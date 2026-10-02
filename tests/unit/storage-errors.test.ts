@@ -9,7 +9,7 @@ describe('Storage Error Handling', () => {
     // Clear storage before each test
     await tabGroupsStorage.setValue({});
     vi.clearAllMocks();
-    vi.spyOn(global, 'setTimeout').mockImplementation((cb) => {
+    vi.spyOn(global, 'setTimeout').mockImplementation((cb: any) => {
       if (typeof cb === 'function') cb();
       return 0 as any;
     });
@@ -38,7 +38,7 @@ describe('Storage Error Handling', () => {
       await expect(saveTabGroup(testGroup)).rejects.toThrow('Storage write failed');
     });
 
-        it('should handle transient failures and succeed on retry', async () => {
+    it('should handle transient failures and succeed on retry', async () => {
       const testGroup: TabGroup = {
         id: 'test-1',
         name: 'Test Group',
@@ -292,5 +292,3 @@ describe('Storage Error Handling', () => {
     });
   });
 });
-
-
