@@ -1,134 +1,136 @@
-# PackTabs 用户使用指南与功能图解 (User Guide)
+# PackTabs User Guide & Screenshot Blueprint
 
-> **版本**：v1.0.0  
-> **适用平台**：Google Chrome / Mozilla Firefox / Microsoft Edge 及其他 Chromium 内核浏览器
+🌐 **Language / 语言**: English | [简体中文](USER_GUIDE_ZH.md)
 
----
-
-## 一、为什么需要 PackTabs？
-
-在日常工作和研究中，我们常常陷入两种糟糕的体验：
-1. **不敢关浏览器**：正在进行的工作/论文调研/项目查阅未完成，浏览器常年挂着 30~80 个标签页，严重占用电脑内存并干扰视线。
-2. **书签栏沦为垃圾场**：把临时要看的网页一股脑存入书签栏，过后既难找又舍不得删，导致真正的高频核心书签被严重淹没。
-
-**PackTabs 的解决方案**：
-面向**任务（Task-Oriented）**设计的标签页与工作区管理器。做完一个阶段，一键将当前窗口的全部网页打包封存，随时瞬间原样还原；临时任务与永久书签彻底解耦，还你一个干净、专注的工作区。
+> **Version**: v1.0.0  
+> **Supported Browsers**: Google Chrome / Mozilla Firefox / Microsoft Edge and Chromium-based browsers
 
 ---
 
-## 二、快速上手 (Quick Start)
+## 1. Why PackTabs?
 
-### 1. 唤出 PackTabs
-- **点击图标**：点击浏览器右上角扩展栏的 **PackTabs** 图标。
-- **全局快捷键**：
-  - Windows / Linux：`Alt + Shift + K`
-  - macOS：`Command + Shift + K`
+Modern web multitasking often leads to two major productivity pitfalls:
+1. **The Fear of Closing the Browser**: Unfinished research, debugging tabs, or shopping comparisons linger in 30–80+ open tabs, eating up gigabytes of system memory and overwhelming your focus.
+2. **The Bookmark Bar Graveyard**: Saving temporary working tabs to your permanent bookmark bar clutters your bookmarks with disposable links that you rarely organize and hesitate to delete.
+
+**The PackTabs Solution**:
+A **task-oriented** tab and workspace manager. When you finish a work session or switch projects, package every open tab in your current window into a dedicated group with one click. Clear your browser to regain mental clarity, and restore your full workspace context instantly whenever you're ready.
+
+---
+
+## 2. Quick Start
+
+### 1. Launching PackTabs
+- **Click the Icon**: Click the **PackTabs** icon in your browser's extension toolbar.
+- **Global Keyboard Shortcut**:
+  - Windows / Linux: `Alt + Shift + K`
+  - macOS: `Command + Shift + K`
 
 > [!TIP]
-> 如果您想修改快捷键，可在 Chrome 地址栏输入 `chrome://extensions/shortcuts` 进行自定义配置。
+> You can customize your keyboard shortcut at any time by visiting `chrome://extensions/shortcuts` in Chromium browsers.
 
 ---
 
-## 三、六大核心功能指南与截图建议
+## 3. Core Feature Walkthrough & Store Screenshot Blueprint
 
-> 💡 **商店截图提示**：应用商店要求上传 1~5 张截图。建议按照以下**📸 截图机位**制作 1280×800 像素的高清图片，既能作为用户文档，又能直接上架商店。
-
----
-
-### 功能 1：当前窗口检视与一键打包 (Staging & Save)
-
-#### 📖 功能说明
-打开 PackTabs 后，首先看到的是【当前窗口标签】视图：
-- **实时预览**：列出当前窗口的所有打开标签页，直观显示 Favicon、网页标题和域名。
-- **排除单个网页**：在保存前，若有某些不需要的无关网页（如临时搜索引擎主页），悬停点击右侧的 `✕` 即可将其从本次打包中剔除。
-- **自定义命名**：在输入框为任务命名（如“Q4 竞品调研”、“装修选材”）；若留空，系统会自动以当前时间戳（如 `2026-10-03 14:30`）命名。
-- **保存并自动关闭**：勾选“保存后关闭窗口”，点击**【保存为标签组】**，即可瞬间清空并关闭当前窗口，释放内存。
-
-#### 📸 推荐截图机位 1（商店主图·核心卖点）
-- **截取画面**：展示【当前窗口标签】视图，上方输入框填有项目名称（如 `Feature Release Research`），下方整齐排列 5~8 个常见网站卡片，右侧“保存为标签组”按钮处于高亮状态。
-- **说明文案**：`一键打包当前任务标签页，释放内存，清爽视界`
+> 💡 **Store Listing Guidance**: The Chrome Web Store and Firefox AMO require 1–5 screenshots. The four core setups below serve as both feature documentation and your exact **1280×800 pixel screenshot blueprint** for store submission.
 
 ---
 
-### 功能 2：工作区一键复原与静默打开 (Restore & Tab Operations)
+### Feature 1: Current Window Staging & One-Click Tab Packing
 
-#### 📖 功能说明
-在左侧菜单栏切换到【已保存的标签组】：
-- **一键全部恢复**：点击标签组卡片右上角的**【全部打开】**按钮，瞬间在新窗口（或当前窗口）还原当时保存的所有网页。
-- **单独打开某页面**：点击卡片中的任意一行网页标题，直接打开该单页。
-- **后台静默打开（快捷技巧）**：按住键盘 `Ctrl`（Mac 上为 `Cmd` 或 `Shift`）并点击某个网页，将在后台标签页静默加载，不抢占当前视觉焦点。
-- **组内编辑与删除**：双击或点击编辑图标可重命名标签组；点击卡片垃圾桶图标可彻底删除已完成的任务。
+#### 📖 How It Works
+When you open PackTabs, you're greeted with the **Current Window Tabs** view:
+- **Live Preview**: Inspect every open tab in your active window with crisp Favicons, page titles, and clean domain names.
+- **Selective Exclusion**: Hover over any irrelevant tab (e.g., a search engine homepage) and click `✕` to exclude it before saving.
+- **Custom Naming**: Type a task or project name (e.g., `Q4 Competitive Analysis`, `Vite 8 Migration Notes`). If left blank, PackTabs will automatically assign a timestamp (e.g., `2026-10-03 14:30`).
+- **Save & Auto-Close**: Keep "Close window after save" checked and click **Save as Tab Group** to instantly store all tabs and close the window, freeing memory.
 
-#### 📸 推荐截图机位 2（商店第 2 图）
-- **截取画面**：展示【已保存的标签组】网格卡片，展示 2~3 个不同颜色的任务分组，鼠标悬停在“全部打开”或标签行上，展示流畅的卡片阴影与交互。
-- **说明文案**：`随时瞬间还原整个任务工作区，支持后台静默打开`
-
----
-
-### 功能 3：自动历史快照 (Automatic History Snapshots)
-
-#### 📖 功能说明
-常在河边走，哪能不湿鞋？如果不小心直接点了浏览器右上角大红叉 `✕` 关掉了整个窗口怎么办？
-- **自动防丢机制**：PackTabs 内置后台监听服务，当检测到某个窗口关闭时，会**自动将其中所有有效网页捕获为独立的【历史快照】**。
-- **从不丢失会话**：在左侧进入【历史快照】列表，按今天、昨天、过去 7 天清晰归档。
-- **一键升格为正式组**：在历史快照卡片上点击“保存”，输入名称即可将其转化为永久保存的分组。
-
-#### 📸 推荐截图机位 3（商店第 3 图）
-- **截取画面**：展示【历史快照】页面，顶部显示“上次关闭的会话”专属徽章，时间线上清晰列出 `今天 18:30`、`昨天 15:20` 的自动快照记录。
-- **说明文案**：`窗口意外关闭？自动快照完整记录，一键找回`
+#### 📸 Recommended Screenshot 1 (Store Hero Image / Primary Screenshot)
+- **Visual Setup**: Showcase the Current Tabs staging view. Top input field filled with a clear task name (`Feature Release Research`), 5–8 recognizable cards neatly aligned, and the primary "Save as Tab Group" button clearly visible.
+- **Caption / Value Prop**: `Capture All Task Tabs in One Click · Free Memory Instantly`
 
 ---
 
-### 功能 4：开机/启动恢复器 (Startup Restorer)
+### Feature 2: Instant Workspace Restoration & Silent Background Tabs
 
-#### 📖 功能说明
-每天早晨打开电脑启动浏览器时，是不是想快速接着昨晚未做完的任务继续？
-- 在设置中开启【启动时打开恢复器】。
-- 每次打开全新浏览器时，PackTabs 会自动弹出专属的简洁引导全屏页，列出您上次关闭的会话和高频分组。
-- 点击直接恢复，无缝衔接上一场工作流。
+#### 📖 How It Works
+Switch to the **Saved Groups** view in the sidebar:
+- **One-Click Workspace Restore**: Click **Open All** on any card to restore the entire collection into a fresh browser window.
+- **Open Individual Tabs**: Click any tab row to launch that specific page directly.
+- **Silent Background Opening (Power User Tip)**: Hold `Ctrl` (or `Cmd` / `Shift` on Mac) while clicking a tab item to load it quietly in the background without stealing your current window focus.
+- **Inline Editing & Deletion**: Double-click or click the edit icon to rename groups; click the trash icon to clean up finished projects.
 
-#### 📸 推荐截图机位 4（商店第 4 图）
-- **截取画面**：展示 Startup Restorer 启动恢复器全屏居中卡片，醒目的“继续上次任务”大按钮与网页列表。
-- **说明文案**：`开启浏览器即刻继续未竟任务，无缝切换工作上下文`
-
----
-
-### 功能 5：直观拖拽归类 (Drag & Drop Stashing)
-
-#### 📖 功能说明
-- **跨组归纳**：在当前窗口或组内，按住某个标签卡片，可直接拖动到左侧边栏的指定已有分组中，快速完成归类。
-- **自由调序**：拖拽标签可在组内上下调整重要度顺序。
+#### 📸 Recommended Screenshot 2 (Store Screenshot 2)
+- **Visual Setup**: A 2-column or 3-column responsive grid of saved task groups with subtle hover effects, active badges, and the "Open All" action button.
+- **Caption / Value Prop**: `Restore Entire Workspaces in Seconds · Open Tabs in Background`
 
 ---
 
-### 功能 6：深浅色自适应与 100% 离线隐私 (Theme & Privacy)
+### Feature 3: Automatic History Snapshots (Zero Data Loss)
 
-#### 📖 功能说明
-- **主题切换**：点击右上角太阳/月亮图标，支持【明亮 / 暗黑 / 跟随系统】三态切换，精心打磨的 Tailwind Zinc 色板在夜间模式下极其护眼。
-- **100% 离线运行**：所有网页标题、地址全部保存在您本机浏览器的 10MB 独立沙箱中，零网络请求、零第三方追踪。
+#### 📖 How It Works
+Ever accidentally clicked the browser's top-right `✕` and lost crucial reference tabs?
+- **Automatic Failsafe**: PackTabs runs an active listener service. Whenever an entire browser window closes, it **automatically captures all open tabs into a History Snapshot**.
+- **Chronological Archive**: Access the **History Snapshots** view in the sidebar, neatly organized by Today, Yesterday, and Previous 7 Days.
+- **Promote to Permanent Group**: Click "Save" on any snapshot card to name it and convert it into a permanent Saved Group.
 
----
-
-## 四、如何制作符合应用商店规范的 1280×800 截图？
-
-Chrome Web Store 严格要求截图尺寸为 **1280×800** 或 **640×400**。
-
-### 快捷截取步骤（无需安装修图软件）：
-1. 在 Chrome 中打开 PackTabs 仪表盘页面（按 `Alt+Shift+K`）。
-2. 按 `F12` 打开开发者工具，按 `Ctrl + Shift + M`（Mac 上 `Cmd + Shift + M`）切换至**设备模拟模式**。
-3. 在顶部尺寸栏输入：宽度 **`1280`**，高度 **`800`**。
-4. 调整浏览器缩放为 100%，让界面呈现丰富饱满的真实标签组数据。
-5. 点击开发者工具右上角的三点菜单 `⋮` -> 选择 **Capture screenshot**（捕获屏幕截图）。
-6. 浏览器将自动下载一张尺寸严格为 `1280x800` 的高清 PNG 截图，直接上传商店绝不报错！
+#### 📸 Recommended Screenshot 3 (Store Screenshot 3)
+- **Visual Setup**: The History Snapshots timeline view highlighting the "Last Closed Session" badge and timestamped entries.
+- **Caption / Value Prop**: `Accidentally Closed a Window? Recover Sessions with Automatic Snapshots`
 
 ---
 
-## 五、常用技巧速查表
+### Feature 4: Browser Startup Restorer
 
-| 操作 | 快捷方式 / 操作方法 | 作用 |
+#### 📖 How It Works
+Pick up right where you left off every morning:
+- Enable "Open Startup Restorer on browser launch" in Settings.
+- When opening a fresh browser instance, PackTabs displays a clean, focused startup screen highlighting your last closed session and frequent collections.
+- Jump straight back into your work without searching through your browser history.
+
+#### 📸 Recommended Screenshot 4 (Store Screenshot 4)
+- **Visual Setup**: The Startup Restorer full-screen card displaying the "Resume Previous Session" button alongside task previews.
+- **Caption / Value Prop**: `Start Every Day in Context · Seamless Multi-Day Project Resumption`
+
+---
+
+### Feature 5: Drag-and-Drop Organization
+
+#### 📖 How It Works
+- **Categorize on the Fly**: Drag any tab from your current window staging view directly onto a saved group target on the sidebar.
+- **Reorder Priorities**: Drag tabs up and down within a group card to adjust priority or reading sequence.
+
+---
+
+### Feature 6: Adaptive Dark Theme & 100% Offline Privacy
+
+#### 📖 How It Works
+- **Eye-Friendly Palettes**: Seamlessly switch between Light, Dark, and System modes with the header toggle. Styled with modern zinc neutral colors for zero eye strain.
+- **100% Local & Private**: All URLs and titles are persisted exclusively in your browser's private local storage sandbox. No tracking, zero third-party telemetry, and no remote servers.
+
+---
+
+## 4. How to Capture Pixel-Perfect 1280×800 Screenshots
+
+The Chrome Web Store strictly rejects screenshots that deviate from **1280×800** or **640×400** pixels.
+
+### Quick Step-by-Step Guide (No Extra Software Required):
+1. Open the PackTabs dashboard in Chrome (`Alt + Shift + K`).
+2. Press `F12` to open Chrome DevTools, then press `Ctrl + Shift + M` (`Cmd + Shift + M` on Mac) to toggle the **Device Toolbar**.
+3. In the top dimension inputs, set: **Width: `1280`**, **Height: `800`**.
+4. Set zoom to 100% so the interface displays clean, authentic sample groups.
+5. Click the three dots menu `⋮` in the top right of DevTools -> Select **Capture screenshot**.
+6. Chrome will immediately download an exact **1280×800** PNG file ready for direct store upload!
+
+---
+
+## 5. Keyboard & Interaction Cheatsheet
+
+| Action | Shortcut / Method | Description |
 | :--- | :--- | :--- |
-| **打开/切换管理面板** | `Alt + Shift + K` (Mac: `Cmd + Shift + K`) | 快速唤出仪表盘，若已打开则直接聚焦 |
-| **刷新当前窗口标签** | 打开面板状态下再按一次 `Alt + Shift + K` 或点击刷新 | 重新扫描当前窗口变动的标签页 |
-| **后台静默打开网页** | 按住 `Ctrl` / `Cmd` / `Shift` 点击标签 | 不切换焦点，在后台加载网页 |
-| **快速重命名分组** | 双击分组卡片标题 或 点击编辑按钮 | 修改任务组名称 |
-| **单页剔除** | 悬停标签行点击右侧 `✕` | 不保存该页或从组中移除 |
+| **Open / Focus Dashboard** | `Alt + Shift + K` (Mac: `Cmd + Shift + K`) | Opens the manager tab or focuses an existing one |
+| **Refresh Current Tabs** | Press `Alt + Shift + K` while dashboard is open | Re-scans active tabs in the current window |
+| **Open in Background** | `Ctrl` / `Cmd` / `Shift` + Click | Silently opens a link in the background |
+| **Rename Group** | Double-click title or click Edit | Renames the task group |
+| **Exclude Tab** | Hover tab and click `✕` | Drops tab from current staging group |
