@@ -61,7 +61,7 @@ async function saveTitle() {
       toast.add({
         severity: 'success',
         summary: 'Updated',
-        detail: 'Collection name updated',
+        detail: 'Tab group name updated',
         life: 2500,
       });
     } catch {
@@ -186,7 +186,7 @@ async function handleDeleteTab(tabId: string) {
     await tabStore.deleteTab(props.group.id, tabId);
     toast.add({
       severity: 'success',
-      detail: 'Tab removed from collection',
+      detail: 'Tab removed from tab group',
       life: 2000,
     });
   } catch {
@@ -207,13 +207,13 @@ async function confirmDeleteGroup() {
     emit('deleted');
     toast.add({
       severity: 'success',
-      detail: 'Collection deleted',
+      detail: 'Tab group deleted',
       life: 2500,
     });
   } catch {
     toast.add({
       severity: 'error',
-      detail: 'Failed to delete collection',
+      detail: 'Failed to delete tab group',
       life: 2500,
     });
   }
@@ -222,7 +222,7 @@ async function confirmDeleteGroup() {
 
 <template>
   <div class="space-y-4">
-    <!-- Unified Collection Card -->
+    <!-- Unified Tab Group Card -->
     <Card class="overflow-hidden border border-slate-200/90 shadow-xs">
       <!-- CardHeader: Integrated Title, Meta & Actions -->
       <CardHeader class="p-4 pb-3 border-b border-slate-100 bg-slate-50/50">
@@ -237,13 +237,13 @@ async function confirmDeleteGroup() {
               <!-- Inline Editable Title -->
               <div v-if="!isEditingTitle" class="flex items-center gap-2 group/title">
                 <h2 class="text-sm font-semibold text-slate-900 leading-tight truncate">
-                  {{ group.name || 'Untitled Collection' }}
+                  {{ group.name || 'Untitled Tab Group' }}
                 </h2>
                 <button
                   type="button"
                   class="opacity-0 group-hover/title:opacity-100 transition-opacity p-0.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded"
-                  title="Rename collection"
-                  aria-label="Rename collection"
+                  title="Rename tab group"
+                  aria-label="Rename tab group"
                   @click="startEditingTitle"
                 >
                   <Pencil class="h-3 w-3" />
@@ -293,8 +293,8 @@ async function confirmDeleteGroup() {
               size="sm"
               variant="ghost"
               class="h-7 px-2 text-xs text-slate-400 hover:text-rose-600 hover:bg-rose-50"
-              title="Delete collection"
-              aria-label="Delete collection"
+              title="Delete tab group"
+              aria-label="Delete tab group"
               @click="showDeleteConfirm = true"
             >
               <Trash2 class="h-3.5 w-3.5" />
@@ -307,7 +307,7 @@ async function confirmDeleteGroup() {
       <CardContent class="p-3">
         <!-- Empty State -->
         <div v-if="filteredTabs.length === 0" class="py-12 text-center text-slate-400 text-xs">
-          <p v-if="totalTabsCount === 0">No tabs in this collection.</p>
+          <p v-if="totalTabsCount === 0">No tabs in this tab group.</p>
           <p v-else>No tabs match your search query.</p>
         </div>
 
@@ -366,7 +366,7 @@ async function confirmDeleteGroup() {
             <button
               type="button"
               class="p-1 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors shrink-0"
-              title="Remove tab from collection"
+              title="Remove tab from tab group"
               aria-label="Remove tab"
               @click.stop="handleDeleteTab(tab.id)"
             >
@@ -380,15 +380,15 @@ async function confirmDeleteGroup() {
     <!-- Delete Confirmation Modal -->
     <Modal
       v-model:open="showDeleteConfirm"
-      title="Delete Collection"
-      description="Are you sure you want to delete this collection? This action cannot be undone."
+      title="Delete Tab Group"
+      description="Are you sure you want to delete this tab group? This action cannot be undone."
     >
       <div class="text-sm text-slate-600">
-        Collection: <span class="font-medium text-slate-900">{{ group.name || 'Untitled' }}</span> ({{ group.tabs.length }} tabs)
+        Tab Group: <span class="font-medium text-slate-900">{{ group.name || 'Untitled Tab Group' }}</span> ({{ totalTabsCount }} tabs)
       </div>
       <template #footer>
         <Button variant="outline" size="sm" @click="showDeleteConfirm = false">Cancel</Button>
-        <Button variant="destructive" size="sm" @click="confirmDeleteGroup">Delete Collection</Button>
+        <Button variant="destructive" size="sm" @click="confirmDeleteGroup">Delete Tab Group</Button>
       </template>
     </Modal>
   </div>

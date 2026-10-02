@@ -2,6 +2,7 @@
 import {
   Calendar,
   Check,
+  Clock,
   ExternalLink,
   Globe,
   GripVertical,
@@ -15,7 +16,7 @@ import { computed, ref } from 'vue';
 
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader } from '~/components/ui/card';
+import { Card, CardContent, CardHeader } from '~/components/ui/card';
 import Modal from '~/components/ui/dialog/Modal.vue';
 import { Input } from '~/components/ui/input';
 import { useToast } from '~/composables/useToast';
@@ -63,20 +64,57 @@ function handleFaviconError(tabId: string) {
   faviconErrorStates.value[tabId] = true;
 }
 
-// Format creation date
-const formattedDate = computed(() => {
-  const date = props.group.createdAt;
+// Localized formatting for display title when unnamed
+function formatLocalizedDateTime(dateInput: Date | string | number): string {
   try {
-    return new Intl.DateTimeFormat('en-US', {
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return '';
+    const userLocale = typeof navigator !== 'undefined' && navigator.language ? navigator.language : 'en-US';
+    return new Intl.DateTimeFormat(userLocale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    }).format(date);
+      hour12: false,
+    }).format(d);
+  } catch {
+    const d = new Date(dateInput);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+}
+
+// Format creation date
+const formattedDate = computed(() => {
+  const date = props.group.createdAt;
+  try {
+    const userLocale = typeof navigator !== 'undefined' && navigator.language ? navigator.language : 'en-US';
+    return new Intl.DateTimeFormat(userLocale, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(new Date(date));
   } catch {
     return String(date);
   }
+});
+
+const displayTitle = computed(() => {
+  if (props.group.name?.trim()) {
+    return props.group.name.trim();
+  }
+  return formatLocalizedDateTime(props.group.createdAt);
+});
+
+const subtitleText = computed(() => {
+  if (props.group.name?.trim()) {
+    return `Created ${formattedDate.value}`;
+  }
+  return 'Automatic session snapshot';
 });
 
 const tabList = computed(() => deduplicateTabsByUrl(normalizeTabs(props.group.tabs)));
@@ -245,12 +283,12 @@ async function confirmDeleteGroup() {
   <Card class="overflow-hidden border border-slate-200/90 hover:border-slate-300 transition-all duration-200 shadow-xs hover:shadow-md">
     <!-- Header -->
     <CardHeader class="p-4 pb-3 border-b border-slate-100 bg-slate-50/50">
-      <div class="flex items-start justify-between gap-4">
+      <div class="flex items-center justify-between gap-4">
+        <!-- Left: Title & Inline Edit + Subtitle -->
         <div class="flex-1 min-w-0">
-          <!-- Title & Inline Edit -->
           <div v-if="!isEditingTitle" class="flex items-center gap-2 group/title">
             <h3 class="text-base font-semibold text-slate-900 truncate">
-              {{ group.name || 'History Tab Group' }}
+              {{ displayTitle }}
             </h3>
             <button
               type="button"
@@ -278,17 +316,53 @@ async function confirmDeleteGroup() {
             </Button>
           </div>
 
-          <!-- Date Subtitle -->
+          <!-- Subtitle -->
           <div class="flex items-center gap-1.5 text-xs text-slate-500 mt-1 font-normal">
-            <Calendar class="h-3.5 w-3.5 opacity-70" />
-            <span>{{ formattedDate }}</span>
+            <Calendar v-if="group.name" class="h-3.5 w-3.5 opacity-70" />
+            <Clock v-else class="h-3.5 w-3.5 opacity-70" />
+            <span>{{ subtitleText }}</span>
           </div>
         </div>
 
-        <!-- Tab Count Badge -->
-        <Badge :variant="group.isHistory ? 'secondary' : 'default'" class="shrink-0 font-medium">
-          {{ tabCount }} tabs
-        </Badge>
+        <!-- Right: Actions Toolbar & Tab Count Badge -->
+        <div class="flex items-center gap-2 shrink-0">
+          <Badge :variant="group.isHistory ? 'secondary' : 'default'" class="shrink-0 font-medium text-xs">
+            {{ tabCount }} tabs
+          </Badge>
+
+          <Button
+            size="sm"
+            variant="success"
+            class="h-7 text-xs font-medium gap-1.5 px-2.5"
+            @click="handleOpenAll"
+          >
+            <ExternalLink class="h-3.5 w-3.5" />
+            <span>Open All</span>
+          </Button>
+
+          <Button
+            v-if="group.isHistory"
+            size="sm"
+            variant="outline"
+            class="h-7 gap-1.5 text-xs text-slate-700 font-medium px-2.5"
+            @click="handleSave"
+          >
+            <Save class="h-3.5 w-3.5 text-slate-500" />
+            <span>Save</span>
+          </Button>
+
+          <Button
+            size="sm"
+            variant="ghost"
+            class="h-7 px-2 text-xs text-slate-400 hover:text-rose-600 hover:bg-rose-50 font-medium"
+            title="Delete tab group"
+            aria-label="Delete tab group"
+            @click="handleDeleteGroup"
+          >
+            <Trash2 class="h-3.5 w-3.5" />
+            <span class="sr-only sm:not-sr-only sm:ml-1">Delete</span>
+          </Button>
+        </div>
       </div>
     </CardHeader>
 
@@ -357,44 +431,13 @@ async function confirmDeleteGroup() {
         </div>
       </div>
     </CardContent>
-
-    <!-- Footer: Actions -->
-    <CardFooter class="p-3 pt-2 bg-slate-50/40 border-t border-slate-100 flex items-center justify-between gap-2">
-      <div class="flex items-center gap-2">
-        <Button size="sm" variant="success" class="h-8 gap-1.5 text-xs font-medium" @click="handleOpenAll">
-          <ExternalLink class="h-3.5 w-3.5" />
-          Open All
-        </Button>
-
-        <Button
-          v-if="group.isHistory"
-          size="sm"
-          variant="outline"
-          class="h-8 gap-1.5 text-xs text-slate-700 font-medium"
-          @click="handleSave"
-        >
-          <Save class="h-3.5 w-3.5 text-slate-500" />
-          Save
-        </Button>
-      </div>
-
-      <Button
-        size="sm"
-        variant="ghost"
-        class="h-8 px-2.5 text-xs text-slate-500 hover:text-rose-600 hover:bg-rose-50 font-medium"
-        @click="handleDeleteGroup"
-      >
-        <Trash2 class="h-3.5 w-3.5" />
-        <span class="sr-only sm:not-sr-only sm:ml-1.5">Delete</span>
-      </Button>
-    </CardFooter>
   </Card>
 
   <!-- Name Input Dialog for History Group Conversion -->
   <Modal
     v-model:open="showNameDialog"
     title="Name Tab Group"
-    description="Give this tab group a name to save it as a permanent collection."
+    description="Give this tab group a name to save it to your saved tab groups."
   >
     <div class="space-y-4">
       <div>
@@ -425,7 +468,7 @@ async function confirmDeleteGroup() {
     description="Are you sure you want to delete this tab group? This action cannot be undone."
   >
     <div class="text-sm text-slate-600">
-      Group: <span class="font-medium text-slate-900">{{ group.name || 'History Tab Group' }}</span> ({{ tabCount }} tabs)
+      Group: <span class="font-medium text-slate-900">{{ displayTitle }}</span> ({{ tabCount }} tabs)
     </div>
     <template #footer>
       <Button variant="outline" size="sm" @click="showDeleteConfirm = false">Cancel</Button>

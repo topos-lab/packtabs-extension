@@ -53,7 +53,7 @@ describe('TabGroupCard Component', () => {
     expect(wrapper.text()).toContain('Test Group');
   });
 
-  it('displays "History Tab Group" for groups without name', () => {
+  it('displays formatted date and snapshot subtitle for groups without name', () => {
     const historyGroup = { ...mockGroup, name: null, isHistory: true };
     const wrapper = mount(TabGroupCard, {
       props: { group: historyGroup },
@@ -62,7 +62,8 @@ describe('TabGroupCard Component', () => {
       },
     });
 
-    expect(wrapper.text()).toContain('History Tab Group');
+    expect(wrapper.text()).toContain('Automatic session snapshot');
+    expect(wrapper.find('h3').text().length).toBeGreaterThan(0);
   });
 
   it('displays correct tab count', () => {

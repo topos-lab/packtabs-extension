@@ -357,10 +357,6 @@ function handleSave(groupId: string) {
       <div class="flex-1 overflow-y-auto p-3 space-y-6">
         <!-- Quick Views -->
         <div class="space-y-1">
-          <div v-if="isSidebarOpen" class="px-2.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
-            Views
-          </div>
-
           <!-- 1. Current Tabs -->
           <button
             type="button"
