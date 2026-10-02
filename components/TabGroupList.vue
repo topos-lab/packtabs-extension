@@ -76,13 +76,13 @@ function handleSave(groupId: string) {
     <!-- Empty state -->
     <div
       v-if="groups.length === 0"
-      class="flex flex-col items-center justify-center min-h-[360px] p-8 text-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50"
+      class="flex flex-col items-center justify-center min-h-[360px] p-8 text-center rounded-2xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50"
     >
-      <div class="h-12 w-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 mb-3.5">
+      <div class="h-12 w-12 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 dark:text-zinc-500 mb-3.5">
         <Layers class="h-6 w-6" />
       </div>
-      <h3 class="text-base font-semibold text-slate-800 dark:text-slate-200 mb-1">No tab groups yet</h3>
-      <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed">
+      <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-1">No tab groups yet</h3>
+      <p class="text-xs text-zinc-500 dark:text-zinc-400 max-w-xs leading-relaxed">
         Save your current tabs to create your first tab group
       </p>
     </div>
@@ -99,13 +99,13 @@ function handleSave(groupId: string) {
       >
         <!-- Section Header Divider -->
         <div class="flex items-center gap-2.5 pt-1">
-          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
             {{ section.label }}
           </span>
-          <span class="text-[11px] font-medium text-slate-400 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+          <span class="text-[11px] font-medium text-zinc-400 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
             {{ section.groups.length }}
           </span>
-          <div class="h-px bg-slate-200/80 dark:bg-slate-800 flex-1" />
+          <div class="h-px bg-zinc-200/80 dark:bg-zinc-800 flex-1" />
         </div>
 
         <!-- Group Cards in this Section -->

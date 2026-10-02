@@ -289,19 +289,19 @@ async function confirmDeleteGroup() {
 </script>
 
 <template>
-  <Card class="overflow-hidden border border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-200 shadow-xs hover:shadow-md bg-white dark:bg-slate-900">
+  <Card class="overflow-hidden border border-zinc-200/90 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-200 shadow-xs hover:shadow-md bg-white dark:bg-zinc-900">
     <!-- Header -->
-    <CardHeader class="p-4 pb-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60">
+    <CardHeader class="p-4 pb-3 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/60">
       <div class="flex items-center justify-between gap-4">
         <!-- Left: Title & Inline Edit + Subtitle -->
         <div class="flex-1 min-w-0">
           <div v-if="!isEditingTitle" class="flex items-center gap-2 group/title">
-            <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100 truncate">
+            <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100 truncate">
               {{ displayTitle }}
             </h3>
             <button
               type="button"
-              class="opacity-0 group-hover/title:opacity-100 transition-opacity p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded cursor-pointer"
+              class="opacity-0 group-hover/title:opacity-100 transition-opacity p-1 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 rounded cursor-pointer"
               :title="group.isHistory ? 'Save as named group' : 'Edit group name'"
               :aria-label="group.isHistory ? 'Save as named group' : 'Edit group name'"
               @click="startEditingTitle"
@@ -327,7 +327,7 @@ async function confirmDeleteGroup() {
           </div>
 
           <!-- Date Subtitle (only shown when group has custom name) -->
-          <div v-if="group.name" class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1 font-normal">
+          <div v-if="group.name" class="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-normal">
             <Calendar class="h-3.5 w-3.5 opacity-70" />
             <span>Created {{ formattedDate }}</span>
           </div>
@@ -353,17 +353,17 @@ async function confirmDeleteGroup() {
             v-if="group.isHistory"
             size="sm"
             variant="outline"
-            class="h-7 gap-1.5 text-xs text-slate-700 dark:text-slate-300 font-medium px-2.5"
+            class="h-7 gap-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-medium px-2.5"
             @click="handleSave"
           >
-            <Save class="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+            <Save class="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" />
             <span>Save</span>
           </Button>
 
           <Button
             size="sm"
             variant="ghost"
-            class="h-7 px-2 text-xs text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-medium"
+            class="h-7 px-2 text-xs text-zinc-400 dark:text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-medium"
             title="Delete tab group"
             aria-label="Delete tab group"
             @click="handleDeleteGroup"
@@ -377,12 +377,12 @@ async function confirmDeleteGroup() {
 
     <!-- Body: Tab List -->
     <CardContent class="p-3">
-      <div class="flex flex-col divide-y divide-slate-100 dark:divide-slate-800/80 max-h-96 overflow-y-auto pr-1">
+      <div class="flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800/80 max-h-96 overflow-y-auto pr-1">
         <div
           v-for="tab in tabList"
           :key="tab.id"
           draggable="true"
-          class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors select-none cursor-grab active:cursor-grabbing"
+          class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors select-none cursor-grab active:cursor-grabbing"
           title="Drag to categorize • Ctrl/Cmd+Click to open in background"
           @dragstart="handleDragStart($event, tab)"
           @dragend="handleDragEnd"
@@ -392,7 +392,7 @@ async function confirmDeleteGroup() {
           <div class="flex items-center gap-2 min-w-0 flex-1 mr-3 pointer-events-none">
             <!-- Drag Handle with hover hint -->
             <div
-              class="p-1 -ml-1 rounded text-slate-300 dark:text-slate-600 group-hover/tab:text-slate-500 dark:group-hover/tab:text-slate-400 transition-colors shrink-0"
+              class="p-1 -ml-1 rounded text-zinc-300 dark:text-zinc-600 group-hover/tab:text-zinc-500 dark:group-hover/tab:text-zinc-400 transition-colors shrink-0"
             >
               <GripVertical class="h-3.5 w-3.5" />
             </div>
@@ -407,18 +407,18 @@ async function confirmDeleteGroup() {
                 loading="lazy"
                 @error="handleFaviconError(tab.id)"
               />
-              <Globe v-else class="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+              <Globe v-else class="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
             </div>
 
             <!-- Title -->
-            <span class="text-xs font-medium text-slate-800 dark:text-slate-200 group-hover/tab:text-indigo-600 dark:group-hover/tab:text-indigo-400 truncate transition-colors">
+            <span class="text-xs font-medium text-zinc-800 dark:text-zinc-200 group-hover/tab:text-indigo-600 dark:group-hover/tab:text-indigo-400 truncate transition-colors">
               {{ tab.title || 'Untitled' }}
             </span>
 
             <!-- Domain name -->
             <span
               v-if="getDomain(tab.url)"
-              class="text-[11px] text-slate-400 dark:text-slate-500 font-normal shrink-0 ml-auto pr-2 hidden sm:inline"
+              class="text-[11px] text-zinc-400 dark:text-zinc-500 font-normal shrink-0 ml-auto pr-2 hidden sm:inline"
             >
               {{ getDomain(tab.url) }}
             </span>
@@ -428,7 +428,7 @@ async function confirmDeleteGroup() {
           <div class="flex items-center shrink-0 pointer-events-auto">
             <button
               type="button"
-              class="p-1 text-slate-300 dark:text-slate-600 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded transition-colors shrink-0 cursor-pointer"
+              class="p-1 text-zinc-300 dark:text-zinc-600 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded transition-colors shrink-0 cursor-pointer"
               title="Remove tab from group"
               aria-label="Delete tab"
               @click.stop="handleDeleteTab(tab.id)"
@@ -449,7 +449,7 @@ async function confirmDeleteGroup() {
   >
     <div class="space-y-4">
       <div>
-        <label for="groupName" class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+        <label for="groupName" class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
           Group Name
         </label>
         <Input
@@ -475,8 +475,8 @@ async function confirmDeleteGroup() {
     title="Delete Tab Group"
     description="Are you sure you want to delete this tab group? This action cannot be undone."
   >
-    <div class="text-sm text-slate-600 dark:text-slate-400">
-      Group: <span class="font-medium text-slate-900 dark:text-slate-200">{{ displayTitle }}</span> ({{ tabCount }} tabs)
+    <div class="text-sm text-zinc-600 dark:text-zinc-400">
+      Group: <span class="font-medium text-zinc-900 dark:text-zinc-200">{{ displayTitle }}</span> ({{ tabCount }} tabs)
     </div>
     <template #footer>
       <Button variant="outline" size="sm" @click="showDeleteConfirm = false">Cancel</Button>

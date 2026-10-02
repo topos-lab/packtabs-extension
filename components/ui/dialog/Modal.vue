@@ -24,22 +24,22 @@ const emit = defineEmits<{
 <template>
   <DialogRoot :open="open" @update:open="emit('update:open', $event)">
     <DialogPortal>
-      <DialogOverlay class="fixed inset-0 z-50 bg-slate-950/40 dark:bg-slate-950/70 backdrop-blur-xs transition-opacity" />
+      <DialogOverlay class="fixed inset-0 z-50 bg-black/40 dark:bg-black/70 backdrop-blur-xs transition-opacity" />
       <DialogContent
-        class="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white dark:bg-slate-900 p-6 shadow-xl border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 outline-none"
+        class="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white dark:bg-zinc-900 p-6 shadow-xl border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 outline-none"
       >
         <div class="flex items-center justify-between pb-1">
-          <DialogTitle v-if="title" class="text-lg font-semibold text-slate-900 dark:text-white">
+          <DialogTitle v-if="title" class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
             {{ title }}
           </DialogTitle>
           <DialogClose
-            class="rounded-md p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            class="rounded-md p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             <X class="h-4 w-4" />
             <span class="sr-only">Close</span>
           </DialogClose>
         </div>
-        <DialogDescription v-if="description" class="text-sm text-slate-500 dark:text-slate-400 mt-1 mb-4">
+        <DialogDescription v-if="description" class="text-sm text-zinc-500 dark:text-zinc-400 mt-1 mb-4">
           {{ description }}
         </DialogDescription>
 

@@ -85,11 +85,11 @@ export function useTheme() {
   const themeTooltip = computed(() => {
     switch (theme.value) {
       case 'system':
-        return `Theme: System (${isDark.value ? 'Dark' : 'Light'}) • Click for Light`;
+        return `Theme: Auto (System) (${isDark.value ? 'Dark' : 'Light'}) • Click for Light`;
       case 'light':
         return 'Theme: Light • Click for Dark';
       case 'dark':
-        return 'Theme: Dark • Click for System';
+        return 'Theme: Dark • Click for Auto (System)';
     }
   });
 

@@ -18,7 +18,7 @@ const { toasts, remove } = useToast();
       <div
         v-for="toast in toasts"
         :key="toast.id"
-        class="pointer-events-auto flex items-start gap-3 rounded-lg border bg-white dark:bg-slate-900 p-3.5 shadow-lg"
+        class="pointer-events-auto flex items-start gap-3 rounded-lg border bg-white dark:bg-zinc-900 p-3.5 shadow-lg"
         :class="{
           'border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/90 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-100': toast.type === 'success',
           'border-rose-200 dark:border-rose-800/80 bg-rose-50/90 dark:bg-rose-950/80 text-rose-900 dark:text-rose-100': toast.type === 'error',

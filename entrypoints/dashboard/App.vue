@@ -6,12 +6,12 @@ import {
   Globe,
   GripVertical,
   Layers,
-  Monitor,
   Moon,
   RotateCcw,
   Save,
   Search,
   Sun,
+  SunMoon,
   X,
 } from 'lucide-vue-next';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
@@ -384,16 +384,16 @@ function handleSave(groupId: string) {
 </script>
 
 <template>
-  <div class="flex h-screen w-full bg-slate-50 dark:bg-slate-950 overflow-hidden text-slate-900 dark:text-slate-100">
+  <div class="flex h-screen w-full bg-zinc-50 dark:bg-zinc-950 overflow-hidden text-zinc-900 dark:text-zinc-100">
     <!-- Sidebar -->
     <aside
-      class="h-full w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col shrink-0"
+      class="h-full w-64 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col shrink-0"
     >
       <!-- Sidebar Header / Logo & Theme Toggle -->
-      <div class="h-16 flex items-center justify-between px-3 border-b border-slate-100 dark:border-slate-800">
+      <div class="h-16 flex items-center justify-between px-3 border-b border-zinc-100 dark:border-zinc-800">
         <button
           type="button"
-          class="flex items-center gap-2.5 pl-1.5 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left overflow-hidden group/brand focus:outline-none cursor-pointer"
+          class="flex items-center gap-2.5 pl-1.5 py-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-left overflow-hidden group/brand focus:outline-none cursor-pointer"
           title="About PackTabs"
           @click="openAboutModal"
         >
@@ -401,21 +401,21 @@ function handleSave(groupId: string) {
             <Layers class="h-4 w-4" />
           </div>
           <div class="flex flex-col">
-            <span class="font-bold text-sm tracking-tight text-slate-900 dark:text-white group-hover/brand:text-indigo-600 dark:group-hover/brand:text-indigo-400 leading-tight transition-colors">PackTabs</span>
-            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium leading-tight">Tab Manager</span>
+            <span class="font-bold text-sm tracking-tight text-zinc-900 dark:text-zinc-100 group-hover/brand:text-indigo-600 dark:group-hover/brand:text-indigo-400 leading-tight transition-colors">PackTabs</span>
+            <span class="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium leading-tight">Tab Manager</span>
           </div>
         </button>
 
-        <!-- Theme Toggle Button (Tri-state: System -> Light -> Dark -> System) -->
+        <!-- Theme Toggle Button (Tri-state: Auto (System) -> Light -> Dark -> Auto) -->
         <button
           type="button"
-          class="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0 mr-1 cursor-pointer"
+          class="h-7 w-7 flex items-center justify-center rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0 mr-1 cursor-pointer"
           :title="themeTooltip"
           @click="cycleTheme"
         >
           <Sun v-if="theme === 'light'" class="h-4 w-4 text-amber-500" />
-          <Moon v-else-if="theme === 'dark'" class="h-4 w-4 text-indigo-400" />
-          <Monitor v-else class="h-4 w-4 text-slate-400 dark:text-slate-300" />
+          <Moon v-else-if="theme === 'dark'" class="h-4 w-4 text-zinc-100" />
+          <SunMoon v-else class="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
         </button>
       </div>
 
@@ -427,12 +427,12 @@ function handleSave(groupId: string) {
           <button
             type="button"
             class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer"
-            :class="tabStore.selectedGroupId === 'current' ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-slate-900 dark:hover:text-slate-200'"
+            :class="tabStore.selectedGroupId === 'current' ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 hover:text-zinc-900 dark:hover:text-zinc-200'"
             @click="tabStore.selectedGroupId = 'current'"
           >
             <Layers class="h-4 w-4 shrink-0" />
             <span class="flex-1 text-left truncate">Current Tabs</span>
-            <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-full text-slate-500 dark:text-slate-400 font-normal">
+            <span class="text-[10px] bg-zinc-200/60 dark:bg-zinc-700/60 px-1.5 py-0.5 rounded-full text-zinc-600 dark:text-zinc-300 font-normal">
               {{ currentTabs.length }}
             </span>
           </button>
@@ -441,12 +441,12 @@ function handleSave(groupId: string) {
           <button
             type="button"
             class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer"
-            :class="tabStore.selectedGroupId === 'history' ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-slate-900 dark:hover:text-slate-200'"
+            :class="tabStore.selectedGroupId === 'history' ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 hover:text-zinc-900 dark:hover:text-zinc-200'"
             @click="tabStore.selectedGroupId = 'history'"
           >
             <Clock class="h-4 w-4 shrink-0" />
             <span class="flex-1 text-left truncate">History Snapshots</span>
-            <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-full text-slate-500 dark:text-slate-400 font-normal">
+            <span class="text-[10px] bg-zinc-200/60 dark:bg-zinc-700/60 px-1.5 py-0.5 rounded-full text-zinc-600 dark:text-zinc-300 font-normal">
               {{ tabStore.historyGroups.length }}
             </span>
           </button>
@@ -456,18 +456,18 @@ function handleSave(groupId: string) {
         <div class="space-y-1">
           <div
             class="px-2.5 text-[10px] font-semibold uppercase tracking-wider mb-1.5 flex items-center justify-between transition-colors"
-            :class="tabStore.isDraggingTab ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'"
+            :class="tabStore.isDraggingTab ? 'text-indigo-600 dark:text-indigo-400' : 'text-zinc-400 dark:text-zinc-500'"
           >
             <div class="flex items-center gap-1.5">
               <span>Saved Groups</span>
               <span
                 v-if="tabStore.isDraggingTab"
-                class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80"
+                class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-indigo-50 dark:bg-zinc-800 text-indigo-600 dark:text-indigo-300 border border-indigo-200/80 dark:border-zinc-700"
               >
                 Drop Targets
               </span>
             </div>
-            <span class="text-[10px]" :class="tabStore.isDraggingTab ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : 'text-slate-400 dark:text-slate-500 font-normal'">
+            <span class="text-[10px]" :class="tabStore.isDraggingTab ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : 'text-zinc-400 dark:text-zinc-500 font-normal'">
               {{ tabStore.namedGroups.length }}
             </span>
           </div>
@@ -480,12 +480,12 @@ function handleSave(groupId: string) {
               class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-all relative select-none border cursor-pointer"
               :class="[
                 dragOverGroupId === group.id
-                  ? 'border-indigo-400 dark:border-indigo-500 bg-indigo-50/90 dark:bg-indigo-950/90 text-indigo-950 dark:text-indigo-100 font-semibold ring-2 ring-indigo-500/20 shadow-2xs'
+                  ? 'border-indigo-400 dark:border-indigo-500 bg-indigo-50/90 dark:bg-zinc-800 text-indigo-950 dark:text-zinc-100 font-semibold ring-2 ring-indigo-500/20 shadow-2xs'
                   : tabStore.isDraggingTab
-                    ? 'border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 text-slate-700 dark:text-slate-300 hover:border-indigo-300 dark:hover:border-indigo-600 hover:bg-indigo-50/40'
+                    ? 'border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/60 dark:bg-zinc-800/40 text-zinc-700 dark:text-zinc-300 hover:border-indigo-300 dark:hover:border-zinc-600 hover:bg-indigo-50/40'
                     : tabStore.selectedGroupId === group.id
-                      ? 'border-transparent bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-semibold'
-                      : 'border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-slate-900 dark:hover:text-slate-200'
+                      ? 'border-transparent bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold'
+                      : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 hover:text-zinc-900 dark:hover:text-zinc-200'
               ]"
               @click="tabStore.selectedGroupId = group.id"
               @dragover.prevent="handleDragOver($event, group.id)"
@@ -501,7 +501,7 @@ function handleSave(groupId: string) {
                       ? 'text-indigo-600 dark:text-indigo-400 scale-105'
                       : tabStore.isDraggingTab
                         ? 'text-indigo-500 dark:text-indigo-400'
-                        : 'text-slate-400 dark:text-slate-500'
+                        : 'text-zinc-400 dark:text-zinc-500'
                   ]"
                 />
                 <span class="truncate">{{ group.name || 'Saved Group' }}</span>
@@ -510,21 +510,21 @@ function handleSave(groupId: string) {
                 class="text-[10px] ml-1 shrink-0 transition-colors font-medium"
                 :class="[
                   dragOverGroupId === group.id
-                    ? 'text-indigo-700 dark:text-indigo-300 font-bold bg-indigo-100/90 dark:bg-indigo-900/90 px-1.5 py-0.5 rounded-full'
+                    ? 'text-indigo-700 dark:text-indigo-300 font-bold bg-indigo-100/90 dark:bg-zinc-700 px-1.5 py-0.5 rounded-full'
                     : tabStore.isDraggingTab
-                      ? 'text-slate-500 dark:text-slate-400 font-medium'
-                      : 'text-slate-400 dark:text-slate-500'
+                      ? 'text-zinc-500 dark:text-zinc-400 font-medium'
+                      : 'text-zinc-400 dark:text-zinc-500'
                 ]"
               >
                 {{ getGroupTabCount(group) }}
               </span>
             </button>
           </div>
-          <div v-else-if="tabStore.isDraggingTab" class="px-2.5 py-2.5 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 text-center">
-            <p class="text-xs font-medium text-slate-700 dark:text-slate-300">No saved groups yet</p>
-            <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Save current tabs as a group first</p>
+          <div v-else-if="tabStore.isDraggingTab" class="px-2.5 py-2.5 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/60 dark:bg-zinc-800/40 text-center">
+            <p class="text-xs font-medium text-zinc-700 dark:text-zinc-300">No saved groups yet</p>
+            <p class="text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5">Save current tabs as a group first</p>
           </div>
-          <div v-else class="px-2.5 py-2 text-[11px] text-slate-400 dark:text-slate-500 italic">
+          <div v-else class="px-2.5 py-2 text-[11px] text-zinc-400 dark:text-zinc-500 italic">
             No saved groups yet
           </div>
         </div>
@@ -532,24 +532,24 @@ function handleSave(groupId: string) {
     </aside>
 
     <!-- Main Workspace -->
-    <main class="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-slate-50/60 dark:bg-slate-950/60">
+    <main class="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-zinc-50/60 dark:bg-zinc-950">
       <!-- Content Area -->
       <section class="flex-1 overflow-y-auto p-6">
         <div class="w-full max-w-6xl mx-auto">
           <!-- Current Tabs View -->
           <div v-if="tabStore.selectedGroupId === 'current'" class="space-y-4">
-            <Card class="overflow-hidden border border-slate-200/90 dark:border-slate-800/90 shadow-xs bg-white dark:bg-slate-900">
-              <CardHeader class="p-4 pb-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+            <Card class="overflow-hidden border border-zinc-200/90 dark:border-zinc-800/90 shadow-xs bg-white dark:bg-zinc-900">
+              <CardHeader class="p-4 pb-3 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
                 <div class="flex items-center justify-between gap-4">
                   <div class="flex items-center gap-2.5">
-                    <div class="h-8 w-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                    <div class="h-8 w-8 rounded-lg bg-indigo-50 dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
                       <Layers class="h-4 w-4" />
                     </div>
                     <div>
-                      <h2 class="text-sm font-semibold text-slate-900 dark:text-white leading-tight">
+                      <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 leading-tight">
                         Current Window Tabs
                       </h2>
-                      <p class="text-[11px] text-slate-400 dark:text-slate-500 font-normal leading-tight">
+                      <p class="text-[11px] text-zinc-400 dark:text-zinc-500 font-normal leading-tight">
                         Review, exclude, or name before saving
                       </p>
                     </div>
@@ -559,7 +559,7 @@ function handleSave(groupId: string) {
                     <Button
                       size="sm"
                       variant="ghost"
-                      class="h-7 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                      class="h-7 px-2 text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
                       :disabled="currentTabsLoading"
                       @click="refreshCurrentTabs"
                     >
@@ -574,22 +574,22 @@ function handleSave(groupId: string) {
               </CardHeader>
 
               <!-- Actions Toolbar / Group Name Input -->
-              <div class="p-3.5 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div class="p-3.5 bg-white dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                 <div class="flex-1 max-w-sm">
                   <Input
                     v-model="newGroupName"
                     placeholder="Group name (optional, or auto-named with time)..."
-                    class="h-8 text-xs bg-slate-50/60 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500"
+                    class="h-8 text-xs bg-zinc-50/60 dark:bg-zinc-800/60 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-zinc-900 focus:border-indigo-500"
                     @keydown.enter="saveCurrentTabs"
                   />
                 </div>
 
                 <div class="flex items-center gap-4 shrink-0">
-                  <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+                  <label class="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-300 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       v-model="closeWindowAfterSave"
-                      class="rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5"
+                      class="rounded border-zinc-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5"
                     />
                     <span>Close window after save</span>
                   </label>
@@ -609,17 +609,17 @@ function handleSave(groupId: string) {
 
               <!-- Tabs List -->
               <CardContent class="p-3">
-                <div v-if="displayedCurrentTabs.length === 0" class="py-12 text-center text-slate-400 dark:text-slate-500 text-xs">
+                <div v-if="displayedCurrentTabs.length === 0" class="py-12 text-center text-zinc-400 dark:text-zinc-500 text-xs">
                   <p v-if="currentTabs.length === 0">No open web tabs in the current window.</p>
                   <p v-else>No tabs match your search query.</p>
                 </div>
 
-                <div v-else class="flex flex-col divide-y divide-slate-100 dark:divide-slate-800 max-h-[500px] overflow-y-auto pr-1">
+                <div v-else class="flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800 max-h-[500px] overflow-y-auto pr-1">
                   <div
                     v-for="tab in displayedCurrentTabs"
                     :key="tab.id"
                     draggable="true"
-                    class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors select-none cursor-grab active:cursor-grabbing"
+                    class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors select-none cursor-grab active:cursor-grabbing"
                     title="Drag to categorize • Ctrl/Cmd+Click to open in background"
                     @dragstart="handleDragStartCurrentTab($event, tab)"
                     @dragend="handleDragEndTab"
@@ -629,7 +629,7 @@ function handleSave(groupId: string) {
                     <div class="flex items-center gap-2 min-w-0 flex-1 mr-3 pointer-events-none">
                       <!-- Drag Handle with hover hint -->
                       <div
-                        class="p-1 -ml-1 rounded text-slate-300 dark:text-slate-600 group-hover/tab:text-slate-500 dark:group-hover/tab:text-slate-400 transition-colors shrink-0"
+                        class="p-1 -ml-1 rounded text-zinc-300 dark:text-zinc-600 group-hover/tab:text-zinc-500 dark:group-hover/tab:text-zinc-400 transition-colors shrink-0"
                       >
                         <GripVertical class="h-3.5 w-3.5" />
                       </div>
@@ -642,16 +642,16 @@ function handleSave(groupId: string) {
                           alt=""
                           loading="lazy"
                         />
-                        <Globe v-else class="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+                        <Globe v-else class="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
                       </div>
 
-                      <span class="text-xs font-medium text-slate-800 dark:text-slate-200 group-hover/tab:text-indigo-600 dark:group-hover/tab:text-indigo-400 truncate transition-colors">
+                      <span class="text-xs font-medium text-zinc-800 dark:text-zinc-200 group-hover/tab:text-indigo-600 dark:group-hover/tab:text-indigo-400 truncate transition-colors">
                         {{ tab.title || 'Untitled' }}
                       </span>
 
                       <span
                         v-if="getDomain(tab.url)"
-                        class="text-[11px] text-slate-400 dark:text-slate-500 font-normal shrink-0 ml-auto pr-2 hidden sm:inline"
+                        class="text-[11px] text-zinc-400 dark:text-zinc-500 font-normal shrink-0 ml-auto pr-2 hidden sm:inline"
                       >
                         {{ getDomain(tab.url) }}
                       </span>
@@ -661,7 +661,7 @@ function handleSave(groupId: string) {
                     <div class="flex items-center shrink-0 pointer-events-auto">
                       <button
                         type="button"
-                        class="p-1 text-slate-300 dark:text-slate-600 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded transition-colors shrink-0 cursor-pointer"
+                        class="p-1 text-zinc-300 dark:text-zinc-600 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded transition-colors shrink-0 cursor-pointer"
                         title="Exclude from group"
                         aria-label="Exclude tab"
                         @click.stop="removeCurrentTab(tab.id)"
@@ -686,17 +686,17 @@ function handleSave(groupId: string) {
 
           <!-- History Snapshots Feed / Fallback Groups List -->
           <div v-else class="space-y-4">
-            <div class="flex items-center justify-between gap-4 pb-2 border-b border-slate-200/60 dark:border-slate-800">
+            <div class="flex items-center justify-between gap-4 pb-2 border-b border-zinc-200/60 dark:border-zinc-800">
               <div>
-                <h2 class="text-sm font-semibold text-slate-900 dark:text-white tracking-tight">History Snapshots</h2>
-                <p class="text-[11px] text-slate-400 dark:text-slate-500 font-normal">Automatic session snapshots captured from closed windows</p>
+                <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">History Snapshots</h2>
+                <p class="text-[11px] text-zinc-400 dark:text-zinc-500 font-normal">Automatic session snapshots captured from closed windows</p>
               </div>
               <div class="relative w-64">
-                <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500 pointer-events-none" />
                 <Input
                   v-model="searchQuery"
                   placeholder="Search history tabs..."
-                  class="h-8 pl-8 text-xs bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900"
+                  class="h-8 pl-8 text-xs bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-zinc-900"
                 />
               </div>
             </div>
@@ -716,28 +716,28 @@ function handleSave(groupId: string) {
       description="Minimalist tab session manager for modern browsers."
     >
       <div class="space-y-4 py-1">
-        <div class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-100 dark:border-zinc-800">
           <div class="h-10 w-10 rounded-lg bg-indigo-600 flex items-center justify-center text-white shrink-0 shadow-xs">
             <Layers class="h-5 w-5" />
           </div>
           <div class="min-w-0 flex-1">
-            <h4 class="text-sm font-bold text-slate-900 dark:text-white leading-tight">PackTabs</h4>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">High-performance Chrome Tab Group & Session Manager</p>
+            <h4 class="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-tight">PackTabs</h4>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">High-performance Chrome Tab Group & Session Manager</p>
           </div>
         </div>
 
-        <div class="text-xs text-slate-600 dark:text-slate-300 space-y-2">
+        <div class="text-xs text-zinc-600 dark:text-zinc-300 space-y-2">
           <!-- Theme Segmented Control -->
-          <div class="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
+          <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
             <div>
-              <span class="text-slate-400 dark:text-slate-500">Theme</span>
-              <p class="text-[10px] text-slate-400 dark:text-slate-500">Appearance preference</p>
+              <span class="text-zinc-400 dark:text-zinc-500">Theme</span>
+              <p class="text-[10px] text-zinc-400 dark:text-zinc-500">Appearance preference</p>
             </div>
-            <div class="inline-flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 text-xs">
+            <div class="inline-flex items-center p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60 text-xs">
               <button
                 type="button"
                 class="flex items-center gap-1 px-2 py-1 rounded-md transition-all font-medium cursor-pointer"
-                :class="theme === 'light' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-2xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+                :class="theme === 'light' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-2xs' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'"
                 @click="setTheme('light')"
               >
                 <Sun class="h-3 w-3 text-amber-500" />
@@ -746,34 +746,34 @@ function handleSave(groupId: string) {
               <button
                 type="button"
                 class="flex items-center gap-1 px-2 py-1 rounded-md transition-all font-medium cursor-pointer"
-                :class="theme === 'dark' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-2xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+                :class="theme === 'dark' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-2xs' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'"
                 @click="setTheme('dark')"
               >
-                <Moon class="h-3 w-3 text-indigo-400" />
+                <Moon class="h-3 w-3 text-zinc-100" />
                 <span>Dark</span>
               </button>
               <button
                 type="button"
                 class="flex items-center gap-1 px-2 py-1 rounded-md transition-all font-medium cursor-pointer"
-                :class="theme === 'system' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-2xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+                :class="theme === 'system' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-2xs' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'"
                 @click="setTheme('system')"
               >
-                <Monitor class="h-3 w-3 text-slate-500 dark:text-slate-400" />
-                <span>System</span>
+                <SunMoon class="h-3 w-3 text-zinc-500 dark:text-zinc-400" />
+                <span>Auto (System)</span>
               </button>
             </div>
           </div>
 
-          <div class="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
-            <span class="text-slate-400 dark:text-slate-500">Version</span>
-            <span class="font-medium text-slate-700 dark:text-slate-200">1.0.0</span>
+          <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
+            <span class="text-zinc-400 dark:text-zinc-500">Version</span>
+            <span class="font-medium text-zinc-700 dark:text-zinc-200">1.0.0</span>
           </div>
-          <div class="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
-            <span class="text-slate-400 dark:text-slate-500">Author</span>
-            <span class="font-medium text-slate-700 dark:text-slate-200">Wesley Chen</span>
+          <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
+            <span class="text-zinc-400 dark:text-zinc-500">Author</span>
+            <span class="font-medium text-zinc-700 dark:text-zinc-200">Wesley Chen</span>
           </div>
-          <div class="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
-            <span class="text-slate-400 dark:text-slate-500">GitHub</span>
+          <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
+            <span class="text-zinc-400 dark:text-zinc-500">GitHub</span>
             <a
               href="https://github.com/wesley-chen/packtabs-extension"
               target="_blank"
@@ -786,11 +786,11 @@ function handleSave(groupId: string) {
           </div>
           <div class="flex items-center justify-between py-1.5">
             <div>
-              <span class="text-slate-400 dark:text-slate-500">Shortcut</span>
-              <p class="text-[10px] text-slate-400 dark:text-slate-500">Configurable in Chrome</p>
+              <span class="text-zinc-400 dark:text-zinc-500">Shortcut</span>
+              <p class="text-[10px] text-zinc-400 dark:text-zinc-500">Configurable in Chrome</p>
             </div>
             <div class="flex items-center gap-2">
-              <span class="font-mono text-[11px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-700 dark:text-slate-300 font-semibold border border-slate-200/60 dark:border-slate-700/60">
+              <span class="font-mono text-[11px] bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded text-zinc-700 dark:text-zinc-300 font-semibold border border-zinc-200/60 dark:border-zinc-700/60">
                 {{ currentShortcut }}
               </span>
               <button

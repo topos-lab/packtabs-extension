@@ -8,7 +8,8 @@ describe('useTheme Composable', () => {
     document.documentElement.classList.remove('dark');
     // Mock settings storage
     await settingsStorage.setValue({
-      closeWindowAfterSave: true,
+      autoCloseAfterSave: true,
+      maxHistoryGroups: 10,
       theme: 'system',
     });
   });
@@ -63,7 +64,7 @@ describe('useTheme Composable', () => {
     const { themeTooltip, setTheme } = useTheme();
 
     await setTheme('system');
-    expect(themeTooltip.value).toContain('System');
+    expect(themeTooltip.value).toContain('Auto (System)');
 
     await setTheme('light');
     expect(themeTooltip.value).toContain('Light');
