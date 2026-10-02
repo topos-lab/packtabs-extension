@@ -157,3 +157,8 @@ packtabs-extension/
 ## License
 
 MIT © [Wesley Chen](https://github.com/wesley-chen)
+
+## Privacy Policy
+
+PackTabs operates with a 100% offline, privacy-by-default architecture. All saved tab groups and configurations stay strictly inside your local browser storage.  
+Read the full [Privacy Policy](PRIVACY_POLICY.md) or visit the hosted version at [https://wesley-chen.github.io/packtabs-extension/](https://wesley-chen.github.io/packtabs-extension/).
