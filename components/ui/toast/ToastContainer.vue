@@ -18,11 +18,11 @@ const { toasts, remove } = useToast();
       <div
         v-for="toast in toasts"
         :key="toast.id"
-        class="pointer-events-auto flex items-start gap-3 rounded-lg border bg-white p-3.5 shadow-lg"
+        class="pointer-events-auto flex items-start gap-3 rounded-lg border bg-white dark:bg-slate-900 p-3.5 shadow-lg"
         :class="{
-          'border-emerald-200 bg-emerald-50/70 text-emerald-900': toast.type === 'success',
-          'border-rose-200 bg-rose-50/70 text-rose-900': toast.type === 'error',
-          'border-sky-200 bg-sky-50/70 text-sky-900': toast.type === 'info',
+          'border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/90 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-100': toast.type === 'success',
+          'border-rose-200 dark:border-rose-800/80 bg-rose-50/90 dark:bg-rose-950/80 text-rose-900 dark:text-rose-100': toast.type === 'error',
+          'border-sky-200 dark:border-sky-800/80 bg-sky-50/90 dark:bg-sky-950/80 text-sky-900 dark:text-sky-100': toast.type === 'info',
         }"
       >
         <CheckCircle2 v-if="toast.type === 'success'" class="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
