@@ -164,14 +164,42 @@ export default defineBackground(() => {
   // Also initialize and recover when service worker wakes up
   void recoverPendingHistoryGroups();
 
-  // Handle extension action icon click -> open dashboard
-  browser.action.onClicked.addListener(() => {
+  /**
+   * Opens or switches to the PackTabs Dashboard tab.
+   * If a dashboard tab is already open, activates it and focuses its window;
+   * otherwise creates a new tab.
+   */
+  async function openOrFocusDashboard() {
     const dashboardUrl = browser.runtime.getURL('/dashboard.html');
+    try {
+      const tabs = await browser.tabs.query({ url: dashboardUrl });
+      if (tabs.length > 0 && tabs[0].id !== undefined) {
+        await browser.tabs.update(tabs[0].id, { active: true });
+        if (tabs[0].windowId !== undefined) {
+          await browser.windows.update(tabs[0].windowId, { focused: true });
+        }
+        return;
+      }
+    } catch (err) {
+      console.error('Error finding existing dashboard tab:', err);
+    }
 
-    void browser.tabs.create({
+    await browser.tabs.create({
       url: dashboardUrl,
       active: true,
     });
+  }
+
+  // Handle extension action icon click -> open or focus dashboard
+  browser.action.onClicked.addListener(() => {
+    void openOrFocusDashboard();
+  });
+
+  // Handle keyboard shortcut command -> open or focus dashboard
+  browser.commands.onCommand.addListener((command) => {
+    if (command === 'open_dashboard' || command === '_execute_action') {
+      void openOrFocusDashboard();
+    }
   });
 
   // Message handler for tab capture and restoration operations

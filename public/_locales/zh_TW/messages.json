@@ -1,0 +1,363 @@
+{
+  "extName": {
+    "message": "PackTabs",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "一鍵儲存未完成任務的開啟分頁，隨時恢復工作區，告別書籤雜亂。",
+    "description": "Extension description"
+  },
+  "actionTitle": {
+    "message": "PackTabs 分頁管理器",
+    "description": "Browser action title"
+  },
+  "commandOpenDashboard": {
+    "message": "開啟 PackTabs 分頁管理器",
+    "description": "Keyboard shortcut command description"
+  },
+  "tabManager": {
+    "message": "分頁管理"
+  },
+  "aboutPackTabs": {
+    "message": "關於 PackTabs"
+  },
+  "aboutDesc": {
+    "message": "一鍵儲存未完成任務的分頁，隨時恢復工作區。"
+  },
+  "aboutTagline": {
+    "message": "面向任務的分頁與階段管理器"
+  },
+  "currentTabs": {
+    "message": "目前分頁"
+  },
+  "historySnapshots": {
+    "message": "歷史快照"
+  },
+  "savedGroups": {
+    "message": "已儲存分組"
+  },
+  "dropTargets": {
+    "message": "放置目標"
+  },
+  "savedGroupFallback": {
+    "message": "已儲存分組"
+  },
+  "noSavedGroupsYet": {
+    "message": "尚無已儲存分組"
+  },
+  "saveCurrentTabsFirst": {
+    "message": "先將目前分頁儲存為分組"
+  },
+  "currentWindowTabs": {
+    "message": "目前視窗分頁"
+  },
+  "currentTabsSubtitle": {
+    "message": "在儲存前檢查、排除或命名"
+  },
+  "refresh": {
+    "message": "重新整理"
+  },
+  "tabsCount": {
+    "message": "{count} 個分頁"
+  },
+  "tabCountSingle": {
+    "message": "1 個分頁"
+  },
+  "groupNamePlaceholder": {
+    "message": "分組名稱（可選，留空將按時間自動命名）..."
+  },
+  "closeWindowAfterSave": {
+    "message": "儲存後關閉視窗"
+  },
+  "saving": {
+    "message": "儲存中..."
+  },
+  "saveAsTabGroup": {
+    "message": "儲存為分頁分組"
+  },
+  "noCurrentTabs": {
+    "message": "目前視窗沒有開啟的網頁分頁。"
+  },
+  "noMatchingTabs": {
+    "message": "沒有符合搜尋條件的分頁。"
+  },
+  "tooltipDragTab": {
+    "message": "拖曳分頁歸類到分組"
+  },
+  "tooltipOpenBackground": {
+    "message": "Ctrl / Cmd / Shift + 點擊在背景開啟"
+  },
+  "excludeTab": {
+    "message": "從分組中排除"
+  },
+  "excludeTabAria": {
+    "message": "排除分頁"
+  },
+  "historySnapshotsSubtitle": {
+    "message": "自動擷取自已關閉視窗的階段快照"
+  },
+  "searchHistoryPlaceholder": {
+    "message": "搜尋歷史分頁..."
+  },
+  "timeToday": {
+    "message": "今天"
+  },
+  "timeYesterday": {
+    "message": "昨天"
+  },
+  "timePrevious7Days": {
+    "message": "近 7 天"
+  },
+  "timeThisMonth": {
+    "message": "本月"
+  },
+  "timeOlder": {
+    "message": "更早"
+  },
+  "noGroupsYet": {
+    "message": "尚無分頁分組"
+  },
+  "noGroupsYetSubtitle": {
+    "message": "儲存目前分頁以建立你的第一個分頁分組"
+  },
+  "openAll": {
+    "message": "全部開啟"
+  },
+  "save": {
+    "message": "儲存"
+  },
+  "delete": {
+    "message": "刪除"
+  },
+  "cancel": {
+    "message": "取消"
+  },
+  "close": {
+    "message": "關閉"
+  },
+  "saveGroup": {
+    "message": "儲存分組"
+  },
+  "deleteTabGroup": {
+    "message": "刪除分頁分組"
+  },
+  "renameTabGroup": {
+    "message": "重新命名分頁分組"
+  },
+  "saveAsNamedGroup": {
+    "message": "儲存為具名分組"
+  },
+  "editGroupName": {
+    "message": "編輯分組名稱"
+  },
+  "untitledTabGroup": {
+    "message": "未命名分頁分組"
+  },
+  "untitled": {
+    "message": "無標題"
+  },
+  "createdDate": {
+    "message": "建立於 {date}"
+  },
+  "defaultGroupNamePrefix": {
+    "message": "分頁分組"
+  },
+  "removeTabFromGroup": {
+    "message": "從分頁分組中移除分頁"
+  },
+  "removeTabAria": {
+    "message": "移除分頁"
+  },
+  "deleteTabAria": {
+    "message": "刪除分頁"
+  },
+  "noTabsInGroup": {
+    "message": "此分頁分組中沒有分頁。"
+  },
+  "deleteConfirmTitle": {
+    "message": "刪除分頁分組"
+  },
+  "deleteConfirmDesc": {
+    "message": "確定要刪除此分頁分組嗎？此操作無法復原。"
+  },
+  "deleteGroupItemDesc": {
+    "message": "分頁分組：{name}（{count} 個分頁）"
+  },
+  "deleteGroupItemDescShort": {
+    "message": "分組：{name}（{count} 個分頁）"
+  },
+  "nameGroupDialogTitle": {
+    "message": "命名分頁分組"
+  },
+  "nameGroupDialogDesc": {
+    "message": "為此分頁分組指定一個名稱以儲存到已儲存分組。"
+  },
+  "groupNameLabel": {
+    "message": "分組名稱"
+  },
+  "groupNameInputPlaceholder": {
+    "message": "例如：資料調研、專案 Alpha、工作"
+  },
+  "enterNameToSavePlaceholder": {
+    "message": "輸入名稱以儲存分組..."
+  },
+  "groupNameSimplePlaceholder": {
+    "message": "分組名稱..."
+  },
+  "themeLabel": {
+    "message": "外觀主題"
+  },
+  "themeDesc": {
+    "message": "介面外觀偏好"
+  },
+  "themeLight": {
+    "message": "淺色"
+  },
+  "themeDark": {
+    "message": "深色"
+  },
+  "themeSystem": {
+    "message": "跟隨系統"
+  },
+  "languageLabel": {
+    "message": "顯示語言"
+  },
+  "languageDesc": {
+    "message": "介面顯示語言偏好"
+  },
+  "langSystem": {
+    "message": "跟隨系統"
+  },
+  "langEn": {
+    "message": "English"
+  },
+  "langZhCN": {
+    "message": "簡體中文"
+  },
+  "langZhTW": {
+    "message": "繁體中文"
+  },
+  "versionLabel": {
+    "message": "版本"
+  },
+  "authorLabel": {
+    "message": "作者"
+  },
+  "githubLabel": {
+    "message": "GitHub"
+  },
+  "shortcutLabel": {
+    "message": "快捷鍵"
+  },
+  "shortcutDesc": {
+    "message": "可在瀏覽器中設定"
+  },
+  "shortcutNotSet": {
+    "message": "未設定 (預設: Alt + Shift + K)"
+  },
+  "change": {
+    "message": "變更"
+  },
+  "storageQuotaError": {
+    "message": "儲存空間已滿。請刪除部分分組以釋放空間。"
+  },
+  "permissionDeniedError": {
+    "message": "無法存取受限制的系統分頁。"
+  },
+  "invalidUrlError": {
+    "message": "遇到無效的網址。"
+  },
+  "errorTitle": {
+    "message": "錯誤"
+  },
+  "successTitle": {
+    "message": "成功"
+  },
+  "updatedTitle": {
+    "message": "已更新"
+  },
+  "savedTitle": {
+    "message": "已儲存"
+  },
+  "tabGroupNameUpdated": {
+    "message": "分頁分組名稱已更新"
+  },
+  "updateNameFailed": {
+    "message": "更新名稱失敗"
+  },
+  "updateGroupNameFailed": {
+    "message": "更新分組名稱失敗"
+  },
+  "saveGroupFailed": {
+    "message": "儲存分組失敗"
+  },
+  "deleteGroupFailed": {
+    "message": "刪除分頁分組失敗"
+  },
+  "tabGroupDeleted": {
+    "message": "分頁分組已刪除"
+  },
+  "tabRemovedFromGroupSuccess": {
+    "message": "已從分頁分組中移除分頁"
+  },
+  "tabRemovedSuccess": {
+    "message": "分頁已移除"
+  },
+  "removeTabFailed": {
+    "message": "移除分頁失敗"
+  },
+  "openedBackgroundSuccess": {
+    "message": "已在背景開啟 \"{title}\""
+  },
+  "openedBackgroundFailed": {
+    "message": "在背景開啟分頁失敗"
+  },
+  "tabAlreadyInGroup": {
+    "message": "該分頁已在此分組中"
+  },
+  "addedTabToGroupSuccess": {
+    "message": "已將 \"{tab}\" 加入到 \"{group}\""
+  },
+  "movedTabToGroupSuccess": {
+    "message": "已將 \"{tab}\" 移動到 \"{group}\""
+  },
+  "moveTabFailed": {
+    "message": "移動分頁失敗"
+  },
+  "savedSuccessSummary": {
+    "message": "儲存成功"
+  },
+  "savedSuccessDetail": {
+    "message": "已將 {count} 個分頁儲存至 \"{name}\"。"
+  },
+  "saveFailedSummary": {
+    "message": "儲存失敗"
+  },
+  "couldNotSaveTabs": {
+    "message": "無法儲存分頁"
+  },
+  "restoredTabsSuccess": {
+    "message": "已在瀏覽器中恢復 {count} 個分頁"
+  },
+  "restoredTabsSuccessShort": {
+    "message": "已恢復 {count} 個分頁"
+  },
+  "restoreTabsFailed": {
+    "message": "恢復分頁失敗"
+  },
+  "savedAsNamedGroupDetail": {
+    "message": "已在已儲存分組中儲存為 \"{name}\""
+  },
+  "groupConvertedSuccess": {
+    "message": "分組已轉換為永久具名分組"
+  },
+  "themeTooltipSystem": {
+    "message": "外觀主題：跟隨系統 ({current}) • 點擊切換為淺色"
+  },
+  "themeTooltipLight": {
+    "message": "外觀主題：淺色 • 點擊切換為深色"
+  },
+  "themeTooltipDark": {
+    "message": "外觀主題：深色 • 點擊切換為跟隨系統"
+  }
+}

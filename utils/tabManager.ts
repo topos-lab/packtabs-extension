@@ -226,8 +226,8 @@ export async function closeCurrentTabs(): Promise<void> {
 /**
  * Generates an intelligent localized default group name based on timestamp.
  * Example (en-US): "Tab Group · Oct 2, 18:40"
- * Example (zh-CN): "Tab Group · 10月2日 18:40"
+ * Example (zh-CN): "标签分组 · 10月2日 18:40"
  */
-export function generateDefaultGroupName(date: Date = new Date()): string {
-  return formatDefaultGroupName(date);
+export function generateDefaultGroupName(date: Date = new Date(), prefix?: string): string {
+  return formatDefaultGroupName(date, prefix);
 }

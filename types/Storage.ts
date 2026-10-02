@@ -11,6 +11,7 @@ export type StoredTabGroup = Omit<TabGroup, 'createdAt'> & {
 };
 
 export type ThemeMode = 'system' | 'light' | 'dark';
+export type LocaleMode = 'system' | 'en' | 'zh_CN' | 'zh_TW';
 
 /**
  * Settings configuration schema.
@@ -19,6 +20,7 @@ export interface SettingsSchema {
   autoCloseAfterSave: boolean;
   maxHistoryGroups: number;
   theme?: ThemeMode;
+  locale?: LocaleMode;
 }
 
 /**
@@ -47,6 +49,7 @@ export const settingsStorage = storage.defineItem<StorageSchema['settings']>('sy
     autoCloseAfterSave: true,
     maxHistoryGroups: 10,
     theme: 'system',
+    locale: 'system',
   },
 });
 

@@ -16,6 +16,7 @@ import {
   updateTabGroup as updateTabGroupInStorage,
 } from '~/utils/storage';
 import { captureCurrentWindow, deduplicateTabsByUrl, TabPermissionDeniedError } from '~/utils/tabManager';
+import { sortGroupsByDateDesc } from '~/utils/date';
 
 /**
  * Optional error handler that can be registered from the UI
@@ -57,16 +58,12 @@ export const useTabStore = defineStore('tabs', () => {
   const selectedGroupId = ref<string | null>(null);
   const isDraggingTab = ref(false);
 
-  // Helper to sort by timestamp descending (newest first)
-  const sortByDateDesc = (a: TabGroup, b: TabGroup) =>
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-
   // Computed properties (sorted newest first)
   const historyGroups = computed(() =>
-    [...tabGroups.value].filter((g) => g.isHistory).sort(sortByDateDesc)
+    sortGroupsByDateDesc(tabGroups.value.filter((g) => g.isHistory))
   );
   const namedGroups = computed(() =>
-    [...tabGroups.value].filter((g) => !g.isHistory).sort(sortByDateDesc)
+    sortGroupsByDateDesc(tabGroups.value.filter((g) => !g.isHistory))
   );
   const selectedGroup = computed(() => tabGroups.value.find((g) => g.id === selectedGroupId.value) ?? null);
 
@@ -76,7 +73,7 @@ export const useTabStore = defineStore('tabs', () => {
   async function loadGroups(): Promise<void> {
     try {
       const groups = await getTabGroups();
-      tabGroups.value = groups.sort(sortByDateDesc);
+      tabGroups.value = sortGroupsByDateDesc(groups);
     } catch (error) {
       handleError(error, 'Failed to load tab groups');
     }
@@ -87,9 +84,9 @@ export const useTabStore = defineStore('tabs', () => {
     if (typeof tabGroupsStorage?.watch === 'function') {
       tabGroupsStorage.watch((newVal) => {
         if (newVal) {
-          tabGroups.value = Object.values(newVal)
-            .map((stored) => deserializeTabGroup(stored))
-            .sort(sortByDateDesc);
+          tabGroups.value = sortGroupsByDateDesc(
+            Object.values(newVal).map((stored) => deserializeTabGroup(stored))
+          );
         }
       });
     }
@@ -135,7 +132,7 @@ export const useTabStore = defineStore('tabs', () => {
       } else {
         tabGroups.value = [newGroup, ...tabGroups.value];
       }
-      tabGroups.value.sort(sortByDateDesc);
+      tabGroups.value = sortGroupsByDateDesc(tabGroups.value);
 
       return newGroup;
     } catch (error) {
@@ -166,7 +163,7 @@ export const useTabStore = defineStore('tabs', () => {
           ...updates,
           id, // ID must remain immutable
         };
-        tabGroups.value = [...tabGroups.value];
+        tabGroups.value = sortGroupsByDateDesc([...tabGroups.value]);
       } else {
         await loadGroups();
       }

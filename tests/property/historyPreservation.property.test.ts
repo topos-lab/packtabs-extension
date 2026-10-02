@@ -149,6 +149,7 @@ describe('History Group Preservation Property Tests', () => {
 
         // Track the total number of tabs across all groups
         let totalTabs = 0;
+        const createdGroups: TabGroup[] = [];
 
         // Create multiple history groups
         for (const groupData of historyGroupsData) {
@@ -162,6 +163,7 @@ describe('History Group Preservation Property Tests', () => {
             isHistory: true,
           };
 
+          createdGroups.push(historyGroup);
           await saveTabGroup(historyGroup);
         }
 
@@ -177,12 +179,16 @@ describe('History Group Preservation Property Tests', () => {
         }
 
         // Verify each group maintains its own tab count
-        for (let i = 0; i < historyGroupsData.length; i++) {
-          const originalTabCount = historyGroupsData[i].tabs.length;
-          const retrievedGroup = retrievedGroups[i];
+        for (const createdGroup of createdGroups) {
+          const originalTabCount = createdGroup.tabs.length;
+          const retrievedGroup = retrievedGroups.find((g) => g.id === createdGroup.id);
+
+          if (!retrievedGroup) {
+            throw new Error(`History group ${createdGroup.id} not found in retrieved groups`);
+          }
 
           if (retrievedGroup.tabs.length !== originalTabCount) {
-            throw new Error(`Group ${i} should have ${originalTabCount} tabs, got ${retrievedGroup.tabs.length}`);
+            throw new Error(`Group ${createdGroup.id} should have ${originalTabCount} tabs, got ${retrievedGroup.tabs.length}`);
           }
         }
 

@@ -1,11 +1,23 @@
 # PackTabs Extension
 
-A high-performance, minimalist Chrome Manifest V3 browser extension built with the WXT Framework, Vue 3, and Tailwind CSS v4 to effortlessly organize, save, and restore browser tab sessions.
+> **Save open tabs for unfinished tasks in one click, banish bookmark clutter, and restore your workspace instantly.**
 
-## Features
+PackTabs is a productivity-first Chrome Manifest V3 browser extension built with the WXT Framework, Vue 3, and Tailwind CSS v4.
+
+When working on multitasking projects, research topics, or troubleshooting issues, tabs easily pile up. Bookmarking them one by one is tedious, slow, and clutters your permanent browser bookmarks with temporary links. PackTabs eliminates this friction: package all open tabs from an unfinished task into an organized group in one click, cleanly close the window to clear your mind and free browser memory, and restore your entire work context whenever you're ready to pick up where you left off.
+
+## Why PackTabs?
+
+- ⚡ **Task-Oriented Session Capture**: Staging and saving 10+ open tabs takes just one click—no more tedious one-by-one bookmarking.
+- 🧹 **Instant Focus & Memory Relief**: Save current tabs and close the window automatically to eliminate multitasking clutter and free up system RAM.
+- 🚀 **One-Click Workspace Restoration**: Reopen entire task sessions with a single click, or peek into individual links in the background with `Ctrl/Cmd/Shift+Click`.
+- 🛡️ **Zero-Loss History Snapshots**: Closed a window or quit the browser unexpectedly? Open sessions are automatically captured as history snapshots so your context is never lost.
+- 🎯 **Flexible Drag & Drop Categorization**: Move or organize tabs across task groups effortlessly on the sidebar.
+
+## Core Features
 
 - **One-Click Session Capture**: Save all open tabs in the current window with optional window closing.
-- **Smart Auto-Naming**: Intelligent timestamps (e.g. `2026-10-02 20:30`) if no group name is provided.
+- **Smart Auto-Naming**: Intelligent timestamps (e.g. `Tab Group · Oct 2, 20:30`) if no group name is provided.
 - **Automatic History Snapshots**: Silently captures tabs before browser or window closing to prevent data loss.
 - **Drag-and-Drop Categorization**: Drag any tab from Current Tabs or saved groups into other groups on the sidebar.
 - **Background Tab Opening**: Hold `Ctrl`, `Cmd`, or `Shift` and click any tab item to open it silently in the background without switching tabs.

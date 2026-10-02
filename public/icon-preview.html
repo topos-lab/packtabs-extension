@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PackTabs 方案 B 色彩进阶预览 - 告别白色生硬，焕新高级质感</title>
+  <style>
+    :root {
+      --bg-primary: #0b0f19;
+      --card-bg: #151d2f;
+      --border-color: #23314d;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-main);
+      padding: 40px 24px;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 36px;
+      text-align: center;
+    }
+    header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #a5b4fc, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 14px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .specs-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 14px;
+      padding: 6px 16px;
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: 9999px;
+      font-size: 12px;
+      color: #c7d2fe;
+    }
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 28px;
+      margin-bottom: 48px;
+    }
+    .option-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .option-card:hover {
+      border-color: #6366f1;
+      transform: translateY(-2px);
+      box-shadow: 0 16px 32px -12px rgba(0, 0, 0, 0.6);
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .tag-cyan { background: rgba(6, 182, 212, 0.15); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.3); }
+    .tag-indigo { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3); }
+    .tag-amber { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+    .option-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .option-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      min-height: 48px;
+    }
+
+    /* Main Icon Hero Display */
+    .icon-hero {
+      width: 170px;
+      height: 170px;
+      margin: 0 auto 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%);
+    }
+    .icon-hero svg {
+      width: 150px;
+      height: 150px;
+      filter: drop-shadow(0 12px 24px rgba(0,0,0,0.5));
+    }
+
+    /* Multi-size preview strip */
+    .sizes-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+    .sizes-container {
+      background: #090d16;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .sizes-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      gap: 12px;
+      padding: 6px 0;
+    }
+    .size-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .size-item .size-label {
+      font-size: 10px;
+      color: #64748b;
+      font-family: monospace;
+    }
+
+    /* Mock Toolbars (Light and Dark) */
+    .mock-toolbars {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: auto;
+    }
+    .toolbar {
+      border-radius: 8px;
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+    }
+    .toolbar-light {
+      background: #f1f3f4;
+      color: #3c4043;
+      border: 1px solid #dadce0;
+    }
+    .toolbar-dark {
+      background: #202124;
+      color: #bdc1c6;
+      border: 1px solid #3c4043;
+    }
+    .toolbar-title {
+      font-size: 10px;
+      opacity: 0.7;
+      margin-right: auto;
+    }
+    .toolbar-mock-icon {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.25;
+    }
+
+    /* Features list */
+    .features-list {
+      list-style: none;
+      font-size: 12px;
+      color: #cbd5e1;
+      margin: 14px 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .features-list li {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .features-list li::before {
+      content: "✓";
+      color: #10b981;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>PackTabs 方案 B 色彩升级方案</h1>
+      <p>已替换原方案 B 较为生硬刺眼的纯白前景卡片，采用三套与深邃底座完美融合、对比鲜明且极富高级感的全新配色组合。</p>
+      <div class="specs-badge">
+        <span>🎨 摒除生硬白色</span>
+        <span>•</span>
+        <span>⚡ 纯矢量 SVG 512x512 基准</span>
+        <span>•</span>
+        <span>🌓 Chrome & Firefox 双平台深浅主题适配</span>
+      </div>
+    </header>
+
+    <div class="options-grid">
+
+      <!-- ================= 方案 B-1：电光极光青 (Luminous Cyber Cyan) ================= -->
+      <div class="option-card" id="card-b1">
+        <div class="card-header">
+          <div>
+            <div class="option-title">方案 B-1：电光极光青 (Cyber Cyan)</div>
+            <div class="tag tag-cyan">首选推荐 · 清新冷艳科技感</div>
+          </div>
+        </div>
+        <div class="option-desc">
+          前景主标签换用<strong>高饱和电光极光青（Cyan / Teal）</strong>渐变，搭配细腻半透明内微光；与中间紫罗兰标签形成极具张力的流体冷光对比。
+        </div>
+
+        <div class="icon-hero">
+          <!-- Option B-1 SVG (512x512) -->
+          <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="gradB1_bg" x1="64" y1="48" x2="448" y2="464" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#2E1065" />
+                <stop offset="45%" stop-color="#1E1B4B" />
+                <stop offset="100%" stop-color="#0B0F19" />
+              </linearGradient>
+              <!-- Top Active Tab (Cyan Gradient) -->
+              <linearGradient id="gradB1_tabTop" x1="116" y1="240" x2="396" y2="360" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#22D3EE" />
+                <stop offset="100%" stop-color="#0891B2" />
+              </linearGradient>
+              <!-- Mid Tab (Violet Gradient) -->
+              <linearGradient id="gradB1_tabMid" x1="144" y1="180" x2="368" y2="270" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#A855F7" />
+                <stop offset="100%" stop-color="#7C3AED" />
+              </linearGradient>
+              <!-- Bottom Tab (Deep Indigo Gradient) -->
+              <linearGradient id="gradB1_tabBot" x1="172" y1="120" x2="340" y2="206" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#6366F1" />
+                <stop offset="100%" stop-color="#4338CA" />
+              </linearGradient>
+              <filter id="shadowB1_tab" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#05070d" flood-opacity="0.55" />
+              </filter>
+            </defs>
+            <!-- Squircle Container Base -->
+            <rect x="48" y="48" width="416" height="416" rx="104" fill="url(#gradB1_bg)" stroke="#6366F1" stroke-width="4" stroke-opacity="0.5" />
+            <rect x="52" y="52" width="408" height="408" rx="100" stroke="#22D3EE" stroke-width="1.5" stroke-opacity="0.3" />
+            
+            <!-- Bottom Tab 3 (Deep Indigo) -->
+            <g opacity="0.8" filter="url(#shadowB1_tab)">
+              <path d="M172 136C172 127.163 179.163 120 188 120H252C258.365 120 264.12 123.774 266.64 129.62L272 142H324C332.837 142 340 149.163 340 158V206H172V136Z" fill="url(#gradB1_tabBot)" />
+            </g>
+            
+            <!-- Middle Tab 2 (Violet) -->
+            <g opacity="0.95" filter="url(#shadowB1_tab)">
+              <path d="M144 196C144 187.163 151.163 180 160 180H234C240.365 180 246.12 183.774 248.64 189.62L254 202H352C360.837 202 368 209.163 368 218V270H144V196Z" fill="url(#gradB1_tabMid)" />
+            </g>
+            
+            <!-- Foreground Active Tab 1 (Electric Cyan) -->
+            <g filter="url(#shadowB1_tab)">
+              <path d="M116 256C116 247.163 123.163 240 132 240H216C222.365 240 228.12 243.774 230.64 249.62L236 262H380C388.837 262 396 269.163 396 278V344C396 352.837 388.837 360 380 360H132C123.163 360 116 352.837 116 344V256Z" fill="url(#gradB1_tabTop)" />
+              <!-- Highlight gloss on top lip -->
+              <path d="M132 242H216L236 264H380C386 264 394 270 394 278C394 272 386 264 380 264H236L216 242H132C125 242 118 248 118 256C118 250 125 242 132 242Z" fill="white" opacity="0.45" />
+              <!-- Tab status bar elements -->
+              <rect x="144" y="294" width="76" height="14" rx="7" fill="#0E7490" />
+              <rect x="232" y="294" width="104" height="14" rx="7" fill="#67E8F9" opacity="0.9" />
+              <circle cx="366" cy="301" r="7" fill="#FFFFFF" />
+            </g>
+          </svg>
+        </div>
+
+        <ul class="features-list">
+          <li><strong>冰青极光主卡</strong>：彻底消除白色的苍白感，流光溢彩</li>
+          <li><strong>冷色高反差</strong>：深黑紫底座衬托青蓝，极具未来 SaaS 感</li>
+          <li><strong>超强自适应</strong>：在浅色与深色浏览器工具栏中极其显眼</li>
+        </ul>
+
+        <div class="sizes-title">各级规范尺寸渲染测试</div>
+        <div class="sizes-container">
+          <div class="sizes-row">
+            <div class="size-item">
+              <svg width="16" height="16" viewBox="0 0 512 512">
+                <rect x="48" y="48" width="416" height="416" rx="104" fill="#1E1B4B" />
+                <path d="M144 180H234L254 202H368V270H144V180Z" fill="#A855F7" />
+                <path d="M116 240H216L236 262H396V360H116V240Z" fill="#22D3EE" />
+              </svg>
+              <span class="size-label">16px</span>
+            </div>
+            <div class="size-item">
+              <svg width="32" height="32" viewBox="0 0 512 512">
+                <rect x="48" y="48" width="416" height="416" rx="104" fill="#1E1B4B" stroke="#6366F1" stroke-width="12" />
+                <path d="M144 180H234L254 202H368V270H144V180Z" fill="#A855F7" />
+                <path d="M116 240H216L236 262H396V360H116V240Z" fill="#22D3EE" />
+                <rect x="144" y="294" width="76" height="14" rx="7" fill="#0E7490" />
+              </svg>
+              <span class="size-label">32px</span>
+            </div>
+            <div class="size-item">
+              <svg width="48" height="48" viewBox="0 0 512 512">
+                <rect x="48" y="48" width="416" height="416" rx="104" fill="#1E1B4B" stroke="#6366F1" stroke-width="8" />
+                <path d="M172 120H252L272 142H340V206H172V120Z" fill="#6366F1" />
+                <path d="M144 180H234L254 202H368V270H144V180Z" fill="#A855F7" />
+                <path d="M116 240H216L236 262H396V360H116V240Z" fill="#22D3EE" />
+              </svg>
+              <span class="size-label">48px</span>
+            </div>
+            <div class="size-item">
+              <svg width="64" height="64" viewBox="0 0 512 512">
+                <rect x="48" y="48" width="416" height="416" rx="104" fill="#1E1B4B" stroke="#6366F1" stroke-width="6" />
+                <path d="M172 120H252L272 142H340V206H172V120Z" fill="#6366F1" />
+                <path d="M144 180H234L254 202H368V270H144V180Z" fill="#A855F7" />
+                <path d="M116 240H216L236 262H396V360H116V240Z" fill="#22D3EE" />
+              </svg>
+              <span class="size-label">96/128px</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mock-toolbars">
+          <div class="toolbar toolbar-light">
+            <span class="toolbar-title">Chrome 浅色工具栏</span>
+            <span class="toolbar-mock-icon"></span>
+            <svg width="18" height="18" viewBox="0 0 512 512">
+              <rect x="48" y="48" width="416" height="416" rx="104" fill="#1E1B4B" />
+              <path d="M144 180H234L254 202H368V270H144V180Z" fill="#A855F7" />
+              <path d="M116 240H216L236 262H396V360H116V240Z" fill="#22D3EE" />
+            </svg>
+            <span class="toolbar-mock-icon"></span>
+          </div>
+          <div class="toolbar toolbar-dark">
+            <span class="toolbar-title">Firefox 深色工具栏</span>
+            <span class="toolbar-mock-icon"></span>
+            <svg width="18" height="18" viewBox="0 0 512 512">
+              <rect x="48" y="48" width="416" height="416" rx="104" fill="#1E1B4B" stroke="#818CF8" stroke-width="16" />
+              <path d="M144 180H234L254 202H368V270H144V180Z" fill="#A855F7" />
+              <path d="M116 240H216L236 262H396V360H116V240Z" fill="#22D3EE" />
+            </svg>
+            <span class="toolbar-mock-icon"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= 方案 B-2：皇家电光靛蓝 (Royal Electric Indigo) ================= -->
+      <div class="option-card" id="card-b2">
+        <div class="card-header">
+          <div>
+            <div class="option-title">方案 B-2：皇家电光靛蓝 (Royal Indigo)</div>
+            <div class="tag tag-indigo">品牌正统 · 优雅沉稳专业</div>
+          </div>
+        </div>
+        <div class="option-desc">
+          前景主标签换用<strong>PackTabs 原生皇家电光靛蓝（Indigo #6366F1）</strong>，边缘配以精致浅紫微光描边，辅以翡翠绿点，与 Dashboard 界面主色 100% 呼应。
+        </div>
+
+        <div class="icon-hero">
+          <!-- Option B-2 SVG (512x512) -->
+          <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="gradB2_bg" x1="64" y1="48" x2="448" y2="464" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#1E1B4B" />
+                <stop offset="60%" stop-color="#0F172A" />
+                <stop offset="100%" stop-color="#020617" />
+              </linearGradient>
+              <!-- Top Tab (Indigo Gradient) -->
+              <linearGradient id="gradB2_tabTop" x1="116" y1="240" x2="396" y2="360" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#818CF8" />
+                <stop offset="60%" stop-color="#6366F1" />
+                <stop offset="100%" stop-color="#4F46E5" />
+              </linearGradient>
+              <!-- Mid Tab (Sky Cyan Gradient) -->
+              <linearGradient id="gradB2_tabMid" x1="144" y1="180" x2="368" y2="270" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#38BDF8" />
+                <stop offset="100%" stop-color="#0284C7" />
+              </linearGradient>
+              <!-- Bottom Tab (Rose Violet Gradient) -->
+              <linearGradient id="gradB2_tabBot" x1="172" y1="120" x2="340" y2="206" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#C084FC" />
+                <stop offset="100%" stop-color="#9333EA" />
+              </linearGradient>
+              <filter id="shadowB2_tab" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.6" />
+              </filter>
+            </defs>
+            <!-- Squircle Container Base -->
+            <rect x="48" y="48" width="416" height="416" rx="104" fill="url(#gradB2_bg)" stroke="#4F46E5" stroke-width="4" stroke-opacity="0.5" />
+            <rect x="52" y="52" width="408" height="408" rx="100" stroke="#818CF8" stroke-width="1.5" stroke-opacity="0.25" />
+            
+            <!-- Bottom Tab 3 (Rose Violet) -->
+            <g opacity="0.8" filter="url(#shadowB2_tab)">
+              <path d="M172 136C172 127.163 179.163 120 188 120H252C258.365 120 264.12 123.774 266.64 129.62L272 142H324C332.837 142 340 149.163 340 158V206H172V136Z" fill="url(#gradB2_tabBot)" />
+            </g>
+            
+            <!-- Middle Tab 2 (Sky Cyan) -->
+            <g opacity="0.95" filter="url(#shadowB2_tab)">
+              <path d="M144 196C144 187.163 151.163 180 160 180H234C240.365 180 246.12 183.774 248.64 189.62L254 202H352C360.837 202 368 209.163 368 218V270H144V196Z" fill="url(#gradB2_tabMid)" />
+            </g>
+            
+            <!-- Foreground Active Tab 1 (Royal Electric Indigo) -->
+            <g filter="url(#shadowB2_tab)">
+              <path d="M116 256C116 247.163 123.163 240 132 240H216C222.365 240 228.12 243.774 230.64 249.62L236 262H380C388.837 262 396 269.163 396 278V344C396 352.837 388.837 360 380 360H132C123.163 360 116 352.837 116 344V256Z" fill="url(#gradB2_tabTop)" stroke="#C7D2FE" stroke-width="2" stroke-opacity="0.4" />
+              <!-- Subtle inner glow -->
+              <rect x="144" y="294" width="76" height="14" rx="7" fill="#312E81" />
+              <rect x="232" y="294" width="104" height="14" rx="7" fill="#E0E7FF" opacity="0.8" />
+              <circle cx="366" cy="301" r="7" fill="#10B981" />
+            </g>
+          </svg>
+        </div>
+
+        <ul class="features-list">
+          <li><strong>品牌视觉统一</strong>：与扩展 Dashboard 界面蓝紫风格极致吻合</li>
+          <li><strong>精致微光轮廓</strong>：浅紫白光边赋予前景卡片极强立体感</li>
+          <li><strong>翡翠绿就绪点</strong>：细节生动，传递会话已稳妥归档的安心感</li>
+        </ul>
+
+        <div class="sizes-title">各级规范尺寸渲染测试</div>
+        <div class="sizes-container">
+          <div class="sizes-row">
+            <div class="size-item">
+              <svg width="16" height="16" viewBox="0 0 512 512">
+                <rect x="48" y="48" width="416" height="416" rx="104" fill="#0F172A" />
+                <path d="M144 180H234L254 202H368V270H144V180Z" fill="#38BDF8" />
+                <path d="M116 240H216L236 262H396V360H116V240Z" fill="#6366F1" />
+              </svg>
+              <span class="size-label">16px</span>
+            </div>
+            <div class="size-item">
+              <svg width="32" height="32" viewBox="0 0 512 512">
+                <rect x="48" y="48" width="416" height="416" rx="104" fill="#0F172A" stroke="#4F46E5" stroke-width="12" />
+                <path d="M144 180H234L254 202H368V270H144V180Z" fill="#38BDF8" />
+                <path d="M116 240H216L236 262H396V360H116V240Z" fill="#6366F1" />
+              </svg>
+              <span class="size-label">32px</span>
+            </div>
+            <div class="size-item">
+              <svg width="48" height="48" viewBox="0 0 512 512">
+                <rect x="48" y="48" width="416" height="416" rx="104" fill="#0F172A" stroke="#4F46E5" stroke-width="8" />
+                <path d="M172 120H252L272 142H340V206H172V120Z" fill="#9333EA" />
+                <path d="M144 180H234L254 202H368V270H144V180Z" fill="#38BDF8" />
+                <path d="M116 240H216L236 262H396V360H116V240Z" fill="#6366F1" />
+              </svg>
+              <span class="size-label">48px</span>
+            </div>
+            <div class="size-item">
+              <svg width="64" height="64" viewBox="0 0 512 512">
+                <rect x="48" y="48" width="416" height="416" rx="104" fill="#0F172A" stroke="#4F46E5" stroke-width="6" />
+                <path d="M172 120H252L272 142H340V206H172V120Z" fill="#9333EA" />
+                <path d="M144 180H234L254 202H368V270H144V180Z" fill="#38BDF8" />
+                <path d="M116 240H216L236 262H396V360H116V240Z" fill="#6366F1" />
+              </svg>
+              <span class="size-label">96/128px</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mock-toolbars">
+          <div class="toolbar toolbar-light">
+            <span class="toolbar-title">Chrome 浅色工具栏</span>
+            <span class="toolbar-mock-icon"></span>
+            <svg width="18" height="18" viewBox="0 0 512 512">
+              <rect x="48" y="48" width="416" height="416" rx="104" fill="#0F172A" />
+              <path d="M144 180H234L254 202H368V270H144V180Z" fill="#38BDF8" />
+              <path d="M116 240H216L236 262H396V360H116V240Z" fill="#818CF8" />
+            </svg>
+            <span class="toolbar-mock-icon"></span>
+          </div>
+          <div class="toolbar toolbar-dark">
+            <span class="toolbar-title">Firefox 深色工具栏</span>
+            <span class="toolbar-mock-icon"></span>
+            <svg width="18" height="18" viewBox="0 0 512 512">
+              <rect x="48" y="48" width="416" height="416" rx="104" fill="#0F172A" stroke="#818CF8" stroke-width="16" />
+              <path d="M144 180H234L254 202H368V270H144V180Z" fill="#38BDF8" />
+              <path d="M116 240H216L236 262H396V360H116V240Z" fill="#818CF8" />
+            </svg>
+            <span class="toolbar-mock-icon"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= 方案 B-3：晨曦琥珀金 (Sunset Amber Coral) ================= -->
+      <div class="option-card" id="card-b3">
+        <div class="card-header">
+          <div>
+            <div class="option-title">方案 B-3：晨曦琥珀金 (Sunset Amber)</div>
+            <div class="tag tag-amber">冷暖对撞 · 极致醒目跳出</div>
+          </div>
+        </div>
+        <div class="option-desc">
+          前景主标签换用<strong>明艳温暖的晨曦琥珀金 / 珊瑚橙（Amber #F59E0B）</strong>，在深邃蓝夜底座上形成强烈的冷暖对撞，一眼抓住眼球。
+        </div>
+
+        <div class="icon-hero">
+          <!-- Option B-3 SVG (512x512) -->
+          <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="gradB3_bg" x1="64" y1="48" x2="448" y2="464" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#1E1B4B" />
+                <stop offset="50%" stop-color="#172554" />
+                <stop offset="100%" stop-color="#020617" />
+              </linearGradient>
+              <!-- Top Tab (Amber Gradient) -->
+              <linearGradient id="gradB3_tabTop" x1="116" y1="240" x2="396" y2="360" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#FBBF24" />
+                <stop offset="50%" stop-color="#F59E0B" />
+                <stop offset="100%" stop-color="#EA580C" />
+              </linearGradient>
+              <!-- Mid Tab (Violet Gradient) -->
+              <linearGradient id="gradB3_tabMid" x1="144" y1="180" x2="368" y2="270" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#818CF8" />
+                <stop offset="100%" stop-color="#6366F1" />
+              </linearGradient>
+              <!-- Bottom Tab (Cyan Gradient) -->
+              <linearGradient id="gradB3_tabBot" x1="172" y1="120" x2="340" y2="206" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#38BDF8" />
+                <stop offset="100%" stop-color="#0284C7" />
+              </linearGradient>
+              <filter id="shadowB3_tab" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.6" />
+              </filter>
+            </defs>
+            <!-- Squircle Container Base -->
+            <rect x="48" y="48" width="416" height="416" rx="104" fill="url(#gradB3_bg)" stroke="#38BDF8" stroke-width="4" stroke-opacity="0.4" />
+            <rect x="52" y="52" width="408" height="408" rx="100" stroke="#F59E0B" stroke-width="1.5" stroke-opacity="0.25" />
+            
+            <!-- Bottom Tab 3 (Cyan) -->
+            <g opacity="0.8" filter="url(#shadowB3_tab)">
+              <path d="M172 136C172 127.163 179.163 120 188 120H252C258.365 120 264.12 123.774 266.64 129.62L272 142H324C332.837 142 340 149.163 340 158V206H172V136Z" fill="url(#gradB3_tabBot)" />
+            </g>
+            
+            <!-- Middle Tab 2 (Violet) -->
+            <g opacity="0.95" filter="url(#shadowB3_tab)">
+              <path d="M144 196C144 187.163 151.163 180 160 180H234C240.365 180 246.12 183.774 248.64 189.62L254 202H352C360.837 202 368 209.163 368 218V270H144V196Z" fill="url(#gradB3_tabMid)" />
+            </g>
+            
+            <!-- Foreground Active Tab 1 (Sunset Amber) -->
+            <g filter="url(#shadowB3_tab)">
+              <path d="M116 256C116 247.163 123.163 240 132 240H216C222.365 240 228.12 243.774 230.64 249.62L236 262H380C388.837 262 396 269.163 396 278V344C396 352.837 388.837 360 380 360H132C123.163 360 116 352.837 116 344V256Z" fill="url(#gradB3_tabTop)" />
+              <!-- Highlight gloss -->
+              <path d="M132 242H216L236 264H380C386 264 394 270 394 278C394 272 386 264 380 264H236L216 242H132C125 242 118 248 118 256C118 250 125 242 132 242Z" fill="white" opacity="0.4" />
+              <!-- Tab status bar elements -->
+              <rect x="144" y="294" width="76" height="14" rx="7" fill="#9A3412" />
+              <rect x="232" y="294" width="104" height="14" rx="7" fill="#FEF08A" opacity="0.9" />
+              <circle cx="366" cy="301" r="7" fill="#FFFFFF" />
+            </g>
+          </svg>
+        </div>
+
+        <ul class="features-list">
+          <li><strong>冷暖极致反差</strong>：深蓝紫底座托起暖金标签，视觉焦点极其明晰</li>
+          <li><strong>视觉跳出率最高</strong>：在一众蓝白色系的浏览器图标中最为出挑</li>
+          <li><strong>活力热情</strong>：象征待办与恢复充满动能与活力</li>
+        </ul>
+
+        <div class="sizes-title">各级规范尺寸渲染测试</div>
+        <div class="sizes-container">
+          <div class="sizes-row">
+            <div class="size-item">
+              <svg width="16" height="16" viewBox="0 0 512 512">
+                <rect x="48" y="48" width="416" height="416" rx="104" fill="#172554" />
+                <path d="M144 180H234L254 202H368V270H144V180Z" fill="#6366F1" />
+                <path d="M116 240H216L236 262H396V360H116V240Z" fill="#F59E0B" />
+              </svg>
+              <span class="size-label">16px</span>
+            </div>
+            <div class="size-item">
+              <svg width="32" height="32" viewBox="0 0 512 512">
+                <rect x="48" y="48" width="416" height="416" rx="104" fill="#172554" stroke="#F59E0B" stroke-width="12" />
+                <path d="M144 180H234L254 202H368V270H144V180Z" fill="#6366F1" />
+                <path d="M116 240H216L236 262H396V360H116V240Z" fill="#F59E0B" />
+              </svg>
+              <span class="size-label">32px</span>
+            </div>
+            <div class="size-item">
+              <svg width="48" height="48" viewBox="0 0 512 512">
+                <rect x="48" y="48" width="416" height="416" rx="104" fill="#172554" stroke="#F59E0B" stroke-width="8" />
+                <path d="M172 120H252L272 142H340V206H172V120Z" fill="#0284C7" />
+                <path d="M144 180H234L254 202H368V270H144V180Z" fill="#6366F1" />
+                <path d="M116 240H216L236 262H396V360H116V240Z" fill="#F59E0B" />
+              </svg>
+              <span class="size-label">48px</span>
+            </div>
+            <div class="size-item">
+              <svg width="64" height="64" viewBox="0 0 512 512">
+                <rect x="48" y="48" width="416" height="416" rx="104" fill="#172554" stroke="#F59E0B" stroke-width="6" />
+                <path d="M172 120H252L272 142H340V206H172V120Z" fill="#0284C7" />
+                <path d="M144 180H234L254 202H368V270H144V180Z" fill="#6366F1" />
+                <path d="M116 240H216L236 262H396V360H116V240Z" fill="#F59E0B" />
+              </svg>
+              <span class="size-label">96/128px</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mock-toolbars">
+          <div class="toolbar toolbar-light">
+            <span class="toolbar-title">Chrome 浅色工具栏</span>
+            <span class="toolbar-mock-icon"></span>
+            <svg width="18" height="18" viewBox="0 0 512 512">
+              <rect x="48" y="48" width="416" height="416" rx="104" fill="#172554" />
+              <path d="M144 180H234L254 202H368V270H144V180Z" fill="#6366F1" />
+              <path d="M116 240H216L236 262H396V360H116V240Z" fill="#F59E0B" />
+            </svg>
+            <span class="toolbar-mock-icon"></span>
+          </div>
+          <div class="toolbar toolbar-dark">
+            <span class="toolbar-title">Firefox 深色工具栏</span>
+            <span class="toolbar-mock-icon"></span>
+            <svg width="18" height="18" viewBox="0 0 512 512">
+              <rect x="48" y="48" width="416" height="416" rx="104" fill="#172554" stroke="#F59E0B" stroke-width="16" />
+              <path d="M144 180H234L254 202H368V270H144V180Z" fill="#6366F1" />
+              <path d="M116 240H216L236 262H396V360H116V240Z" fill="#F59E0B" />
+            </svg>
+            <span class="toolbar-mock-icon"></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

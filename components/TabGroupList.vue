@@ -3,9 +3,25 @@ import { Layers } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 import TabGroupCard from '~/components/TabGroupCard.vue';
+import { t } from '~/composables/useI18n';
 import type { TabGroup } from '~/types/TabGroup';
 
 type TimeCategory = 'Today' | 'Yesterday' | 'Previous 7 Days' | 'This Month' | 'Older';
+
+function getCategoryLabel(label: TimeCategory): string {
+  switch (label) {
+    case 'Today':
+      return t('timeToday');
+    case 'Yesterday':
+      return t('timeYesterday');
+    case 'Previous 7 Days':
+      return t('timePrevious7Days');
+    case 'This Month':
+      return t('timeThisMonth');
+    case 'Older':
+      return t('timeOlder');
+  }
+}
 
 interface TimeSection {
   label: TimeCategory;
@@ -81,9 +97,9 @@ function handleSave(groupId: string) {
       <div class="h-12 w-12 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 dark:text-zinc-500 mb-3.5">
         <Layers class="h-6 w-6" />
       </div>
-      <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-1">No tab groups yet</h3>
+      <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-1">{{ t('noGroupsYet') }}</h3>
       <p class="text-xs text-zinc-500 dark:text-zinc-400 max-w-xs leading-relaxed">
-        Save your current tabs to create your first tab group
+        {{ t('noGroupsYetSubtitle') }}
       </p>
     </div>
 
@@ -100,7 +116,7 @@ function handleSave(groupId: string) {
         <!-- Section Header Divider -->
         <div class="flex items-center gap-2.5 pt-1">
           <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            {{ section.label }}
+            {{ getCategoryLabel(section.label) }}
           </span>
           <span class="text-[11px] font-medium text-zinc-400 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
             {{ section.groups.length }}

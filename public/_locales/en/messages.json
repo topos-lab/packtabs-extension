@@ -1,0 +1,363 @@
+{
+  "extName": {
+    "message": "PackTabs",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Save open tabs for unfinished tasks in one click and restore your workspace anytime without bookmark clutter.",
+    "description": "Extension description"
+  },
+  "actionTitle": {
+    "message": "PackTabs Manager",
+    "description": "Browser action title"
+  },
+  "commandOpenDashboard": {
+    "message": "Open PackTabs Manager",
+    "description": "Keyboard shortcut command description"
+  },
+  "tabManager": {
+    "message": "Tab Manager"
+  },
+  "aboutPackTabs": {
+    "message": "About PackTabs"
+  },
+  "aboutDesc": {
+    "message": "Save open tabs for unfinished tasks in one click and restore your workspace anytime."
+  },
+  "aboutTagline": {
+    "message": "Task-oriented tab & session manager"
+  },
+  "currentTabs": {
+    "message": "Current Tabs"
+  },
+  "historySnapshots": {
+    "message": "History Snapshots"
+  },
+  "savedGroups": {
+    "message": "Saved Groups"
+  },
+  "dropTargets": {
+    "message": "Drop Targets"
+  },
+  "savedGroupFallback": {
+    "message": "Saved Group"
+  },
+  "noSavedGroupsYet": {
+    "message": "No saved groups yet"
+  },
+  "saveCurrentTabsFirst": {
+    "message": "Save current tabs as a group first"
+  },
+  "currentWindowTabs": {
+    "message": "Current Window Tabs"
+  },
+  "currentTabsSubtitle": {
+    "message": "Review, exclude, or name before saving"
+  },
+  "refresh": {
+    "message": "Refresh"
+  },
+  "tabsCount": {
+    "message": "{count} tabs"
+  },
+  "tabCountSingle": {
+    "message": "1 tab"
+  },
+  "groupNamePlaceholder": {
+    "message": "Group name (optional, or auto-named with time)..."
+  },
+  "closeWindowAfterSave": {
+    "message": "Close window after save"
+  },
+  "saving": {
+    "message": "Saving..."
+  },
+  "saveAsTabGroup": {
+    "message": "Save as Tab Group"
+  },
+  "noCurrentTabs": {
+    "message": "No open web tabs in the current window."
+  },
+  "noMatchingTabs": {
+    "message": "No tabs match your search query."
+  },
+  "tooltipDragTab": {
+    "message": "Drag tab to categorize into group"
+  },
+  "tooltipOpenBackground": {
+    "message": "Ctrl / Cmd / Shift + Click to open in background"
+  },
+  "excludeTab": {
+    "message": "Exclude from group"
+  },
+  "excludeTabAria": {
+    "message": "Exclude tab"
+  },
+  "historySnapshotsSubtitle": {
+    "message": "Automatic session snapshots captured from closed windows"
+  },
+  "searchHistoryPlaceholder": {
+    "message": "Search history tabs..."
+  },
+  "timeToday": {
+    "message": "Today"
+  },
+  "timeYesterday": {
+    "message": "Yesterday"
+  },
+  "timePrevious7Days": {
+    "message": "Previous 7 Days"
+  },
+  "timeThisMonth": {
+    "message": "This Month"
+  },
+  "timeOlder": {
+    "message": "Older"
+  },
+  "noGroupsYet": {
+    "message": "No tab groups yet"
+  },
+  "noGroupsYetSubtitle": {
+    "message": "Save your current tabs to create your first tab group"
+  },
+  "openAll": {
+    "message": "Open All"
+  },
+  "save": {
+    "message": "Save"
+  },
+  "delete": {
+    "message": "Delete"
+  },
+  "cancel": {
+    "message": "Cancel"
+  },
+  "close": {
+    "message": "Close"
+  },
+  "saveGroup": {
+    "message": "Save Group"
+  },
+  "deleteTabGroup": {
+    "message": "Delete tab group"
+  },
+  "renameTabGroup": {
+    "message": "Rename tab group"
+  },
+  "saveAsNamedGroup": {
+    "message": "Save as named group"
+  },
+  "editGroupName": {
+    "message": "Edit group name"
+  },
+  "untitledTabGroup": {
+    "message": "Untitled Tab Group"
+  },
+  "untitled": {
+    "message": "Untitled"
+  },
+  "createdDate": {
+    "message": "Created {date}"
+  },
+  "defaultGroupNamePrefix": {
+    "message": "Tab Group"
+  },
+  "removeTabFromGroup": {
+    "message": "Remove tab from tab group"
+  },
+  "removeTabAria": {
+    "message": "Remove tab"
+  },
+  "deleteTabAria": {
+    "message": "Delete tab"
+  },
+  "noTabsInGroup": {
+    "message": "No tabs in this tab group."
+  },
+  "deleteConfirmTitle": {
+    "message": "Delete Tab Group"
+  },
+  "deleteConfirmDesc": {
+    "message": "Are you sure you want to delete this tab group? This action cannot be undone."
+  },
+  "deleteGroupItemDesc": {
+    "message": "Tab Group: {name} ({count} tabs)"
+  },
+  "deleteGroupItemDescShort": {
+    "message": "Group: {name} ({count} tabs)"
+  },
+  "nameGroupDialogTitle": {
+    "message": "Name Tab Group"
+  },
+  "nameGroupDialogDesc": {
+    "message": "Give this tab group a name to save it to your saved tab groups."
+  },
+  "groupNameLabel": {
+    "message": "Group Name"
+  },
+  "groupNameInputPlaceholder": {
+    "message": "e.g. Research, Project Alpha, Work"
+  },
+  "enterNameToSavePlaceholder": {
+    "message": "Enter name to save group..."
+  },
+  "groupNameSimplePlaceholder": {
+    "message": "Group name..."
+  },
+  "themeLabel": {
+    "message": "Theme"
+  },
+  "themeDesc": {
+    "message": "Appearance preference"
+  },
+  "themeLight": {
+    "message": "Light"
+  },
+  "themeDark": {
+    "message": "Dark"
+  },
+  "themeSystem": {
+    "message": "Auto (System)"
+  },
+  "languageLabel": {
+    "message": "Language"
+  },
+  "languageDesc": {
+    "message": "Display language preference"
+  },
+  "langSystem": {
+    "message": "Auto (System)"
+  },
+  "langEn": {
+    "message": "English"
+  },
+  "langZhCN": {
+    "message": "简体中文"
+  },
+  "langZhTW": {
+    "message": "繁體中文"
+  },
+  "versionLabel": {
+    "message": "Version"
+  },
+  "authorLabel": {
+    "message": "Author"
+  },
+  "githubLabel": {
+    "message": "GitHub"
+  },
+  "shortcutLabel": {
+    "message": "Shortcut"
+  },
+  "shortcutDesc": {
+    "message": "Configurable in Chrome"
+  },
+  "shortcutNotSet": {
+    "message": "Not set (Default: Alt + Shift + K)"
+  },
+  "change": {
+    "message": "Change"
+  },
+  "storageQuotaError": {
+    "message": "Storage quota reached. Please delete some groups to free space."
+  },
+  "permissionDeniedError": {
+    "message": "Permission denied to access restricted system tabs."
+  },
+  "invalidUrlError": {
+    "message": "Invalid URL encountered."
+  },
+  "errorTitle": {
+    "message": "Error"
+  },
+  "successTitle": {
+    "message": "Success"
+  },
+  "updatedTitle": {
+    "message": "Updated"
+  },
+  "savedTitle": {
+    "message": "Saved"
+  },
+  "tabGroupNameUpdated": {
+    "message": "Tab group name updated"
+  },
+  "updateNameFailed": {
+    "message": "Failed to update name"
+  },
+  "updateGroupNameFailed": {
+    "message": "Failed to update group name"
+  },
+  "saveGroupFailed": {
+    "message": "Failed to save group"
+  },
+  "deleteGroupFailed": {
+    "message": "Failed to delete tab group"
+  },
+  "tabGroupDeleted": {
+    "message": "Tab group deleted"
+  },
+  "tabRemovedFromGroupSuccess": {
+    "message": "Tab removed from tab group"
+  },
+  "tabRemovedSuccess": {
+    "message": "Tab removed"
+  },
+  "removeTabFailed": {
+    "message": "Failed to remove tab"
+  },
+  "openedBackgroundSuccess": {
+    "message": "Opened \"{title}\" in background"
+  },
+  "openedBackgroundFailed": {
+    "message": "Failed to open tab in background"
+  },
+  "tabAlreadyInGroup": {
+    "message": "Tab is already in this group"
+  },
+  "addedTabToGroupSuccess": {
+    "message": "Added \"{tab}\" to \"{group}\""
+  },
+  "movedTabToGroupSuccess": {
+    "message": "Moved \"{tab}\" to \"{group}\""
+  },
+  "moveTabFailed": {
+    "message": "Failed to move tab"
+  },
+  "savedSuccessSummary": {
+    "message": "Saved successfully"
+  },
+  "savedSuccessDetail": {
+    "message": "Preserved {count} tabs into \"{name}\"."
+  },
+  "saveFailedSummary": {
+    "message": "Save failed"
+  },
+  "couldNotSaveTabs": {
+    "message": "Could not save tabs"
+  },
+  "restoredTabsSuccess": {
+    "message": "Restored {count} tabs in browser"
+  },
+  "restoredTabsSuccessShort": {
+    "message": "Restored {count} tabs"
+  },
+  "restoreTabsFailed": {
+    "message": "Failed to restore tabs"
+  },
+  "savedAsNamedGroupDetail": {
+    "message": "Saved as \"{name}\" in Saved Groups"
+  },
+  "groupConvertedSuccess": {
+    "message": "Group converted to permanent named group"
+  },
+  "themeTooltipSystem": {
+    "message": "Theme: Auto (System) ({current}) • Click for Light"
+  },
+  "themeTooltipLight": {
+    "message": "Theme: Light • Click for Dark"
+  },
+  "themeTooltipDark": {
+    "message": "Theme: Dark • Click for Auto (System)"
+  }
+}

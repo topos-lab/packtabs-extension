@@ -1,0 +1,363 @@
+{
+  "extName": {
+    "message": "PackTabs",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "一键保存未完成任务的打开标签页，随时恢复工作区，告别书签杂乱。",
+    "description": "Extension description"
+  },
+  "actionTitle": {
+    "message": "PackTabs 标签页管理器",
+    "description": "Browser action title"
+  },
+  "commandOpenDashboard": {
+    "message": "打开 PackTabs 标签页管理器",
+    "description": "Keyboard shortcut command description"
+  },
+  "tabManager": {
+    "message": "标签页管理"
+  },
+  "aboutPackTabs": {
+    "message": "关于 PackTabs"
+  },
+  "aboutDesc": {
+    "message": "一键保存未完成任务的标签页，随时恢复工作区。"
+  },
+  "aboutTagline": {
+    "message": "面向任务的标签页与会话管理器"
+  },
+  "currentTabs": {
+    "message": "当前标签页"
+  },
+  "historySnapshots": {
+    "message": "历史快照"
+  },
+  "savedGroups": {
+    "message": "已保存分组"
+  },
+  "dropTargets": {
+    "message": "放置目标"
+  },
+  "savedGroupFallback": {
+    "message": "已保存分组"
+  },
+  "noSavedGroupsYet": {
+    "message": "暂无已保存分组"
+  },
+  "saveCurrentTabsFirst": {
+    "message": "先将当前标签页保存为分组"
+  },
+  "currentWindowTabs": {
+    "message": "当前窗口标签页"
+  },
+  "currentTabsSubtitle": {
+    "message": "在保存前检查、排除或命名"
+  },
+  "refresh": {
+    "message": "刷新"
+  },
+  "tabsCount": {
+    "message": "{count} 个标签页"
+  },
+  "tabCountSingle": {
+    "message": "1 个标签页"
+  },
+  "groupNamePlaceholder": {
+    "message": "分组名称（可选，留空将按时间自动命名）..."
+  },
+  "closeWindowAfterSave": {
+    "message": "保存后关闭窗口"
+  },
+  "saving": {
+    "message": "保存中..."
+  },
+  "saveAsTabGroup": {
+    "message": "保存为标签分组"
+  },
+  "noCurrentTabs": {
+    "message": "当前窗口没有打开的网页标签页。"
+  },
+  "noMatchingTabs": {
+    "message": "没有符合搜索条件的标签页。"
+  },
+  "tooltipDragTab": {
+    "message": "拖动标签页归类到分组"
+  },
+  "tooltipOpenBackground": {
+    "message": "Ctrl / Cmd / Shift + 单击在后台打开"
+  },
+  "excludeTab": {
+    "message": "从分组中排除"
+  },
+  "excludeTabAria": {
+    "message": "排除标签页"
+  },
+  "historySnapshotsSubtitle": {
+    "message": "自动捕获自已关闭窗口的会话快照"
+  },
+  "searchHistoryPlaceholder": {
+    "message": "搜索历史标签页..."
+  },
+  "timeToday": {
+    "message": "今天"
+  },
+  "timeYesterday": {
+    "message": "昨天"
+  },
+  "timePrevious7Days": {
+    "message": "近 7 天"
+  },
+  "timeThisMonth": {
+    "message": "本月"
+  },
+  "timeOlder": {
+    "message": "更早"
+  },
+  "noGroupsYet": {
+    "message": "暂无标签分组"
+  },
+  "noGroupsYetSubtitle": {
+    "message": "保存当前标签页以创建你的第一个标签分组"
+  },
+  "openAll": {
+    "message": "全部打开"
+  },
+  "save": {
+    "message": "保存"
+  },
+  "delete": {
+    "message": "删除"
+  },
+  "cancel": {
+    "message": "取消"
+  },
+  "close": {
+    "message": "关闭"
+  },
+  "saveGroup": {
+    "message": "保存分组"
+  },
+  "deleteTabGroup": {
+    "message": "删除标签分组"
+  },
+  "renameTabGroup": {
+    "message": "重命名标签分组"
+  },
+  "saveAsNamedGroup": {
+    "message": "保存为具名分组"
+  },
+  "editGroupName": {
+    "message": "编辑分组名称"
+  },
+  "untitledTabGroup": {
+    "message": "未命名标签分组"
+  },
+  "untitled": {
+    "message": "无标题"
+  },
+  "createdDate": {
+    "message": "创建于 {date}"
+  },
+  "defaultGroupNamePrefix": {
+    "message": "标签分组"
+  },
+  "removeTabFromGroup": {
+    "message": "从标签分组中移除标签页"
+  },
+  "removeTabAria": {
+    "message": "移除标签页"
+  },
+  "deleteTabAria": {
+    "message": "删除标签页"
+  },
+  "noTabsInGroup": {
+    "message": "此标签分组中没有标签页。"
+  },
+  "deleteConfirmTitle": {
+    "message": "删除标签分组"
+  },
+  "deleteConfirmDesc": {
+    "message": "确定要删除此标签分组吗？此操作无法撤销。"
+  },
+  "deleteGroupItemDesc": {
+    "message": "标签分组：{name}（{count} 个标签页）"
+  },
+  "deleteGroupItemDescShort": {
+    "message": "分组：{name}（{count} 个标签页）"
+  },
+  "nameGroupDialogTitle": {
+    "message": "命名标签分组"
+  },
+  "nameGroupDialogDesc": {
+    "message": "为此标签分组指定一个名称以保存到已保存分组。"
+  },
+  "groupNameLabel": {
+    "message": "分组名称"
+  },
+  "groupNameInputPlaceholder": {
+    "message": "例如：资料调研、项目 Alpha、工作"
+  },
+  "enterNameToSavePlaceholder": {
+    "message": "输入名称以保存分组..."
+  },
+  "groupNameSimplePlaceholder": {
+    "message": "分组名称..."
+  },
+  "themeLabel": {
+    "message": "外观主题"
+  },
+  "themeDesc": {
+    "message": "界面外观偏好"
+  },
+  "themeLight": {
+    "message": "浅色"
+  },
+  "themeDark": {
+    "message": "深色"
+  },
+  "themeSystem": {
+    "message": "跟随系统"
+  },
+  "languageLabel": {
+    "message": "显示语言"
+  },
+  "languageDesc": {
+    "message": "界面显示语言偏好"
+  },
+  "langSystem": {
+    "message": "跟随系统"
+  },
+  "langEn": {
+    "message": "English"
+  },
+  "langZhCN": {
+    "message": "简体中文"
+  },
+  "langZhTW": {
+    "message": "繁體中文"
+  },
+  "versionLabel": {
+    "message": "版本"
+  },
+  "authorLabel": {
+    "message": "作者"
+  },
+  "githubLabel": {
+    "message": "GitHub"
+  },
+  "shortcutLabel": {
+    "message": "快捷键"
+  },
+  "shortcutDesc": {
+    "message": "可在浏览器中配置"
+  },
+  "shortcutNotSet": {
+    "message": "未设置 (默认: Alt + Shift + K)"
+  },
+  "change": {
+    "message": "修改"
+  },
+  "storageQuotaError": {
+    "message": "存储空间已满。请删除部分分组以释放空间。"
+  },
+  "permissionDeniedError": {
+    "message": "无法访问受限制的系统标签页。"
+  },
+  "invalidUrlError": {
+    "message": "遇到无效的网址。"
+  },
+  "errorTitle": {
+    "message": "错误"
+  },
+  "successTitle": {
+    "message": "成功"
+  },
+  "updatedTitle": {
+    "message": "已更新"
+  },
+  "savedTitle": {
+    "message": "已保存"
+  },
+  "tabGroupNameUpdated": {
+    "message": "标签分组名称已更新"
+  },
+  "updateNameFailed": {
+    "message": "更新名称失败"
+  },
+  "updateGroupNameFailed": {
+    "message": "更新分组名称失败"
+  },
+  "saveGroupFailed": {
+    "message": "保存分组失败"
+  },
+  "deleteGroupFailed": {
+    "message": "删除标签分组失败"
+  },
+  "tabGroupDeleted": {
+    "message": "标签分组已删除"
+  },
+  "tabRemovedFromGroupSuccess": {
+    "message": "已从标签分组中移除标签页"
+  },
+  "tabRemovedSuccess": {
+    "message": "标签页已移除"
+  },
+  "removeTabFailed": {
+    "message": "移除标签页失败"
+  },
+  "openedBackgroundSuccess": {
+    "message": "已在后台打开 \"{title}\""
+  },
+  "openedBackgroundFailed": {
+    "message": "在后台打开标签页失败"
+  },
+  "tabAlreadyInGroup": {
+    "message": "该标签页已在此分组中"
+  },
+  "addedTabToGroupSuccess": {
+    "message": "已将 \"{tab}\" 添加到 \"{group}\""
+  },
+  "movedTabToGroupSuccess": {
+    "message": "已将 \"{tab}\" 移动到 \"{group}\""
+  },
+  "moveTabFailed": {
+    "message": "移动标签页失败"
+  },
+  "savedSuccessSummary": {
+    "message": "保存成功"
+  },
+  "savedSuccessDetail": {
+    "message": "已将 {count} 个标签页保存至 \"{name}\"。"
+  },
+  "saveFailedSummary": {
+    "message": "保存失败"
+  },
+  "couldNotSaveTabs": {
+    "message": "无法保存标签页"
+  },
+  "restoredTabsSuccess": {
+    "message": "已在浏览器中恢复 {count} 个标签页"
+  },
+  "restoredTabsSuccessShort": {
+    "message": "已恢复 {count} 个标签页"
+  },
+  "restoreTabsFailed": {
+    "message": "恢复标签页失败"
+  },
+  "savedAsNamedGroupDetail": {
+    "message": "已在已保存分组中保存为 \"{name}\""
+  },
+  "groupConvertedSuccess": {
+    "message": "分组已转换为永久具名分组"
+  },
+  "themeTooltipSystem": {
+    "message": "外观主题：跟随系统 ({current}) • 点击切换为浅色"
+  },
+  "themeTooltipLight": {
+    "message": "外观主题：浅色 • 点击切换为深色"
+  },
+  "themeTooltipDark": {
+    "message": "外观主题：深色 • 点击切换为跟随系统"
+  }
+}

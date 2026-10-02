@@ -1,6 +1,7 @@
 import type { StorageSchema, StoredTabGroup } from '../types/Storage';
 import { tabGroupsStorage } from '../types/Storage';
 import type { TabGroup, TabItem } from '../types/TabGroup';
+import { sortGroupsByDateDesc } from './date';
 
 /**
  * Storage service interface for tab group operations
@@ -184,7 +185,8 @@ export async function getTabGroups(): Promise<TabGroup[]> {
   return await withRetry(async () => {
     const allGroups = await tabGroupsStorage.getValue();
 
-    return Object.values(allGroups).map((stored) => deserializeTabGroup(stored));
+    const deserialized = Object.values(allGroups).map((stored) => deserializeTabGroup(stored));
+    return sortGroupsByDateDesc(deserialized);
   });
 }
 

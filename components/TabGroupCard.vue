@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader } from '~/components/ui/card';
 import Modal from '~/components/ui/dialog/Modal.vue';
 import { Input } from '~/components/ui/input';
 import { Tooltip } from '~/components/ui/tooltip';
+import { t } from '~/composables/useI18n';
 import { useToast } from '~/composables/useToast';
 import { useTabStore } from '~/stores/useTabStore';
 import type { TabGroup, TabItem } from '~/types/TabGroup';
@@ -92,24 +93,24 @@ async function saveTitle() {
         await tabStore.convertToNamed(props.group.id, trimmed);
         toast.add({
           severity: 'success',
-          summary: 'Saved',
-          detail: `Saved as "${trimmed}" in Saved Groups`,
+          summary: t('savedTitle'),
+          detail: t('savedAsNamedGroupDetail', { name: trimmed }),
           life: 3000,
         });
       } else {
         await tabStore.updateGroup(props.group.id, { name: trimmed });
         toast.add({
           severity: 'success',
-          summary: 'Success',
-          detail: 'Group name updated successfully',
+          summary: t('successTitle'),
+          detail: t('tabGroupNameUpdated'),
           life: 3000,
         });
       }
     } catch (error) {
       toast.add({
         severity: 'error',
-        summary: 'Error',
-        detail: props.group.isHistory ? 'Failed to save group' : 'Failed to update group name',
+        summary: t('errorTitle'),
+        detail: props.group.isHistory ? t('saveGroupFailed') : t('updateGroupNameFailed'),
         life: 3000,
       });
     }
@@ -136,13 +137,13 @@ async function handleTabItemRowClick(event: MouseEvent, tab: TabItem) {
       await openSingleTab(tab, true);
       toast.add({
         severity: 'info',
-        detail: `Opened "${tab.title || 'tab'}" in background`,
+        detail: t('openedBackgroundSuccess', { title: tab.title || t('untitled') }),
         life: 2000,
       });
     } catch {
       toast.add({
         severity: 'error',
-        detail: 'Failed to open tab in background',
+        detail: t('openedBackgroundFailed'),
         life: 3000,
       });
     }
@@ -154,13 +155,13 @@ async function handleDeleteTab(tabId: string) {
     await tabStore.deleteTab(props.group.id, tabId);
     toast.add({
       severity: 'success',
-      detail: 'Tab removed',
+      detail: t('tabRemovedSuccess'),
       life: 2000,
     });
   } catch (error) {
     toast.add({
       severity: 'error',
-      detail: 'Failed to remove tab',
+      detail: t('removeTabFailed'),
       life: 3000,
     });
   }
@@ -191,13 +192,13 @@ async function handleOpenAll() {
     await openTabs(tabList.value);
     toast.add({
       severity: 'success',
-      detail: `Restored ${tabList.value.length} tabs`,
+      detail: t('restoredTabsSuccessShort', { count: tabList.value.length }),
       life: 3000,
     });
   } catch (error) {
     toast.add({
       severity: 'error',
-      detail: 'Failed to restore tabs',
+      detail: t('restoreTabsFailed'),
       life: 3000,
     });
   }
@@ -217,14 +218,14 @@ async function saveWithName() {
       newGroupName.value = '';
       toast.add({
         severity: 'success',
-        summary: 'Saved',
-        detail: 'Group converted to permanent named group',
+        summary: t('savedTitle'),
+        detail: t('groupConvertedSuccess'),
         life: 3000,
       });
     } catch (error) {
       toast.add({
         severity: 'error',
-        detail: 'Failed to save group',
+        detail: t('saveGroupFailed'),
         life: 3000,
       });
     }
@@ -241,13 +242,13 @@ async function confirmDeleteGroup() {
     showDeleteConfirm.value = false;
     toast.add({
       severity: 'success',
-      detail: 'Tab group deleted',
+      detail: t('tabGroupDeleted'),
       life: 3000,
     });
   } catch (error) {
     toast.add({
       severity: 'error',
-      detail: 'Failed to delete group',
+      detail: t('deleteGroupFailed'),
       life: 3000,
     });
   }
@@ -268,8 +269,8 @@ async function confirmDeleteGroup() {
             <button
               type="button"
               class="opacity-0 group-hover/title:opacity-100 transition-opacity p-1 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 rounded cursor-pointer"
-              :title="group.isHistory ? 'Save as named group' : 'Edit group name'"
-              :aria-label="group.isHistory ? 'Save as named group' : 'Edit group name'"
+              :title="group.isHistory ? t('saveAsNamedGroup') : t('editGroupName')"
+              :aria-label="group.isHistory ? t('saveAsNamedGroup') : t('editGroupName')"
               @click="startEditingTitle"
             >
               <Pencil class="h-3.5 w-3.5" />
@@ -280,7 +281,7 @@ async function confirmDeleteGroup() {
               v-model="editedTitle"
               class="h-8 py-1 text-sm font-medium w-full max-w-sm"
               autofocus
-              :placeholder="group.isHistory ? 'Enter name to save group...' : 'Group name...'"
+              :placeholder="group.isHistory ? t('enterNameToSavePlaceholder') : t('groupNameSimplePlaceholder')"
               @keydown="handleTitleKeydown"
               @blur="saveTitle"
             />
@@ -295,14 +296,14 @@ async function confirmDeleteGroup() {
           <!-- Date Subtitle (only shown when group has custom name) -->
           <div v-if="group.name" class="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-normal">
             <Calendar class="h-3.5 w-3.5 opacity-70" />
-            <span>Created {{ formattedDate }}</span>
+            <span>{{ t('createdDate', { date: formattedDate }) }}</span>
           </div>
         </div>
 
         <!-- Right: Actions Toolbar & Tab Count Badge -->
         <div class="flex items-center gap-2 shrink-0">
           <Badge :variant="group.isHistory ? 'secondary' : 'default'" class="shrink-0 font-medium text-xs">
-            {{ tabCount }} tabs
+            {{ t('tabsCount', { count: tabCount }) }}
           </Badge>
 
           <Button
@@ -312,7 +313,7 @@ async function confirmDeleteGroup() {
             @click="handleOpenAll"
           >
             <ExternalLink class="h-3.5 w-3.5" />
-            <span>Open All</span>
+            <span>{{ t('openAll') }}</span>
           </Button>
 
           <Button
@@ -323,19 +324,19 @@ async function confirmDeleteGroup() {
             @click="handleSave"
           >
             <Save class="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" />
-            <span>Save</span>
+            <span>{{ t('save') }}</span>
           </Button>
 
           <Button
             size="sm"
             variant="ghost"
             class="h-7 px-2 text-xs text-zinc-400 dark:text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-medium"
-            title="Delete tab group"
-            aria-label="Delete tab group"
+            :title="t('deleteTabGroup')"
+            :aria-label="t('deleteTabGroup')"
             @click="handleDeleteGroup"
           >
             <Trash2 class="h-3.5 w-3.5" />
-            <span class="sr-only sm:not-sr-only sm:ml-1">Delete</span>
+            <span class="sr-only sm:not-sr-only sm:ml-1">{{ t('delete') }}</span>
           </Button>
         </div>
       </div>
@@ -347,7 +348,7 @@ async function confirmDeleteGroup() {
         <Tooltip
           v-for="tab in tabList"
           :key="tab.id"
-          :content="['Drag tab to categorize into group', 'Ctrl / Cmd / Shift + Click to open in background']"
+          :content="[t('tooltipDragTab'), t('tooltipOpenBackground')]"
           side="top"
           :delay-duration="400"
         >
@@ -382,7 +383,7 @@ async function confirmDeleteGroup() {
 
               <!-- Title -->
               <span class="text-xs font-medium text-zinc-800 dark:text-zinc-200 group-hover/tab:text-indigo-600 dark:group-hover/tab:text-indigo-400 truncate transition-colors">
-                {{ tab.title || 'Untitled' }}
+                {{ tab.title || t('untitled') }}
               </span>
 
               <!-- Domain name -->
@@ -399,8 +400,8 @@ async function confirmDeleteGroup() {
               <button
                 type="button"
                 class="p-1 text-zinc-300 dark:text-zinc-600 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded transition-colors shrink-0 cursor-pointer"
-                title="Remove tab from group"
-                aria-label="Delete tab"
+                :title="t('removeTabFromGroup')"
+                :aria-label="t('deleteTabAria')"
                 @click.stop="handleDeleteTab(tab.id)"
               >
                 <X class="h-3.5 w-3.5" />
@@ -415,27 +416,27 @@ async function confirmDeleteGroup() {
   <!-- Name Input Dialog for History Group Conversion -->
   <Modal
     v-model:open="showNameDialog"
-    title="Name Tab Group"
-    description="Give this tab group a name to save it to your saved tab groups."
+    :title="t('nameGroupDialogTitle')"
+    :description="t('nameGroupDialogDesc')"
   >
     <div class="space-y-4">
       <div>
         <label for="groupName" class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
-          Group Name
+          {{ t('groupNameLabel') }}
         </label>
         <Input
           id="groupName"
           v-model="newGroupName"
           autofocus
-          placeholder="e.g. Research, Project Alpha, Work"
+          :placeholder="t('groupNameInputPlaceholder')"
           @keydown.enter="saveWithName"
         />
       </div>
     </div>
     <template #footer>
-      <Button variant="outline" size="sm" @click="showNameDialog = false">Cancel</Button>
+      <Button variant="outline" size="sm" @click="showNameDialog = false">{{ t('cancel') }}</Button>
       <Button size="sm" :disabled="!newGroupName.trim()" @click="saveWithName">
-        Save Group
+        {{ t('saveGroup') }}
       </Button>
     </template>
   </Modal>
@@ -443,15 +444,15 @@ async function confirmDeleteGroup() {
   <!-- Delete Confirmation Dialog -->
   <Modal
     v-model:open="showDeleteConfirm"
-    title="Delete Tab Group"
-    description="Are you sure you want to delete this tab group? This action cannot be undone."
+    :title="t('deleteConfirmTitle')"
+    :description="t('deleteConfirmDesc')"
   >
     <div class="text-sm text-zinc-600 dark:text-zinc-400">
-      Group: <span class="font-medium text-zinc-900 dark:text-zinc-200">{{ displayTitle }}</span> ({{ tabCount }} tabs)
+      {{ t('deleteGroupItemDescShort', { name: displayTitle, count: tabCount }) }}
     </div>
     <template #footer>
-      <Button variant="outline" size="sm" @click="showDeleteConfirm = false">Cancel</Button>
-      <Button variant="destructive" size="sm" @click="confirmDeleteGroup">Delete</Button>
+      <Button variant="outline" size="sm" @click="showDeleteConfirm = false">{{ t('cancel') }}</Button>
+      <Button variant="destructive" size="sm" @click="confirmDeleteGroup">{{ t('delete') }}</Button>
     </template>
   </Modal>
 </template>

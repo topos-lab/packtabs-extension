@@ -1,5 +1,6 @@
 import { computed, ref } from 'vue';
 
+import { t } from '~/composables/useI18n';
 import { settingsStorage } from '~/types/Storage';
 import type { ThemeMode } from '~/types/Storage';
 
@@ -85,11 +86,11 @@ export function useTheme() {
   const themeTooltip = computed(() => {
     switch (theme.value) {
       case 'system':
-        return `Theme: Auto (System) (${isDark.value ? 'Dark' : 'Light'}) • Click for Light`;
+        return t('themeTooltipSystem', { current: isDark.value ? t('themeDark') : t('themeLight') });
       case 'light':
-        return 'Theme: Light • Click for Dark';
+        return t('themeTooltipLight');
       case 'dark':
-        return 'Theme: Dark • Click for Auto (System)';
+        return t('themeTooltipDark');
     }
   });
 

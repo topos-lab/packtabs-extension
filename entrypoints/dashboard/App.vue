@@ -25,11 +25,13 @@ import Modal from '~/components/ui/dialog/Modal.vue';
 import { Input } from '~/components/ui/input';
 import ToastContainer from '~/components/ui/toast/ToastContainer.vue';
 import { Tooltip } from '~/components/ui/tooltip';
+import { useI18n } from '~/composables/useI18n';
 import { useTheme } from '~/composables/useTheme';
 import { useToast } from '~/composables/useToast';
 import { setStoreErrorHandler, useTabStore } from '~/stores/useTabStore';
 import { settingsStorage } from '~/types/Storage';
 import type { TabGroup, TabItem } from '~/types/TabGroup';
+import { sortGroupsByDateDesc } from '~/utils/date';
 import { normalizeTabs, StorageQuotaExceededError } from '~/utils/storage';
 import {
   captureCurrentWindow,
@@ -45,6 +47,7 @@ import {
 const tabStore = useTabStore();
 const toast = useToast();
 const { theme, isDark, initTheme, setTheme, cycleTheme, themeTooltip } = useTheme();
+const { t, localeMode, setLocale, initLocale } = useI18n();
 
 const searchQuery = ref('');
 
@@ -65,11 +68,13 @@ async function loadShortcut() {
   try {
     if (typeof browser !== 'undefined' && browser.commands?.getAll) {
       const commands = await browser.commands.getAll();
-      const actionCmd = commands.find((c) => c.name === '_execute_action');
-      if (actionCmd && actionCmd.shortcut) {
-        currentShortcut.value = actionCmd.shortcut.split('+').join(' + ');
-      } else if (actionCmd && actionCmd.shortcut === '') {
-        currentShortcut.value = 'Not set (Default: Alt + Shift + K)';
+      const targetCmd =
+        commands.find((c) => c.name === 'open_dashboard') ||
+        commands.find((c) => c.name === '_execute_action');
+      if (targetCmd && targetCmd.shortcut) {
+        currentShortcut.value = targetCmd.shortcut.split('+').join(' + ');
+      } else if (targetCmd && targetCmd.shortcut === '') {
+        currentShortcut.value = t('shortcutNotSet');
       }
     }
   } catch (err) {
@@ -109,16 +114,16 @@ setStoreErrorHandler((error: Error) => {
   let message = error.message;
 
   if (error instanceof StorageQuotaExceededError) {
-    message = 'Storage quota reached. Please delete some groups to free space.';
+    message = t('storageQuotaError');
   } else if (error instanceof TabPermissionDeniedError) {
-    message = 'Permission denied to access restricted system tabs.';
+    message = t('permissionDeniedError');
   } else if (error instanceof InvalidUrlError) {
-    message = 'Invalid URL encountered.';
+    message = t('invalidUrlError');
   }
 
   toast.add({
     severity: 'error',
-    summary: 'Error',
+    summary: t('errorTitle'),
     detail: message,
     life: 5000,
   });
@@ -150,13 +155,13 @@ async function handleTabItemRowClick(event: MouseEvent, tab: TabItem) {
       await openSingleTab(tab, true);
       toast.add({
         severity: 'info',
-        detail: `Opened "${tab.title || 'tab'}" in background`,
+        detail: t('openedBackgroundSuccess', { title: tab.title || t('untitled') }),
         life: 2000,
       });
     } catch (err) {
       toast.add({
         severity: 'error',
-        detail: 'Failed to open tab in background',
+        detail: t('openedBackgroundFailed'),
         life: 3000,
       });
     }
@@ -227,28 +232,28 @@ async function handleDrop(event: DragEvent, targetGroupId: string) {
     if (sourceGroupId === targetGroupId) {
       toast.add({
         severity: 'info',
-        detail: 'Tab is already in this group',
+        detail: t('tabAlreadyInGroup'),
         life: 2000,
       });
       return;
     }
 
     const targetGroup = tabStore.tabGroups.find((g) => g.id === targetGroupId);
-    const targetName = targetGroup?.name || 'Saved Group';
+    const targetName = targetGroup?.name || t('savedGroupFallback');
 
     if (sourceGroupId === 'current') {
       currentTabs.value = currentTabs.value.filter((t) => t.id !== tab.id);
       await tabStore.addTab(targetGroupId, tab);
       toast.add({
         severity: 'success',
-        detail: `Added "${tab.title || 'Tab'}" to "${targetName}"`,
+        detail: t('addedTabToGroupSuccess', { tab: tab.title || t('untitled'), group: targetName }),
         life: 2500,
       });
     } else {
       await tabStore.moveTab(sourceGroupId, targetGroupId, tab.id);
       toast.add({
         severity: 'success',
-        detail: `Moved "${tab.title || 'Tab'}" to "${targetName}"`,
+        detail: t('movedTabToGroupSuccess', { tab: tab.title || t('untitled'), group: targetName }),
         life: 2500,
       });
     }
@@ -256,7 +261,7 @@ async function handleDrop(event: DragEvent, targetGroupId: string) {
     console.error('Failed to move tab:', error);
     toast.add({
       severity: 'error',
-      detail: 'Failed to move tab',
+      detail: t('moveTabFailed'),
       life: 3000,
     });
   } finally {
@@ -270,7 +275,7 @@ async function saveCurrentTabs() {
   isSavingCurrent.value = true;
 
   try {
-    const name = newGroupName.value.trim() || generateDefaultGroupName();
+    const name = newGroupName.value.trim() || generateDefaultGroupName(new Date(), t('defaultGroupNamePrefix'));
     const cleanTabs = deduplicateTabsByUrl(currentTabs.value);
     const group = await tabStore.saveGroup(name, false, cleanTabs);
 
@@ -278,8 +283,8 @@ async function saveCurrentTabs() {
 
     toast.add({
       severity: 'success',
-      summary: 'Saved successfully',
-      detail: `Preserved ${tabsCount} tabs into "${group.name || 'Saved Group'}".`,
+      summary: t('savedSuccessSummary'),
+      detail: t('savedSuccessDetail', { count: tabsCount, name: group.name || t('savedGroupFallback') }),
       life: 3500,
     });
 
@@ -301,8 +306,8 @@ async function saveCurrentTabs() {
   } catch (error) {
     toast.add({
       severity: 'error',
-      summary: 'Save failed',
-      detail: error instanceof Error ? error.message : 'Could not save tabs',
+      summary: t('saveFailedSummary'),
+      detail: error instanceof Error ? error.message : t('couldNotSaveTabs'),
       life: 4000,
     });
   } finally {
@@ -314,11 +319,22 @@ function getGroupTabCount(group: TabGroup): number {
   return deduplicateTabsByUrl(normalizeTabs(group.tabs)).length;
 }
 
+function handleGlobalKeydown(e: KeyboardEvent) {
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+  const modifier = isMac ? e.metaKey : e.altKey;
+  if (modifier && e.shiftKey && (e.key === 'K' || e.key === 'k')) {
+    e.preventDefault();
+    void refreshCurrentTabs();
+  }
+}
+
 onMounted(async () => {
   window.addEventListener('dragend', handleDragEndTab);
   window.addEventListener('drop', handleDragEndTab);
+  window.addEventListener('keydown', handleGlobalKeydown);
 
   void initTheme();
+  void initLocale();
 
   // Load user preference for closeWindowAfterSave
   try {
@@ -350,9 +366,13 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('focus', loadShortcut);
+  window.removeEventListener('keydown', handleGlobalKeydown);
   window.removeEventListener('dragend', handleDragEndTab);
   window.removeEventListener('drop', handleDragEndTab);
 });
+
+// Explicitly sorted named groups descending by createdAt (newest first)
+const sortedNamedGroups = computed(() => sortGroupsByDateDesc(tabStore.namedGroups));
 
 // Filtered current tabs when searching in "Current Tabs" view
 const displayedCurrentTabs = computed(() => {
@@ -378,12 +398,14 @@ const displayedGroups = computed(() => {
     list = [];
   }
 
+  const sortedList = sortGroupsByDateDesc(list);
+
   if (!searchQuery.value.trim()) {
-    return list;
+    return sortedList;
   }
 
   const q = searchQuery.value.toLowerCase().trim();
-  return list.filter((group) => {
+  return sortedList.filter((group) => {
     const matchName = (group.name ?? 'History Tab Group').toLowerCase().includes(q);
     const tabsList = normalizeTabs(group.tabs);
     const matchTabs = tabsList.some(
@@ -409,15 +431,13 @@ function handleSave(groupId: string) {
         <button
           type="button"
           class="flex items-center gap-2.5 pl-1.5 py-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-left overflow-hidden group/brand focus:outline-none cursor-pointer"
-          title="About PackTabs"
+          :title="t('aboutPackTabs')"
           @click="openAboutModal"
         >
-          <div class="h-8 w-8 rounded-lg bg-indigo-600 group-hover/brand:bg-indigo-700 flex items-center justify-center text-white shadow-xs shrink-0 transition-colors">
-            <Layers class="h-4 w-4" />
-          </div>
+          <img src="/icon/48.png" alt="PackTabs Logo" class="h-8 w-8 rounded-lg shrink-0 shadow-xs object-contain" />
           <div class="flex flex-col">
             <span class="font-bold text-sm tracking-tight text-zinc-900 dark:text-zinc-100 group-hover/brand:text-indigo-600 dark:group-hover/brand:text-indigo-400 leading-tight transition-colors">PackTabs</span>
-            <span class="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium leading-tight">Tab Manager</span>
+            <span class="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium leading-tight">{{ t('tabManager') }}</span>
           </div>
         </button>
 
@@ -446,7 +466,7 @@ function handleSave(groupId: string) {
             @click="tabStore.selectedGroupId = 'current'"
           >
             <Layers class="h-4 w-4 shrink-0" />
-            <span class="flex-1 text-left truncate">Current Tabs</span>
+            <span class="flex-1 text-left truncate">{{ t('currentTabs') }}</span>
             <span class="text-[10px] bg-zinc-200/60 dark:bg-zinc-700/60 px-1.5 py-0.5 rounded-full text-zinc-600 dark:text-zinc-300 font-normal">
               {{ currentTabs.length }}
             </span>
@@ -460,7 +480,7 @@ function handleSave(groupId: string) {
             @click="tabStore.selectedGroupId = 'history'"
           >
             <Clock class="h-4 w-4 shrink-0" />
-            <span class="flex-1 text-left truncate">History Snapshots</span>
+            <span class="flex-1 text-left truncate">{{ t('historySnapshots') }}</span>
             <span class="text-[10px] bg-zinc-200/60 dark:bg-zinc-700/60 px-1.5 py-0.5 rounded-full text-zinc-600 dark:text-zinc-300 font-normal">
               {{ tabStore.historyGroups.length }}
             </span>
@@ -474,12 +494,12 @@ function handleSave(groupId: string) {
             :class="tabStore.isDraggingTab ? 'text-indigo-600 dark:text-indigo-400' : 'text-zinc-400 dark:text-zinc-500'"
           >
             <div class="flex items-center gap-1.5">
-              <span>Saved Groups</span>
+              <span>{{ t('savedGroups') }}</span>
               <span
                 v-if="tabStore.isDraggingTab"
                 class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-indigo-50 dark:bg-zinc-800 text-indigo-600 dark:text-indigo-300 border border-indigo-200/80 dark:border-zinc-700"
               >
-                Drop Targets
+                {{ t('dropTargets') }}
               </span>
             </div>
             <span class="text-[10px]" :class="tabStore.isDraggingTab ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : 'text-zinc-400 dark:text-zinc-500 font-normal'">
@@ -489,7 +509,7 @@ function handleSave(groupId: string) {
 
           <div v-if="tabStore.namedGroups.length > 0" class="space-y-1 max-h-60 overflow-y-auto">
             <button
-              v-for="group in tabStore.namedGroups"
+              v-for="group in sortedNamedGroups"
               :key="group.id"
               type="button"
               class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-all relative select-none border cursor-pointer"
@@ -519,7 +539,7 @@ function handleSave(groupId: string) {
                         : 'text-zinc-400 dark:text-zinc-500'
                   ]"
                 />
-                <span class="truncate">{{ group.name || 'Saved Group' }}</span>
+                <span class="truncate">{{ group.name || t('savedGroupFallback') }}</span>
               </div>
               <span
                 class="text-[10px] ml-1 shrink-0 transition-colors font-medium"
@@ -536,11 +556,11 @@ function handleSave(groupId: string) {
             </button>
           </div>
           <div v-else-if="tabStore.isDraggingTab" class="px-2.5 py-2.5 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/60 dark:bg-zinc-800/40 text-center">
-            <p class="text-xs font-medium text-zinc-700 dark:text-zinc-300">No saved groups yet</p>
-            <p class="text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5">Save current tabs as a group first</p>
+            <p class="text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ t('noSavedGroupsYet') }}</p>
+            <p class="text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5">{{ t('saveCurrentTabsFirst') }}</p>
           </div>
           <div v-else class="px-2.5 py-2 text-[11px] text-zinc-400 dark:text-zinc-500 italic">
-            No saved groups yet
+            {{ t('noSavedGroupsYet') }}
           </div>
         </div>
       </div>
@@ -562,10 +582,10 @@ function handleSave(groupId: string) {
                     </div>
                     <div>
                       <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 leading-tight">
-                        Current Window Tabs
+                        {{ t('currentWindowTabs') }}
                       </h2>
                       <p class="text-[11px] text-zinc-400 dark:text-zinc-500 font-normal leading-tight">
-                        Review, exclude, or name before saving
+                        {{ t('currentTabsSubtitle') }}
                       </p>
                     </div>
                   </div>
@@ -579,10 +599,10 @@ function handleSave(groupId: string) {
                       @click="refreshCurrentTabs"
                     >
                       <RotateCcw class="h-3.5 w-3.5 mr-1" :class="{ 'animate-spin': currentTabsLoading }" />
-                      Refresh
+                      {{ t('refresh') }}
                     </Button>
                     <Badge variant="secondary" class="font-medium text-xs">
-                      {{ displayedCurrentTabs.length }} tabs
+                      {{ t('tabsCount', { count: displayedCurrentTabs.length }) }}
                     </Badge>
                   </div>
                 </div>
@@ -593,7 +613,7 @@ function handleSave(groupId: string) {
                 <div class="flex-1 max-w-sm">
                   <Input
                     v-model="newGroupName"
-                    placeholder="Group name (optional, or auto-named with time)..."
+                    :placeholder="t('groupNamePlaceholder')"
                     class="h-8 text-xs bg-zinc-50/60 dark:bg-zinc-800/60 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-zinc-900 focus:border-indigo-500"
                     @keydown.enter="saveCurrentTabs"
                   />
@@ -606,7 +626,7 @@ function handleSave(groupId: string) {
                       v-model="closeWindowAfterSave"
                       class="rounded border-zinc-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5"
                     />
-                    <span>Close window after save</span>
+                    <span>{{ t('closeWindowAfterSave') }}</span>
                   </label>
 
                   <Button
@@ -617,7 +637,7 @@ function handleSave(groupId: string) {
                     @click="saveCurrentTabs"
                   >
                     <Save class="h-3.5 w-3.5" />
-                    <span>{{ isSavingCurrent ? 'Saving...' : 'Save as Tab Group' }}</span>
+                    <span>{{ isSavingCurrent ? t('saving') : t('saveAsTabGroup') }}</span>
                   </Button>
                 </div>
               </div>
@@ -625,15 +645,15 @@ function handleSave(groupId: string) {
               <!-- Tabs List -->
               <CardContent class="p-3">
                 <div v-if="displayedCurrentTabs.length === 0" class="py-12 text-center text-zinc-400 dark:text-zinc-500 text-xs">
-                  <p v-if="currentTabs.length === 0">No open web tabs in the current window.</p>
-                  <p v-else>No tabs match your search query.</p>
+                  <p v-if="currentTabs.length === 0">{{ t('noCurrentTabs') }}</p>
+                  <p v-else>{{ t('noMatchingTabs') }}</p>
                 </div>
 
                 <div v-else class="flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800 max-h-[500px] overflow-y-auto pr-1">
                   <Tooltip
                     v-for="tab in displayedCurrentTabs"
                     :key="tab.id"
-                    :content="['Drag tab to categorize into group', 'Ctrl / Cmd / Shift + Click to open in background']"
+                    :content="[t('tooltipDragTab'), t('tooltipOpenBackground')]"
                     side="top"
                     :delay-duration="400"
                   >
@@ -665,7 +685,7 @@ function handleSave(groupId: string) {
                         </div>
 
                         <span class="text-xs font-medium text-zinc-800 dark:text-zinc-200 group-hover/tab:text-indigo-600 dark:group-hover/tab:text-indigo-400 truncate transition-colors">
-                          {{ tab.title || 'Untitled' }}
+                          {{ tab.title || t('untitled') }}
                         </span>
 
                         <span
@@ -681,8 +701,8 @@ function handleSave(groupId: string) {
                         <button
                           type="button"
                           class="p-1 text-zinc-300 dark:text-zinc-600 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded transition-colors shrink-0 cursor-pointer"
-                          title="Exclude from group"
-                          aria-label="Exclude tab"
+                          :title="t('excludeTab')"
+                          :aria-label="t('excludeTabAria')"
                           @click.stop="removeCurrentTab(tab.id)"
                         >
                           <X class="h-3.5 w-3.5" />
@@ -708,14 +728,14 @@ function handleSave(groupId: string) {
           <div v-else class="space-y-4">
             <div class="flex items-center justify-between gap-4 pb-2 border-b border-zinc-200/60 dark:border-zinc-800">
               <div>
-                <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">History Snapshots</h2>
-                <p class="text-[11px] text-zinc-400 dark:text-zinc-500 font-normal">Automatic session snapshots captured from closed windows</p>
+                <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">{{ t('historySnapshots') }}</h2>
+                <p class="text-[11px] text-zinc-400 dark:text-zinc-500 font-normal">{{ t('historySnapshotsSubtitle') }}</p>
               </div>
               <div class="relative w-64">
                 <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500 pointer-events-none" />
                 <Input
                   v-model="searchQuery"
-                  placeholder="Search history tabs..."
+                  :placeholder="t('searchHistoryPlaceholder')"
                   class="h-8 pl-8 text-xs bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-zinc-900"
                 />
               </div>
@@ -732,17 +752,15 @@ function handleSave(groupId: string) {
     <!-- About PackTabs Modal -->
     <Modal
       v-model:open="showAboutModal"
-      title="About PackTabs"
-      description="Minimalist tab session manager for modern browsers."
+      :title="t('aboutPackTabs')"
+      :description="t('aboutDesc')"
     >
       <div class="space-y-4 py-1">
         <div class="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-100 dark:border-zinc-800">
-          <div class="h-10 w-10 rounded-lg bg-indigo-600 flex items-center justify-center text-white shrink-0 shadow-xs">
-            <Layers class="h-5 w-5" />
-          </div>
+          <img src="/icon/48.png" alt="PackTabs Logo" class="h-10 w-10 rounded-xl shrink-0 shadow-xs object-contain" />
           <div class="min-w-0 flex-1">
             <h4 class="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-tight">PackTabs</h4>
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">High-performance Chrome Tab Group & Session Manager</p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{{ t('aboutTagline') }}</p>
           </div>
         </div>
 
@@ -750,8 +768,8 @@ function handleSave(groupId: string) {
           <!-- Theme Segmented Control -->
           <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
             <div>
-              <span class="text-zinc-400 dark:text-zinc-500">Theme</span>
-              <p class="text-[10px] text-zinc-400 dark:text-zinc-500">Appearance preference</p>
+              <span class="text-zinc-400 dark:text-zinc-500">{{ t('themeLabel') }}</span>
+              <p class="text-[10px] text-zinc-400 dark:text-zinc-500">{{ t('themeDesc') }}</p>
             </div>
             <div class="inline-flex items-center p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60 text-xs">
               <button
@@ -761,7 +779,7 @@ function handleSave(groupId: string) {
                 @click="setTheme('light')"
               >
                 <Sun class="h-3 w-3 text-amber-500" />
-                <span>Light</span>
+                <span>{{ t('themeLight') }}</span>
               </button>
               <button
                 type="button"
@@ -770,7 +788,7 @@ function handleSave(groupId: string) {
                 @click="setTheme('dark')"
               >
                 <Moon class="h-3 w-3 text-zinc-100" />
-                <span>Dark</span>
+                <span>{{ t('themeDark') }}</span>
               </button>
               <button
                 type="button"
@@ -779,17 +797,59 @@ function handleSave(groupId: string) {
                 @click="setTheme('system')"
               >
                 <SunMoon class="h-3 w-3 text-zinc-500 dark:text-zinc-400" />
-                <span>Auto (System)</span>
+                <span>{{ t('themeSystem') }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Language Selector -->
+          <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
+            <div>
+              <span class="text-zinc-400 dark:text-zinc-500">{{ t('languageLabel') }}</span>
+              <p class="text-[10px] text-zinc-400 dark:text-zinc-500">{{ t('languageDesc') }}</p>
+            </div>
+            <div class="inline-flex items-center p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60 text-xs">
+              <button
+                type="button"
+                class="px-2 py-1 rounded-md transition-all font-medium cursor-pointer"
+                :class="localeMode === 'system' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-2xs' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'"
+                @click="setLocale('system')"
+              >
+                <span>{{ t('langSystem') }}</span>
+              </button>
+              <button
+                type="button"
+                class="px-2 py-1 rounded-md transition-all font-medium cursor-pointer"
+                :class="localeMode === 'zh_CN' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-2xs' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'"
+                @click="setLocale('zh_CN')"
+              >
+                <span>{{ t('langZhCN') }}</span>
+              </button>
+              <button
+                type="button"
+                class="px-2 py-1 rounded-md transition-all font-medium cursor-pointer"
+                :class="localeMode === 'zh_TW' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-2xs' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'"
+                @click="setLocale('zh_TW')"
+              >
+                <span>{{ t('langZhTW') }}</span>
+              </button>
+              <button
+                type="button"
+                class="px-2 py-1 rounded-md transition-all font-medium cursor-pointer"
+                :class="localeMode === 'en' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-2xs' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'"
+                @click="setLocale('en')"
+              >
+                <span>{{ t('langEn') }}</span>
               </button>
             </div>
           </div>
 
           <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
-            <span class="text-zinc-400 dark:text-zinc-500">Version</span>
+            <span class="text-zinc-400 dark:text-zinc-500">{{ t('versionLabel') }}</span>
             <span class="font-medium text-zinc-700 dark:text-zinc-200">1.0.0</span>
           </div>
           <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
-            <span class="text-zinc-400 dark:text-zinc-500">Author</span>
+            <span class="text-zinc-400 dark:text-zinc-500">{{ t('authorLabel') }}</span>
             <span class="font-medium text-zinc-700 dark:text-zinc-200">Wesley Chen</span>
           </div>
           <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
@@ -806,8 +866,8 @@ function handleSave(groupId: string) {
           </div>
           <div class="flex items-center justify-between py-1.5">
             <div>
-              <span class="text-zinc-400 dark:text-zinc-500">Shortcut</span>
-              <p class="text-[10px] text-zinc-400 dark:text-zinc-500">Configurable in Chrome</p>
+              <span class="text-zinc-400 dark:text-zinc-500">{{ t('shortcutLabel') }}</span>
+              <p class="text-[10px] text-zinc-400 dark:text-zinc-500">{{ t('shortcutDesc') }}</p>
             </div>
             <div class="flex items-center gap-2">
               <span class="font-mono text-[11px] bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded text-zinc-700 dark:text-zinc-300 font-semibold border border-zinc-200/60 dark:border-zinc-700/60">
@@ -819,14 +879,14 @@ function handleSave(groupId: string) {
                 title="Open Chrome Shortcut Settings"
                 @click="openShortcutSettings"
               >
-                Change
+                {{ t('change') }}
               </button>
             </div>
           </div>
         </div>
       </div>
       <template #footer>
-        <Button size="sm" variant="outline" @click="showAboutModal = false">Close</Button>
+        <Button size="sm" variant="outline" @click="showAboutModal = false">{{ t('close') }}</Button>
       </template>
     </Modal>
   </div>
