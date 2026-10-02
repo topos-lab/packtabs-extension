@@ -1,6 +1,6 @@
 import { storage } from 'wxt/utils/storage';
 
-import type { TabGroup } from './TabGroup';
+import type { TabGroup, TabItem } from './TabGroup';
 
 /**
  * Serialized representation of a TabGroup for persistence.
@@ -44,4 +44,14 @@ export const settingsStorage = storage.defineItem<StorageSchema['settings']>('sy
     autoCloseAfterSave: true,
     maxHistoryGroups: 10,
   },
+});
+
+/**
+ * WXT storage item to persist active tabs per window.
+ * Ensures history snapshots survive browser shutdowns, abrupt terminations,
+ * and MV3 service worker dormancy.
+ * Map of windowId -> TabItem[]
+ */
+export const activeSessionTabsStorage = storage.defineItem<Record<string, TabItem[]>>('local:activeSessionTabs', {
+  defaultValue: {},
 });

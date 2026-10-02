@@ -1,38 +1,165 @@
-import { settingsStorage } from '~/types/Storage';
+import { activeSessionTabsStorage, settingsStorage } from '~/types/Storage';
 import type { TabGroup, TabItem } from '~/types/TabGroup';
 import { saveTabGroup } from '~/utils/storage';
-import { captureCurrentWindow, closeCurrentTabs, openSingleTab, openTabs } from '~/utils/tabManager';
+import { captureCurrentWindow, closeCurrentTabs, openSingleTab, openTabs, validateUrl } from '~/utils/tabManager';
 
 export default defineBackground(() => {
   console.log('PackTabs background service worker initialized', { id: browser.runtime.id });
 
-  // In-memory snapshot of open tabs to safely preserve history snapshots upon browser window close
-  let activeTabsSnapshot: TabItem[] = [];
+  let syncTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  async function updateActiveTabsSnapshot() {
+  /**
+   * Debounced sync of open tabs across all browser windows to storage.
+   * Persists active tabs to disk so history snapshots are preserved even if
+   * the browser exits abruptly or the service worker goes to sleep.
+   */
+  function debouncedSyncSessionTabs() {
+    if (syncTimeout) {
+      clearTimeout(syncTimeout);
+    }
+    syncTimeout = setTimeout(() => {
+      void syncCurrentSessionTabs();
+    }, 400);
+  }
+
+  async function syncCurrentSessionTabs() {
     try {
-      const tabs = await browser.tabs.query({});
-      activeTabsSnapshot = tabs
-        .filter((t) => t.url && !t.url.startsWith('chrome://') && !t.url.startsWith('about:'))
-        .map((t) => ({
-          id: crypto.randomUUID(),
-          url: t.url ?? '',
-          title: t.title ?? 'Untitled',
-          faviconUrl: t.favIconUrl,
-        }));
+      const windows = await browser.windows.getAll({ populate: true });
+      const currentSessionMap: Record<string, TabItem[]> = {};
+
+      for (const win of windows) {
+        if (win.id == null || win.type !== 'normal') continue;
+
+        const validTabs = (win.tabs ?? [])
+          .filter((t) => t.url && validateUrl(t.url))
+          .map((t) => ({
+            id: crypto.randomUUID(),
+            url: t.url ?? '',
+            title: t.title && t.title.trim().length > 0 ? t.title : (t.url ?? 'Untitled'),
+            faviconUrl: t.favIconUrl,
+          }));
+
+        if (validTabs.length > 0) {
+          currentSessionMap[String(win.id)] = validTabs;
+        }
+      }
+
+      await activeSessionTabsStorage.setValue(currentSessionMap);
     } catch {
-      // Ignore during browser teardown
+      // Ignore during browser teardown or window transitions
     }
   }
 
-  // Continuously maintain the tab snapshot
-  browser.tabs.onCreated.addListener(() => void updateActiveTabsSnapshot());
-  browser.tabs.onRemoved.addListener(() => void updateActiveTabsSnapshot());
+  /**
+   * Recovers any tabs from previous sessions that were not converted to history snapshots.
+   * This is critical when the user closes the entire browser (where Chrome exits before
+   * window close handlers can finish writing) or after a restart.
+   */
+  async function recoverPendingHistoryGroups() {
+    try {
+      const sessionMap = await activeSessionTabsStorage.getValue();
+      const windowIds = Object.keys(sessionMap);
+
+      if (windowIds.length === 0) {
+        await syncCurrentSessionTabs();
+        return;
+      }
+
+      const currentWindows = await browser.windows.getAll();
+      const currentWindowIds = new Set(currentWindows.map((w) => String(w.id)));
+
+      const remainingMap = { ...sessionMap };
+      let hasRecovered = false;
+
+      for (const winId of windowIds) {
+        // If the window is not currently open, it belonged to a closed/previous session
+        if (!currentWindowIds.has(winId)) {
+          const tabs = sessionMap[winId];
+          if (tabs && tabs.length > 0) {
+            const historyGroup: TabGroup = {
+              id: crypto.randomUUID(),
+              name: null,
+              createdAt: new Date(),
+              tabs,
+              isHistory: true,
+            };
+
+            await saveTabGroup(historyGroup);
+            hasRecovered = true;
+          }
+          delete remainingMap[winId];
+        }
+      }
+
+      if (hasRecovered) {
+        await activeSessionTabsStorage.setValue(remainingMap);
+      }
+
+      // Re-sync with current open windows
+      await syncCurrentSessionTabs();
+    } catch (error) {
+      console.error('Failed to recover pending history groups:', error);
+    }
+  }
+
+  // --- Browser Event Listeners ---
+
+  // Track tab changes across all windows
+  browser.tabs.onCreated.addListener(() => debouncedSyncSessionTabs());
+
   browser.tabs.onUpdated.addListener((_id, changeInfo) => {
-    if (changeInfo.status === 'complete' || changeInfo.url) {
-      void updateActiveTabsSnapshot();
+    if (changeInfo.status === 'complete' || changeInfo.url || changeInfo.title) {
+      debouncedSyncSessionTabs();
     }
   });
+
+  browser.tabs.onMoved.addListener(() => debouncedSyncSessionTabs());
+  browser.tabs.onAttached.addListener(() => debouncedSyncSessionTabs());
+  browser.tabs.onDetached.addListener(() => debouncedSyncSessionTabs());
+
+  browser.tabs.onRemoved.addListener((_tabId, removeInfo) => {
+    // If the entire window is closing, do NOT wipe the session map for that window
+    // so window close / startup recovery can safely capture its tabs!
+    if (!removeInfo.isWindowClosing) {
+      debouncedSyncSessionTabs();
+    }
+  });
+
+  // Handle individual window close
+  browser.windows.onRemoved.addListener((windowId) => {
+    void (async () => {
+      try {
+        const sessionMap = await activeSessionTabsStorage.getValue();
+        const closedTabs = sessionMap[String(windowId)];
+
+        if (closedTabs && closedTabs.length > 0) {
+          const historyGroup: TabGroup = {
+            id: crypto.randomUUID(),
+            name: null,
+            createdAt: new Date(),
+            tabs: closedTabs,
+            isHistory: true,
+          };
+
+          await saveTabGroup(historyGroup);
+
+          const updatedMap = { ...sessionMap };
+          delete updatedMap[String(windowId)];
+          await activeSessionTabsStorage.setValue(updatedMap);
+        }
+      } catch (error) {
+        console.error('Error creating History Tab Group on window close:', error);
+      }
+    })();
+  });
+
+  // Recover on browser startup
+  browser.runtime.onStartup.addListener(() => {
+    void recoverPendingHistoryGroups();
+  });
+
+  // Also initialize and recover when service worker wakes up
+  void recoverPendingHistoryGroups();
 
   // Handle extension action icon click -> open dashboard
   browser.action.onClicked.addListener(() => {
@@ -42,50 +169,6 @@ export default defineBackground(() => {
       url: dashboardUrl,
       active: true,
     });
-  });
-
-  // Listen for browser window closing to create History Tab Group
-  browser.windows.onRemoved.addListener(() => {
-    void (async () => {
-      try {
-        const windows = await browser.windows.getAll();
-
-        // Only create history group if this was the last window
-        if (windows.length === 0) {
-          // Attempt query first; fall back to the live snapshot if browser has already destroyed tabs
-          const allTabs = await browser.tabs.query({});
-          let tabItems: TabItem[] = [];
-
-          if (allTabs.length > 0) {
-            tabItems = allTabs
-              .filter((tab) => tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('about:'))
-              .map((tab) => ({
-                id: crypto.randomUUID(),
-                url: tab.url ?? '',
-                title: tab.title ?? 'Untitled',
-                faviconUrl: tab.favIconUrl,
-              }));
-          } else if (activeTabsSnapshot.length > 0) {
-            tabItems = activeTabsSnapshot;
-          }
-
-          if (tabItems.length > 0) {
-            const historyGroup: TabGroup = {
-              id: crypto.randomUUID(),
-              name: null,
-              createdAt: new Date(),
-              tabs: tabItems,
-              isHistory: true,
-            };
-
-            await saveTabGroup(historyGroup);
-            console.log('History Tab Group created on browser close', historyGroup);
-          }
-        }
-      } catch (error) {
-        console.error('Error creating History Tab Group on window close:', error);
-      }
-    })();
   });
 
   // Message handler for tab capture and restoration operations

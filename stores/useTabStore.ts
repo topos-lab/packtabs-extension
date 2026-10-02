@@ -1,10 +1,12 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
+import { tabGroupsStorage } from '~/types/Storage';
 import type { TabGroup, TabItem } from '~/types/TabGroup';
 import {
   deleteTabFromGroup as deleteTabFromGroupInStorage,
   deleteTabGroup as deleteTabGroupFromStorage,
+  deserializeTabGroup,
   getTabGroups,
   saveTabGroup as saveTabGroupToStorage,
   StorageQuotaExceededError,
@@ -55,6 +57,19 @@ export const useTabStore = defineStore('tabs', () => {
     } catch (error) {
       handleError(error, 'Failed to load tab groups');
     }
+  }
+
+  // Reactively sync store when storage changes in background or other tabs
+  try {
+    if (typeof tabGroupsStorage?.watch === 'function') {
+      tabGroupsStorage.watch((newVal) => {
+        if (newVal) {
+          tabGroups.value = Object.values(newVal).map((stored) => deserializeTabGroup(stored));
+        }
+      });
+    }
+  } catch {
+    // Ignore in environments where watch is not supported
   }
 
   /**

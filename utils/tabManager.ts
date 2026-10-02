@@ -49,7 +49,7 @@ const RESTRICTED_PROTOCOLS = [
 /**
  * Validates and sanitizes a URL
  */
-function validateUrl(url: string): boolean {
+export function validateUrl(url: string): boolean {
   try {
     const urlObj = new URL(url);
     return !RESTRICTED_PROTOCOLS.some((protocol) => urlObj.protocol.startsWith(protocol));
