@@ -383,7 +383,7 @@ async function confirmDeleteGroup() {
           :key="tab.id"
           draggable="true"
           class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-slate-50 transition-colors select-none cursor-grab active:cursor-grabbing"
-          :title="`${tab.title || 'Untitled'}\n${tab.url}\n(Drag to organize • Ctrl/Shift+Click to open in background)`"
+          title="Drag to categorize • Ctrl/Cmd+Click to open in background"
           @dragstart="handleDragStart($event, tab)"
           @dragend="handleDragEnd"
           @click="handleTabItemRowClick($event, tab)"
