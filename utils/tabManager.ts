@@ -59,6 +59,29 @@ export function validateUrl(url: string): boolean {
 }
 
 /**
+ * Normalizes and deduplicates an array of TabItem objects by URL,
+ * preserving the first occurrence of each unique URL.
+ */
+export function deduplicateTabsByUrl(tabs: TabItem[]): TabItem[] {
+  const seen = new Set<string>();
+  return tabs.filter((tab) => {
+    if (!tab.url) return false;
+    let key = tab.url.trim();
+    try {
+      const u = new URL(key);
+      key = (u.origin + u.pathname.replace(/\/+$/, '') + u.search + u.hash).toLowerCase();
+    } catch {
+      key = key.toLowerCase().replace(/\/+$/, '');
+    }
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
+/**
  * Generates a Manifest V3 compliant favicon URL using Chrome's _favicon endpoint.
  */
 export function getFaviconUrl(pageUrl: string): string {

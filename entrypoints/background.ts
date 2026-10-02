@@ -1,7 +1,7 @@
 import { activeSessionTabsStorage, settingsStorage } from '~/types/Storage';
 import type { TabGroup, TabItem } from '~/types/TabGroup';
 import { saveTabGroup } from '~/utils/storage';
-import { captureCurrentWindow, closeCurrentTabs, openSingleTab, openTabs, validateUrl } from '~/utils/tabManager';
+import { captureCurrentWindow, closeCurrentTabs, deduplicateTabsByUrl, openSingleTab, openTabs, validateUrl } from '~/utils/tabManager';
 
 export default defineBackground(() => {
   console.log('PackTabs background service worker initialized', { id: browser.runtime.id });
@@ -39,8 +39,9 @@ export default defineBackground(() => {
             faviconUrl: t.favIconUrl,
           }));
 
-        if (validTabs.length > 0) {
-          currentSessionMap[String(win.id)] = validTabs;
+        const cleanTabs = deduplicateTabsByUrl(validTabs);
+        if (cleanTabs.length > 0) {
+          currentSessionMap[String(win.id)] = cleanTabs;
         }
       }
 
@@ -76,11 +77,12 @@ export default defineBackground(() => {
         if (!currentWindowIds.has(winId)) {
           const tabs = sessionMap[winId];
           if (tabs && tabs.length > 0) {
+            const cleanTabs = deduplicateTabsByUrl(tabs);
             const historyGroup: TabGroup = {
               id: crypto.randomUUID(),
               name: null,
               createdAt: new Date(),
-              tabs,
+              tabs: cleanTabs,
               isHistory: true,
             };
 
@@ -133,11 +135,12 @@ export default defineBackground(() => {
         const closedTabs = sessionMap[String(windowId)];
 
         if (closedTabs && closedTabs.length > 0) {
+          const cleanTabs = deduplicateTabsByUrl(closedTabs);
           const historyGroup: TabGroup = {
             id: crypto.randomUUID(),
             name: null,
             createdAt: new Date(),
-            tabs: closedTabs,
+            tabs: cleanTabs,
             isHistory: true,
           };
 
@@ -189,12 +192,13 @@ export default defineBackground(() => {
           switch (message.type) {
             case 'CAPTURE_TABS': {
               const tabs = await captureCurrentWindow();
+              const cleanTabs = deduplicateTabsByUrl(tabs);
 
               const newGroup: TabGroup = {
                 id: crypto.randomUUID(),
                 name: message.name ?? null,
                 createdAt: new Date(),
-                tabs,
+                tabs: cleanTabs,
                 isHistory: message.isHistory ?? false,
               };
 

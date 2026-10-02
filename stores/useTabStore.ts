@@ -15,7 +15,7 @@ import {
   StorageQuotaExceededError,
   updateTabGroup as updateTabGroupInStorage,
 } from '~/utils/storage';
-import { captureCurrentWindow, TabPermissionDeniedError } from '~/utils/tabManager';
+import { captureCurrentWindow, deduplicateTabsByUrl, TabPermissionDeniedError } from '~/utils/tabManager';
 
 /**
  * Optional error handler that can be registered from the UI
@@ -94,8 +94,8 @@ export const useTabStore = defineStore('tabs', () => {
         throw new Error('No tabs to save');
       }
 
-      // Detach any Vue reactive proxy to ensure a pure plain array of plain objects
-      const sanitizedTabs = normalizeTabs(rawTabs);
+      // Detach any Vue reactive proxy and deduplicate tabs by URL
+      const sanitizedTabs = deduplicateTabsByUrl(normalizeTabs(rawTabs));
 
       const newGroup: TabGroup = {
         id: crypto.randomUUID(),
@@ -228,7 +228,7 @@ export const useTabStore = defineStore('tabs', () => {
         const tabIndex = sourceGroup.tabs.findIndex((t) => t.id === tabId);
         if (tabIndex >= 0) {
           const [movedTab] = sourceGroup.tabs.splice(tabIndex, 1);
-          targetGroup.tabs.push(movedTab);
+          targetGroup.tabs = deduplicateTabsByUrl([...targetGroup.tabs, movedTab]);
           tabGroups.value = [...tabGroups.value];
         }
       }
@@ -238,16 +238,24 @@ export const useTabStore = defineStore('tabs', () => {
   }
 
   /**
-   * Appends a tab to an existing group with optimistic update
+   * Appends a tab to an existing group with optimistic update and URL deduplication
    */
   async function addTab(groupId: string, tab: TabItem): Promise<void> {
     try {
+      const targetGroup = tabGroups.value.find((g) => g.id === groupId);
+      if (targetGroup) {
+        const cleanUrl = (u: string) => u.trim().toLowerCase().replace(/\/+$/, '');
+        const exists = targetGroup.tabs.some((t) => cleanUrl(t.url) === cleanUrl(tab.url));
+        if (exists) {
+          return; // Skip duplicate tab URL
+        }
+      }
+
       await addTabToGroupInStorage(groupId, tab);
 
       // Optimistic local state update
-      const targetGroup = tabGroups.value.find((g) => g.id === groupId);
       if (targetGroup) {
-        targetGroup.tabs.push(tab);
+        targetGroup.tabs = deduplicateTabsByUrl([...targetGroup.tabs, tab]);
         tabGroups.value = [...tabGroups.value];
       }
     } catch (error) {

@@ -21,7 +21,7 @@ import { useToast } from '~/composables/useToast';
 import { useTabStore } from '~/stores/useTabStore';
 import type { TabGroup, TabItem } from '~/types/TabGroup';
 import { normalizeTabs } from '~/utils/storage';
-import { getFaviconUrl, openSingleTab, openTabs } from '~/utils/tabManager';
+import { deduplicateTabsByUrl, getFaviconUrl, openSingleTab, openTabs } from '~/utils/tabManager';
 
 function getDomain(url?: string): string {
   if (!url) return '';
@@ -106,12 +106,12 @@ const formattedDate = computed(() => {
 
 // Total tabs count
 const totalTabsCount = computed(() => {
-  return normalizeTabs(props.group.tabs).length;
+  return deduplicateTabsByUrl(normalizeTabs(props.group.tabs)).length;
 });
 
 // Filtered tabs by search query
 const filteredTabs = computed(() => {
-  const tabsList = normalizeTabs(props.group.tabs);
+  const tabsList = deduplicateTabsByUrl(normalizeTabs(props.group.tabs));
 
   if (!props.searchQuery?.trim()) {
     return tabsList;
@@ -330,7 +330,7 @@ async function confirmDeleteGroup() {
               <!-- Drag Handle with hover hint -->
               <div
                 class="p-0.5 rounded text-slate-300 group-hover/tab:text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 transition-colors shrink-0 cursor-grab active:cursor-grabbing"
-                title="Drag to left sidebar saved groups to categorize / 拖拽至左侧已保存的分组以分类"
+                title="Drag to left sidebar saved groups to categorize"
               >
                 <GripVertical class="h-3.5 w-3.5" />
               </div>

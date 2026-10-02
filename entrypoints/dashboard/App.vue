@@ -28,6 +28,7 @@ import { normalizeTabs, StorageQuotaExceededError } from '~/utils/storage';
 import {
   captureCurrentWindow,
   closeCurrentTabs,
+  deduplicateTabsByUrl,
   getFaviconUrl,
   InvalidUrlError,
   openSingleTab,
@@ -80,7 +81,8 @@ setStoreErrorHandler((error: Error) => {
 async function refreshCurrentTabs() {
   currentTabsLoading.value = true;
   try {
-    currentTabs.value = await captureCurrentWindow();
+    const raw = await captureCurrentWindow();
+    currentTabs.value = deduplicateTabsByUrl(raw);
   } catch (error) {
     console.error('Failed to capture current window tabs:', error);
   } finally {
@@ -218,7 +220,8 @@ async function saveCurrentTabs() {
 
   try {
     const name = newGroupName.value.trim() || null;
-    const group = await tabStore.saveGroup(name, false, currentTabs.value);
+    const cleanTabs = deduplicateTabsByUrl(currentTabs.value);
+    const group = await tabStore.saveGroup(name, false, cleanTabs);
 
     const tabsCount = getGroupTabCount(group);
 
@@ -249,7 +252,7 @@ async function saveCurrentTabs() {
 }
 
 function getGroupTabCount(group: TabGroup): number {
-  return normalizeTabs(group.tabs).length;
+  return deduplicateTabsByUrl(normalizeTabs(group.tabs)).length;
 }
 
 watch(
@@ -398,12 +401,12 @@ function handleSave(groupId: string) {
               <span>Saved Groups</span>
               <span
                 v-if="tabStore.isDraggingTab"
-                class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-100 text-indigo-700 animate-pulse border border-indigo-200"
+                class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-indigo-50 text-indigo-600 border border-indigo-200/80"
               >
                 Drop Targets
               </span>
             </div>
-            <span class="text-[10px]" :class="tabStore.isDraggingTab ? 'text-indigo-600 font-bold' : 'text-slate-400 font-normal'">
+            <span class="text-[10px]" :class="tabStore.isDraggingTab ? 'text-indigo-600 font-semibold' : 'text-slate-400 font-normal'">
               {{ tabStore.namedGroups.length }}
             </span>
           </div>
@@ -413,15 +416,15 @@ function handleSave(groupId: string) {
               v-for="group in tabStore.namedGroups"
               :key="group.id"
               type="button"
-              class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-all relative select-none"
+              class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-all relative select-none border"
               :class="[
                 dragOverGroupId === group.id
-                  ? 'ring-2 ring-indigo-600 bg-indigo-600 text-white font-semibold scale-[1.03] shadow-md z-10'
+                  ? 'border-indigo-400 bg-indigo-50/90 text-indigo-950 font-semibold ring-2 ring-indigo-500/20 shadow-2xs'
                   : tabStore.isDraggingTab
-                    ? 'border border-dashed border-indigo-300 bg-indigo-50/70 text-indigo-950 font-medium hover:bg-indigo-100/80 shadow-2xs'
+                    ? 'border-dashed border-slate-300 bg-slate-50/60 text-slate-700 hover:border-indigo-300 hover:bg-indigo-50/40'
                     : tabStore.selectedGroupId === group.id
-                      ? 'bg-indigo-50 text-indigo-700 font-semibold'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                      ? 'border-transparent bg-indigo-50 text-indigo-700 font-semibold'
+                      : 'border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               ]"
               @click="tabStore.selectedGroupId = group.id"
               @dragover.prevent="handleDragOver($event, group.id)"
@@ -434,9 +437,9 @@ function handleSave(groupId: string) {
                   class="h-3.5 w-3.5 shrink-0 transition-transform"
                   :class="[
                     dragOverGroupId === group.id
-                      ? 'text-white scale-125'
+                      ? 'text-indigo-600 scale-105'
                       : tabStore.isDraggingTab
-                        ? 'text-indigo-600'
+                        ? 'text-indigo-500'
                         : 'text-slate-400'
                   ]"
                 />
@@ -446,9 +449,9 @@ function handleSave(groupId: string) {
                 class="text-[10px] ml-1 shrink-0 transition-colors font-medium"
                 :class="[
                   dragOverGroupId === group.id
-                    ? 'text-indigo-100 font-bold'
+                    ? 'text-indigo-700 font-bold bg-indigo-100/90 px-1.5 py-0.5 rounded-full'
                     : tabStore.isDraggingTab
-                      ? 'text-indigo-700 font-semibold bg-white/90 px-1 py-0.2 rounded-xs'
+                      ? 'text-slate-500 font-medium'
                       : 'text-slate-400'
                 ]"
               >
@@ -456,9 +459,9 @@ function handleSave(groupId: string) {
               </span>
             </button>
           </div>
-          <div v-else-if="tabStore.isDraggingTab" class="px-2.5 py-2.5 rounded-lg border-2 border-dashed border-indigo-200 bg-indigo-50/70 text-center">
-            <p class="text-xs font-semibold text-indigo-800">No saved groups yet</p>
-            <p class="text-[10px] text-indigo-600 mt-0.5">Save current tabs as a group first to drop tabs here</p>
+          <div v-else-if="tabStore.isDraggingTab" class="px-2.5 py-2.5 rounded-lg border border-dashed border-slate-300 bg-slate-50/60 text-center">
+            <p class="text-xs font-medium text-slate-700">No saved groups yet</p>
+            <p class="text-[10px] text-slate-400 mt-0.5">Save current tabs as a group first</p>
           </div>
           <div v-else class="px-2.5 py-2 text-[11px] text-slate-400 italic">
             No saved groups yet
@@ -469,29 +472,6 @@ function handleSave(groupId: string) {
 
     <!-- Main Workspace -->
     <main class="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-slate-50/60">
-      <!-- Top Bar -->
-      <header class="h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md px-6 flex items-center justify-between gap-4 shrink-0 z-10">
-        <!-- Title & Search -->
-        <div class="flex items-center gap-4 flex-1 max-w-xl">
-          <h1 class="text-base font-semibold text-slate-800 tracking-tight shrink-0">
-            <span v-if="tabStore.selectedGroupId === 'current'">Current Tabs</span>
-            <span v-else-if="tabStore.selectedGroupId === 'history'">History Snapshots</span>
-            <span v-else-if="tabStore.selectedGroup">{{ tabStore.selectedGroup.name || 'Saved Group' }}</span>
-            <span v-else>Tabs Manager</span>
-          </h1>
-
-          <!-- Search Input -->
-          <div class="relative w-full max-w-xs">
-            <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-            <Input
-              v-model="searchQuery"
-              placeholder="Search groups or tabs..."
-              class="h-8 pl-8 text-xs bg-slate-50 border-slate-200 focus:bg-white"
-            />
-          </div>
-        </div>
-      </header>
-
       <!-- Content Area -->
       <section class="flex-1 overflow-y-auto p-6">
         <div class="w-full max-w-6xl mx-auto">
@@ -591,7 +571,7 @@ function handleSave(groupId: string) {
                       <!-- Drag Handle with hover hint -->
                       <div
                         class="p-0.5 rounded text-slate-300 group-hover/tab:text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 transition-colors shrink-0 cursor-grab active:cursor-grabbing"
-                        title="Drag to left sidebar saved groups to categorize / 拖拽至左侧已保存的分组以分类"
+                        title="Drag to left sidebar saved groups to categorize"
                       >
                         <GripVertical class="h-3.5 w-3.5" />
                       </div>
@@ -645,7 +625,21 @@ function handleSave(groupId: string) {
           </div>
 
           <!-- History Snapshots Feed / Fallback Groups List -->
-          <div v-else>
+          <div v-else class="space-y-4">
+            <div class="flex items-center justify-between gap-4 pb-2 border-b border-slate-200/60">
+              <div>
+                <h2 class="text-sm font-semibold text-slate-900 tracking-tight">History Snapshots</h2>
+                <p class="text-[11px] text-slate-400 font-normal">Automatic session snapshots captured from closed windows</p>
+              </div>
+              <div class="relative w-64">
+                <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                <Input
+                  v-model="searchQuery"
+                  placeholder="Search history tabs..."
+                  class="h-8 pl-8 text-xs bg-white border-slate-200 focus:bg-white"
+                />
+              </div>
+            </div>
             <TabGroupList :groups="displayedGroups" @save="handleSave" />
           </div>
         </div>
