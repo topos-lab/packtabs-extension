@@ -57,9 +57,17 @@ export const useTabStore = defineStore('tabs', () => {
   const selectedGroupId = ref<string | null>(null);
   const isDraggingTab = ref(false);
 
-  // Computed properties
-  const historyGroups = computed(() => tabGroups.value.filter((g) => g.isHistory));
-  const namedGroups = computed(() => tabGroups.value.filter((g) => !g.isHistory));
+  // Helper to sort by timestamp descending (newest first)
+  const sortByDateDesc = (a: TabGroup, b: TabGroup) =>
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+
+  // Computed properties (sorted newest first)
+  const historyGroups = computed(() =>
+    [...tabGroups.value].filter((g) => g.isHistory).sort(sortByDateDesc)
+  );
+  const namedGroups = computed(() =>
+    [...tabGroups.value].filter((g) => !g.isHistory).sort(sortByDateDesc)
+  );
   const selectedGroup = computed(() => tabGroups.value.find((g) => g.id === selectedGroupId.value) ?? null);
 
   /**
@@ -67,7 +75,8 @@ export const useTabStore = defineStore('tabs', () => {
    */
   async function loadGroups(): Promise<void> {
     try {
-      tabGroups.value = await getTabGroups();
+      const groups = await getTabGroups();
+      tabGroups.value = groups.sort(sortByDateDesc);
     } catch (error) {
       handleError(error, 'Failed to load tab groups');
     }
@@ -78,7 +87,9 @@ export const useTabStore = defineStore('tabs', () => {
     if (typeof tabGroupsStorage?.watch === 'function') {
       tabGroupsStorage.watch((newVal) => {
         if (newVal) {
-          tabGroups.value = Object.values(newVal).map((stored) => deserializeTabGroup(stored));
+          tabGroups.value = Object.values(newVal)
+            .map((stored) => deserializeTabGroup(stored))
+            .sort(sortByDateDesc);
         }
       });
     }
@@ -124,6 +135,7 @@ export const useTabStore = defineStore('tabs', () => {
       } else {
         tabGroups.value = [newGroup, ...tabGroups.value];
       }
+      tabGroups.value.sort(sortByDateDesc);
 
       return newGroup;
     } catch (error) {

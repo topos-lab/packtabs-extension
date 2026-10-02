@@ -123,6 +123,45 @@ describe('useTabStore', () => {
       expect(store.namedGroups.map((g) => g.id)).toContain('named-2');
     });
 
+    it('should sort named groups by time descending with newest first', async () => {
+      const store = useTabStore();
+
+      const olderDate = new Date('2026-01-01T10:00:00Z');
+      const newerDate = new Date('2026-05-01T10:00:00Z');
+      const newestDate = new Date('2026-10-02T10:00:00Z');
+
+      await tabGroupsStorage.setValue({
+        'group-old': {
+          id: 'group-old',
+          name: 'Old Group',
+          createdAt: olderDate.toISOString(),
+          tabs: [],
+          isHistory: false,
+        },
+        'group-newest': {
+          id: 'group-newest',
+          name: 'Newest Group',
+          createdAt: newestDate.toISOString(),
+          tabs: [],
+          isHistory: false,
+        },
+        'group-mid': {
+          id: 'group-mid',
+          name: 'Mid Group',
+          createdAt: newerDate.toISOString(),
+          tabs: [],
+          isHistory: false,
+        },
+      });
+
+      await store.loadGroups();
+
+      expect(store.namedGroups).toHaveLength(3);
+      expect(store.namedGroups[0].id).toBe('group-newest');
+      expect(store.namedGroups[1].id).toBe('group-mid');
+      expect(store.namedGroups[2].id).toBe('group-old');
+    });
+
     it('should return selected group when selectedGroupId is set', async () => {
       const store = useTabStore();
 
