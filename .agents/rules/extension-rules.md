@@ -20,3 +20,18 @@ trigger: always_on
 4. **Storage & Capacity**:
    - Store large or variable tab lists in `local:`, not `sync:`, to prevent exceeding Chrome's 8KB single-item sync quota.
    - Use atomic serialization queues (mutex) to avoid concurrent write loss.
+
+5. **Commands & Keyboard Shortcuts**:
+   - Chrome caches command bindings per extension ID in user Profile `Preferences`. If a command was previously set or cleared, updating `suggested_key` for the same command will NOT overwrite existing user profiles. Introduce a new command name (e.g. `open_dashboard`) if an automatic reset is required.
+   - Always register `browser.commands.onCommand.addListener` in background Service Worker for non-action commands.
+   - When opening dashboard pages from shortcuts/actions, always query existing tabs (`browser.tabs.query`) and focus the active window/tab instead of creating duplicate tabs.
+
+6. **Date Sorting & Property Testing Safety**:
+   - When reading collections from dictionary storages (`Record<string, T>`), key order is arbitrary. Always sort explicitly.
+   - When sorting by timestamps, always use safe helpers (e.g. `getTimeSafe`) returning 0 for missing/invalid dates to prevent `NaN` from breaking V8 Timsort.
+   - In fast-check property tests, never assert element correspondence using array indices; always match elements by unique ID (`retrieved.find(x => x.id === item.id)`).
+
+7. **Product Positioning & User-Centric Copy**:
+   - Avoid empty technical buzzwords ("Minimalist", "High-performance") as primary value propositions.
+   - Focus copy on core user productivity (e.g., saving task-focused tabs in one click vs. tedious bookmarking clutter, instant context restoration).
+   - Ensure Dialog descriptions and inner card subtitles do not duplicate identical wording.
