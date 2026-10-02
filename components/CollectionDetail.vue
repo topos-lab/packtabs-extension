@@ -335,7 +335,7 @@ async function confirmDeleteGroup() {
           >
             <div
               draggable="true"
-              class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors select-none cursor-pointer"
+              class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors select-none cursor-move"
               @dragstart="handleDragStart($event, tab)"
               @dragend="handleDragEnd"
               @click="handleTabItemRowClick($event, tab)"

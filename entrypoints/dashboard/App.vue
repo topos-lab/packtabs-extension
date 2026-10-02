@@ -55,7 +55,7 @@ const newGroupName = ref('');
 const closeWindowAfterSave = ref(true);
 const isSavingCurrent = ref(false);
 const showAboutModal = ref(false);
-const currentShortcut = ref('Alt + Shift + P');
+const currentShortcut = ref('Alt + Shift + K');
 
 async function loadShortcut() {
   try {
@@ -65,7 +65,7 @@ async function loadShortcut() {
       if (actionCmd && actionCmd.shortcut) {
         currentShortcut.value = actionCmd.shortcut.split('+').join(' + ');
       } else if (actionCmd && actionCmd.shortcut === '') {
-        currentShortcut.value = 'Not set (Default: Alt + Shift + P)';
+        currentShortcut.value = 'Not set (Default: Alt + Shift + K)';
       }
     }
   } catch (err) {
@@ -627,7 +627,7 @@ function handleSave(groupId: string) {
                   >
                     <div
                       draggable="true"
-                      class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors select-none cursor-pointer"
+                      class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors select-none cursor-move"
                       @dragstart="handleDragStartCurrentTab($event, tab)"
                       @dragend="handleDragEndTab"
                       @click="handleTabItemRowClick($event, tab)"

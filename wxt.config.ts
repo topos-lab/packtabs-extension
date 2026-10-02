@@ -36,8 +36,8 @@ export default defineConfig({
     commands: {
       _execute_action: {
         suggested_key: {
-          default: 'Alt+Shift+P',
-          mac: 'Alt+Shift+P',
+          default: 'Alt+Shift+K',
+          mac: 'Command+Shift+K',
         },
         description: 'Open PackTabs Manager',
       },
