@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import {
-  Bookmark,
   Clock,
   Folder,
   Globe,
@@ -14,6 +13,7 @@ import {
 } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
 
+import CollectionDetail from '~/components/CollectionDetail.vue';
 import TabGroupList from '~/components/TabGroupList.vue';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
@@ -160,8 +160,6 @@ const displayedGroups = computed(() => {
 
   if (tabStore.selectedGroupId === 'history') {
     list = tabStore.historyGroups;
-  } else if (tabStore.selectedGroupId === 'saved' || tabStore.selectedGroupId === 'named') {
-    list = tabStore.namedGroups;
   } else if (tabStore.selectedGroupId && tabStore.selectedGroupId !== 'current') {
     const specific = tabStore.tabGroups.find((g) => g.id === tabStore.selectedGroupId);
     list = specific ? [specific] : [];
@@ -255,27 +253,16 @@ function handleSave(groupId: string) {
             </span>
           </button>
 
-          <!-- 3. Saved Groups -->
-          <button
-            type="button"
-            class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors"
-            :class="tabStore.selectedGroupId === 'saved' ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'"
-            @click="tabStore.selectedGroupId = 'saved'"
-          >
-            <Bookmark class="h-4 w-4 shrink-0" />
-            <span v-if="isSidebarOpen" class="flex-1 text-left truncate">Saved Groups</span>
-            <span v-if="isSidebarOpen" class="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded-full text-slate-500 font-normal">
-              {{ tabStore.namedGroups.length }}
-            </span>
-          </button>
         </div>
 
-        <!-- Collections (Named Groups List) -->
-        <div v-if="isSidebarOpen && tabStore.namedGroups.length > 0" class="space-y-1">
-          <div class="px-2.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
-            Collections
+        <!-- Saved Groups List -->
+        <div v-if="isSidebarOpen" class="space-y-1">
+          <div class="px-2.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+            <span>Saved Groups</span>
+            <span class="text-[10px] font-normal text-slate-400">{{ tabStore.namedGroups.length }}</span>
           </div>
-          <div class="space-y-0.5 max-h-60 overflow-y-auto">
+
+          <div v-if="tabStore.namedGroups.length > 0" class="space-y-0.5 max-h-60 overflow-y-auto">
             <button
               v-for="group in tabStore.namedGroups"
               :key="group.id"
@@ -291,6 +278,9 @@ function handleSave(groupId: string) {
               <span class="text-[10px] text-slate-400 ml-1">{{ group.tabs.length }}</span>
             </button>
           </div>
+          <div v-else class="px-2.5 py-2 text-[11px] text-slate-400 italic">
+            No saved groups yet
+          </div>
         </div>
       </div>
     </aside>
@@ -304,9 +294,8 @@ function handleSave(groupId: string) {
           <h1 class="text-base font-semibold text-slate-800 tracking-tight shrink-0">
             <span v-if="tabStore.selectedGroupId === 'current'">Current Tabs</span>
             <span v-else-if="tabStore.selectedGroupId === 'history'">History Snapshots</span>
-            <span v-else-if="tabStore.selectedGroupId === 'saved'">Saved Groups</span>
-            <span v-else-if="tabStore.selectedGroup">{{ tabStore.selectedGroup.name }}</span>
-            <span v-else>All Tab Groups</span>
+            <span v-else-if="tabStore.selectedGroup">{{ tabStore.selectedGroup.name || 'Saved Group' }}</span>
+            <span v-else>Tabs Manager</span>
           </h1>
 
           <!-- Search Input -->
@@ -323,7 +312,7 @@ function handleSave(groupId: string) {
 
       <!-- Content Area -->
       <section class="flex-1 overflow-y-auto p-6">
-        <div class="max-w-4xl mx-auto">
+        <div class="w-full max-w-6xl mx-auto">
           <!-- Current Tabs View -->
           <div v-if="tabStore.selectedGroupId === 'current'" class="space-y-4">
             <Card class="overflow-hidden border border-slate-200/90 shadow-xs">
@@ -453,7 +442,16 @@ function handleSave(groupId: string) {
             </Card>
           </div>
 
-          <!-- Other Views (Saved Groups, History Snapshots, Specific Group) -->
+          <!-- Collection Detail View (when selecting a saved group) -->
+          <div v-else-if="tabStore.selectedGroup && !tabStore.selectedGroup.isHistory">
+            <CollectionDetail
+              :group="tabStore.selectedGroup"
+              :search-query="searchQuery"
+              @deleted="tabStore.selectedGroupId = 'current'"
+            />
+          </div>
+
+          <!-- History Snapshots Feed / Fallback Groups List -->
           <div v-else>
             <TabGroupList :groups="displayedGroups" @save="handleSave" />
           </div>
