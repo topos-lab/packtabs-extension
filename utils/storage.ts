@@ -1,6 +1,6 @@
 import type { StorageSchema, StoredTabGroup } from '../types/Storage';
 import { tabGroupsStorage } from '../types/Storage';
-import type { TabGroup } from '../types/TabGroup';
+import type { TabGroup, TabItem } from '../types/TabGroup';
 
 /**
  * Storage service interface for tab group operations
@@ -11,6 +11,8 @@ export interface StorageService {
   updateTabGroup(id: string, updates: Partial<TabGroup>): Promise<void>;
   deleteTabGroup(id: string): Promise<void>;
   deleteTabFromGroup(groupId: string, tabId: string): Promise<void>;
+  moveTabBetweenGroups(sourceGroupId: string, targetGroupId: string, tabId: string): Promise<void>;
+  addTabToGroup(groupId: string, tab: TabItem): Promise<void>;
   clearAllTabGroups(): Promise<void>;
 }
 
@@ -244,6 +246,77 @@ export async function deleteTabFromGroup(groupId: string, tabId: string): Promis
       // Remove the tab immutably
       group.tabs = group.tabs.filter((tab) => tab.id !== tabId);
       allGroups[groupId] = group;
+
+      await tabGroupsStorage.setValue(allGroups);
+    });
+  });
+}
+
+/**
+ * Moves a tab from a source group to a target group atomically
+ */
+export async function moveTabBetweenGroups(
+  sourceGroupId: string,
+  targetGroupId: string,
+  tabId: string
+): Promise<void> {
+  if (sourceGroupId === targetGroupId) return;
+
+  return await withLock(async () => {
+    await withRetry(async () => {
+      const rawGroups = await tabGroupsStorage.getValue();
+      const allGroups: Record<string, StoredTabGroup> = { ...rawGroups };
+
+      const sourceStored = allGroups[sourceGroupId];
+      if (!sourceStored) {
+        throw new StorageNotFoundError(`Source tab group with id ${sourceGroupId} not found`);
+      }
+
+      const targetStored = allGroups[targetGroupId];
+      if (!targetStored) {
+        throw new StorageNotFoundError(`Target tab group with id ${targetGroupId} not found`);
+      }
+
+      const tabIndex = sourceStored.tabs.findIndex((tab) => tab.id === tabId);
+      if (tabIndex === -1) {
+        throw new StorageNotFoundError(`Tab with id ${tabId} not found in source group ${sourceGroupId}`);
+      }
+
+      const tabToMove = sourceStored.tabs[tabIndex];
+
+      allGroups[sourceGroupId] = {
+        ...sourceStored,
+        tabs: sourceStored.tabs.filter((tab) => tab.id !== tabId),
+      };
+
+      allGroups[targetGroupId] = {
+        ...targetStored,
+        tabs: [...targetStored.tabs, tabToMove],
+      };
+
+      await tabGroupsStorage.setValue(allGroups);
+    });
+  });
+}
+
+/**
+ * Appends a tab to an existing group in storage
+ */
+export async function addTabToGroup(groupId: string, tab: TabItem): Promise<void> {
+  return await withLock(async () => {
+    await withRetry(async () => {
+      const rawGroups = await tabGroupsStorage.getValue();
+      const allGroups: Record<string, StoredTabGroup> = { ...rawGroups };
+
+      const existingGroup = allGroups[groupId];
+      if (!existingGroup) {
+        throw new StorageNotFoundError(`Tab group with id ${groupId} not found`);
+      }
+
+      allGroups[groupId] = {
+        ...existingGroup,
+        tabs: [...existingGroup.tabs, tab],
+      };
 
       await tabGroupsStorage.setValue(allGroups);
     });

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { tabGroupsStorage } from '../../types/Storage';
 import type { TabGroup } from '../../types/TabGroup';
-import { deleteTabFromGroup, deleteTabGroup, getTabGroups, saveTabGroup, updateTabGroup } from '../../utils/storage';
+import { addTabToGroup, deleteTabFromGroup, deleteTabGroup, getTabGroups, moveTabBetweenGroups, saveTabGroup, updateTabGroup } from '../../utils/storage';
 
 describe('Storage Service', () => {
   beforeEach(async () => {
@@ -208,6 +208,82 @@ describe('Storage Service', () => {
       await expect(deleteTabFromGroup('group-1', 'non-existent-tab')).rejects.toThrow(
         'Tab with id non-existent-tab not found in group group-1'
       );
+    });
+  });
+
+  describe('moveTabBetweenGroups', () => {
+    it('should move tab from source group to target group atomically', async () => {
+      const group1: TabGroup = {
+        id: 'group-1',
+        name: 'Group 1',
+        createdAt: new Date(),
+        tabs: [
+          { id: 'tab-1', url: 'https://example.com/1', title: 'Site 1' },
+          { id: 'tab-2', url: 'https://example.com/2', title: 'Site 2' },
+        ],
+        isHistory: false,
+      };
+      const group2: TabGroup = {
+        id: 'group-2',
+        name: 'Group 2',
+        createdAt: new Date(),
+        tabs: [{ id: 'tab-3', url: 'https://example.com/3', title: 'Site 3' }],
+        isHistory: false,
+      };
+
+      await saveTabGroup(group1);
+      await saveTabGroup(group2);
+
+      await moveTabBetweenGroups('group-1', 'group-2', 'tab-2');
+
+      const groups = await getTabGroups();
+      const updated1 = groups.find((g) => g.id === 'group-1');
+      const updated2 = groups.find((g) => g.id === 'group-2');
+
+      expect(updated1?.tabs).toHaveLength(1);
+      expect(updated1?.tabs[0].id).toBe('tab-1');
+      expect(updated2?.tabs).toHaveLength(2);
+      expect(updated2?.tabs.find((t) => t.id === 'tab-2')).toBeDefined();
+    });
+
+    it('should do nothing if source and target are the same group', async () => {
+      const group1: TabGroup = {
+        id: 'group-1',
+        name: 'Group 1',
+        createdAt: new Date(),
+        tabs: [{ id: 'tab-1', url: 'https://example.com/1', title: 'Site 1' }],
+        isHistory: false,
+      };
+
+      await saveTabGroup(group1);
+      await moveTabBetweenGroups('group-1', 'group-1', 'tab-1');
+
+      const groups = await getTabGroups();
+      expect(groups[0].tabs).toHaveLength(1);
+    });
+  });
+
+  describe('addTabToGroup', () => {
+    it('should append a tab to an existing group in storage', async () => {
+      const group1: TabGroup = {
+        id: 'group-1',
+        name: 'Group 1',
+        createdAt: new Date(),
+        tabs: [{ id: 'tab-1', url: 'https://example.com/1', title: 'Site 1' }],
+        isHistory: false,
+      };
+
+      await saveTabGroup(group1);
+
+      await addTabToGroup('group-1', {
+        id: 'tab-new',
+        url: 'https://newsite.com',
+        title: 'New Site',
+      });
+
+      const groups = await getTabGroups();
+      expect(groups[0].tabs).toHaveLength(2);
+      expect(groups[0].tabs[1].id).toBe('tab-new');
     });
   });
 });

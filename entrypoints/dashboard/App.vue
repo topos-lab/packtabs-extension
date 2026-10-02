@@ -3,6 +3,7 @@ import {
   Clock,
   Folder,
   Globe,
+  GripVertical,
   Layers,
   PanelLeftClose,
   PanelLeftOpen,
@@ -103,6 +104,101 @@ async function handleOpenTab(tab: TabItem) {
   }
 }
 
+// Drag & drop tab categorization state & handlers
+const dragOverGroupId = ref<string | null>(null);
+
+function handleSidebarDragEnter(event: DragEvent) {
+  if (!isSidebarOpen.value && event.dataTransfer?.types.includes('application/packtabs-tab')) {
+    isSidebarOpen.value = true;
+  }
+}
+
+function handleDragStartCurrentTab(event: DragEvent, tab: TabItem) {
+  if (!event.dataTransfer) return;
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData(
+    'application/packtabs-tab',
+    JSON.stringify({
+      sourceGroupId: 'current',
+      tab,
+    })
+  );
+  event.dataTransfer.setData('text/plain', tab.url);
+}
+
+function handleDragOver(event: DragEvent, groupId: string) {
+  if (event.dataTransfer?.types.includes('application/packtabs-tab')) {
+    event.dataTransfer.dropEffect = 'move';
+    dragOverGroupId.value = groupId;
+  }
+}
+
+function handleDragEnter(groupId: string) {
+  dragOverGroupId.value = groupId;
+}
+
+function handleDragLeave(event: DragEvent, groupId: string) {
+  const currentTarget = event.currentTarget as HTMLElement | null;
+  const relatedTarget = event.relatedTarget as HTMLElement | null;
+  if (!currentTarget?.contains(relatedTarget)) {
+    if (dragOverGroupId.value === groupId) {
+      dragOverGroupId.value = null;
+    }
+  }
+}
+
+async function handleDrop(event: DragEvent, targetGroupId: string) {
+  dragOverGroupId.value = null;
+  const raw = event.dataTransfer?.getData('application/packtabs-tab');
+  if (!raw) return;
+
+  try {
+    const payload = JSON.parse(raw) as {
+      sourceGroupId: string;
+      tab: TabItem;
+    };
+    const { sourceGroupId, tab } = payload;
+
+    if (!tab || !tab.id) return;
+
+    if (sourceGroupId === targetGroupId) {
+      toast.add({
+        severity: 'info',
+        detail: 'Tab is already in this group',
+        life: 2000,
+      });
+      return;
+    }
+
+    const targetGroup = tabStore.tabGroups.find((g) => g.id === targetGroupId);
+    const targetName = targetGroup?.name || 'Saved Group';
+
+    if (sourceGroupId === 'current') {
+      currentTabs.value = currentTabs.value.filter((t) => t.id !== tab.id);
+      await tabStore.addTab(targetGroupId, tab);
+      toast.add({
+        severity: 'success',
+        detail: `Added "${tab.title || 'Tab'}" to "${targetName}"`,
+        life: 2500,
+      });
+    } else {
+      await tabStore.moveTab(sourceGroupId, targetGroupId, tab.id);
+      toast.add({
+        severity: 'success',
+        detail: `Moved "${tab.title || 'Tab'}" to "${targetName}"`,
+        life: 2500,
+      });
+    }
+  } catch (error) {
+    console.error('Failed to move tab:', error);
+    toast.add({
+      severity: 'error',
+      detail: 'Failed to move tab',
+      life: 3000,
+    });
+  }
+}
+
 async function saveCurrentTabs() {
   if (isSavingCurrent.value || currentTabs.value.length === 0) return;
   isSavingCurrent.value = true;
@@ -192,6 +288,7 @@ function handleSave(groupId: string) {
     <aside
       class="h-full border-r border-slate-200 bg-white flex flex-col transition-all duration-300 ease-in-out shrink-0"
       :class="isSidebarOpen ? 'w-64' : 'w-16'"
+      @dragenter="handleSidebarDragEnter"
     >
       <!-- Sidebar Header / Logo -->
       <div class="h-16 flex items-center justify-between px-3 border-b border-slate-100">
@@ -267,15 +364,34 @@ function handleSave(groupId: string) {
               v-for="group in tabStore.namedGroups"
               :key="group.id"
               type="button"
-              class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors"
-              :class="tabStore.selectedGroupId === group.id ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+              class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-all relative select-none"
+              :class="[
+                tabStore.selectedGroupId === group.id
+                  ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                dragOverGroupId === group.id
+                  ? 'ring-2 ring-indigo-500 bg-indigo-100/90 text-indigo-800 scale-[1.02] shadow-xs font-semibold'
+                  : ''
+              ]"
               @click="tabStore.selectedGroupId = group.id"
+              @dragover.prevent="handleDragOver($event, group.id)"
+              @dragenter.prevent="handleDragEnter(group.id)"
+              @dragleave="handleDragLeave($event, group.id)"
+              @drop.prevent="handleDrop($event, group.id)"
             >
               <div class="flex items-center gap-2 truncate">
-                <Folder class="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                <Folder
+                  class="h-3.5 w-3.5 shrink-0 transition-transform"
+                  :class="dragOverGroupId === group.id ? 'text-indigo-600 scale-125' : 'text-slate-400'"
+                />
                 <span class="truncate">{{ group.name }}</span>
               </div>
-              <span class="text-[10px] text-slate-400 ml-1">{{ group.tabs.length }}</span>
+              <span
+                class="text-[10px] ml-1 transition-colors"
+                :class="dragOverGroupId === group.id ? 'text-indigo-700 font-bold' : 'text-slate-400'"
+              >
+                {{ group.tabs.length }}
+              </span>
             </button>
           </div>
           <div v-else class="px-2.5 py-2 text-[11px] text-slate-400 italic">
@@ -395,14 +511,19 @@ function handleSave(groupId: string) {
                   <div
                     v-for="tab in displayedCurrentTabs"
                     :key="tab.id"
-                    class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-slate-50 transition-colors"
+                    draggable="true"
+                    class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-slate-50 transition-colors select-none cursor-grab active:cursor-grabbing"
+                    @dragstart="handleDragStartCurrentTab($event, tab)"
                   >
                     <!-- Favicon + Title Link -->
                     <div
-                      class="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer mr-3"
+                      class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer mr-3"
                       :title="tab.url"
                       @click="handleOpenTab(tab)"
                     >
+                      <!-- Drag Handle -->
+                      <GripVertical class="h-3.5 w-3.5 text-slate-300 group-hover/tab:text-slate-400 shrink-0 cursor-grab" />
+
                       <div class="h-4 w-4 shrink-0 flex items-center justify-center">
                         <img
                           v-if="tab.faviconUrl || getFaviconUrl(tab.url)"

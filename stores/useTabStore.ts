@@ -4,10 +4,12 @@ import { computed, ref } from 'vue';
 import { tabGroupsStorage } from '~/types/Storage';
 import type { TabGroup, TabItem } from '~/types/TabGroup';
 import {
+  addTabToGroup as addTabToGroupInStorage,
   deleteTabFromGroup as deleteTabFromGroupInStorage,
   deleteTabGroup as deleteTabGroupFromStorage,
   deserializeTabGroup,
   getTabGroups,
+  moveTabBetweenGroups as moveTabBetweenGroupsInStorage,
   saveTabGroup as saveTabGroupToStorage,
   StorageQuotaExceededError,
   updateTabGroup as updateTabGroupInStorage,
@@ -203,6 +205,50 @@ export const useTabStore = defineStore('tabs', () => {
     }
   }
 
+  /**
+   * Moves a tab from one group to another with optimistic update
+   */
+  async function moveTab(sourceGroupId: string, targetGroupId: string, tabId: string): Promise<void> {
+    if (sourceGroupId === targetGroupId) return;
+
+    try {
+      await moveTabBetweenGroupsInStorage(sourceGroupId, targetGroupId, tabId);
+
+      // Optimistic local state update
+      const sourceGroup = tabGroups.value.find((g) => g.id === sourceGroupId);
+      const targetGroup = tabGroups.value.find((g) => g.id === targetGroupId);
+
+      if (sourceGroup && targetGroup) {
+        const tabIndex = sourceGroup.tabs.findIndex((t) => t.id === tabId);
+        if (tabIndex >= 0) {
+          const [movedTab] = sourceGroup.tabs.splice(tabIndex, 1);
+          targetGroup.tabs.push(movedTab);
+          tabGroups.value = [...tabGroups.value];
+        }
+      }
+    } catch (error) {
+      handleError(error, 'Failed to move tab between groups');
+    }
+  }
+
+  /**
+   * Appends a tab to an existing group with optimistic update
+   */
+  async function addTab(groupId: string, tab: TabItem): Promise<void> {
+    try {
+      await addTabToGroupInStorage(groupId, tab);
+
+      // Optimistic local state update
+      const targetGroup = tabGroups.value.find((g) => g.id === groupId);
+      if (targetGroup) {
+        targetGroup.tabs.push(tab);
+        tabGroups.value = [...tabGroups.value];
+      }
+    } catch (error) {
+      handleError(error, 'Failed to add tab to group');
+    }
+  }
+
   return {
     // State
     tabGroups,
@@ -218,5 +264,7 @@ export const useTabStore = defineStore('tabs', () => {
     deleteGroup,
     deleteTab,
     convertToNamed,
+    moveTab,
+    addTab,
   };
 });

@@ -4,6 +4,7 @@ import {
   Check,
   ExternalLink,
   Globe,
+  GripVertical,
   Pencil,
   Plus,
   Save,
@@ -149,6 +150,20 @@ async function handleDeleteTab(tabId: string) {
   }
 }
 
+// Drag & drop tab categorization
+function handleDragStart(event: DragEvent, tab: TabItem) {
+  if (!event.dataTransfer) return;
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData(
+    'application/packtabs-tab',
+    JSON.stringify({
+      sourceGroupId: props.group.id,
+      tab,
+    })
+  );
+  event.dataTransfer.setData('text/plain', tab.url);
+}
+
 async function handleOpenAll() {
   try {
     await openTabs(props.group.tabs);
@@ -274,14 +289,19 @@ async function confirmDeleteGroup() {
         <div
           v-for="tab in group.tabs"
           :key="tab.id"
-          class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-slate-50 transition-colors"
+          draggable="true"
+          class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-slate-50 transition-colors select-none cursor-grab active:cursor-grabbing"
+          @dragstart="handleDragStart($event, tab)"
         >
           <!-- Favicon + Title Link -->
           <div
-            class="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer mr-3"
+            class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer mr-3"
             :title="tab.url"
             @click="handleTabClick(tab)"
           >
+            <!-- Drag Handle -->
+            <GripVertical class="h-3.5 w-3.5 text-slate-300 group-hover/tab:text-slate-400 shrink-0 cursor-grab" />
+
             <!-- Favicon -->
             <div class="h-4 w-4 shrink-0 flex items-center justify-center">
               <img
