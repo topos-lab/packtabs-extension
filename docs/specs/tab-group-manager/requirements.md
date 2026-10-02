@@ -1,17 +1,18 @@
-# Requirements Document
+# Requirements Document: Tab Group Manager
 
 ## Introduction
 
-PackTabs is a Chrome browser extension designed for efficiency-focused users who need to manage multiple browser sessions effectively. The system enables users to save all tabs from the current window into named "tab groups" and supports one-click restoration, allowing for seamless continuation of unfinished tasks. The extension follows a "simple and efficient" design philosophy while utilizing Chrome's Manifest V3 architecture.
+PackTabs is a high-performance Chrome browser extension designed for efficiency-focused users who need to manage multiple browser sessions effectively. The system enables users to save all tabs from the current window into organized collections, automatically preserve closed sessions as History Snapshots, and restore browser sessions with a single click. The extension follows a "simple and efficient" design philosophy using modern web technologies and Chrome Manifest V3 architecture.
 
 ## Glossary
 
-- **Tab_Group**: A collection of saved browser tabs with associated metadata (name, creation date, URLs)
-- **History_Tab_Group**: An automatically created, unnamed tab group saved when the browser closes
-- **Named_Tab_Group**: A user-created tab group with a custom name for permanent storage
-- **Management_Page**: The main interface displayed when users click the extension icon
-- **TabGroupCard**: A UI component displaying the contents and actions for a specific tab group
-- **Chrome_Storage_Sync**: Chrome's built-in API for synchronizing data across user devices
+- **Tab_Group**: A collection of saved browser tabs with metadata (ID, optional name, creation date, tab array, isHistory flag).
+- **History_Tab_Group**: An automatically captured snapshot created when windows close or when the browser closes.
+- **Named_Tab_Group**: A user-saved or renamed tab group stored permanently.
+- **Current_Tabs_View**: The staging and review workspace for open tabs in the active window.
+- **TabGroupCard**: An interactive card component displaying the contents and actions for a tab group.
+- **Storage_Local**: Chrome's local storage (`local:tabGroups`, up to 10MB capacity) used for storing large tab collections without 8KB sync quota limits.
+- **Storage_Sync**: Chrome's sync storage (`sync:settings`) used for synchronizing user preferences across signed-in browsers.
 
 ## Requirements
 
@@ -21,100 +22,77 @@ PackTabs is a Chrome browser extension designed for efficiency-focused users who
 
 #### Acceptance Criteria
 
-1. WHEN a user clicks the save action, THE Tab_Group_Manager SHALL capture all open tabs from the current browser window
-2. WHEN tabs are captured, THE Tab_Group_Manager SHALL store the URL, title, and favicon reference for each tab
-3. WHEN a tab group is saved, THE Tab_Group_Manager SHALL automatically close the original tabs to maintain a clean browser interface
-4. WHEN saving tabs, THE Tab_Group_Manager SHALL assign a timestamp to the tab group for creation tracking
-5. WHEN the save operation completes, THE Tab_Group_Manager SHALL persist the tab group data using Chrome_Storage_Sync
+1. WHEN a user navigates to the Current Tabs view, THE Tab_Group_Manager SHALL list all open web tabs from the active window with their title, URL, and favicon.
+2. WHEN reviewing current tabs, THE user SHALL be able to exclude individual tabs from being saved.
+3. WHEN saving tabs, THE user MAY provide a custom group name; IF no name is provided, THE Tab_Group_Manager SHALL automatically assign an intelligent timestamp name (e.g. `2026-10-02 20:30`).
+4. THE Tab_Group_Manager SHALL provide a "Close window after save" option, checked by default, and SHALL persist the user's choice across sessions in `sync:settings`.
+5. WHEN a tab group is saved with "Close window after save" enabled, THE Tab_Group_Manager SHALL close the window tabs while keeping the manager dashboard open.
+6. WHEN saving completes, THE Tab_Group_Manager SHALL persist the group under `local:tabGroups` through a mutex serialization lock.
 
 ### Requirement 2: Automatic History Snapshots
 
-**User Story:** As a user, I want my open tabs to be automatically saved when I close my browser, so that I don't lose my work if I forget to manually save.
+**User Story:** As a user, I want my open tabs to be automatically preserved when I close a window or browser, so that I never lose my work session.
 
 #### Acceptance Criteria
 
-1. WHEN the browser is closing, THE Tab_Group_Manager SHALL automatically capture all open tabs as a History_Tab_Group
-2. WHEN creating a History_Tab_Group, THE Tab_Group_Manager SHALL store it without requiring a user-provided name
-3. WHEN multiple History_Tab_Groups exist, THE Tab_Group_Manager SHALL maintain them as separate entries with timestamps
-4. WHEN a History_Tab_Group is created, THE Tab_Group_Manager SHALL persist it using Chrome_Storage_Sync
+1. WHEN a browser window closes, THE Tab_Group_Manager service worker SHALL automatically preserve the window's tabs as a History_Tab_Group.
+2. WHEN creating a History_Tab_Group, THE Tab_Group_Manager SHALL store it with `isHistory: true` and an accurate creation timestamp.
+3. WHEN displaying History_Tab_Groups, THE Tab_Group_Manager SHALL categorize them by relative time sections (Today, Yesterday, Previous 7 Days, This Month, Older).
+4. WHEN a user clicks the inline edit button on a History_Tab_Group and inputs a name, THE Tab_Group_Manager SHALL immediately convert the group to a Named_Tab_Group and save it permanently.
 
-### Requirement 3: Tab Group Management
+### Requirement 3: Tab Group Organization & Drag-and-Drop Categorization
 
-**User Story:** As a user, I want to create, view, edit, and delete tab groups, so that I can organize my saved sessions effectively.
-
-#### Acceptance Criteria
-
-1. WHEN a user provides a name for a tab group, THE Tab_Group_Manager SHALL convert it from a History_Tab_Group to a Named_Tab_Group
-2. WHEN a user clicks on a tab group title, THE Tab_Group_Manager SHALL allow inline editing of the group name
-3. WHEN a user modifies a tab group name, THE Tab_Group_Manager SHALL update the stored data immediately
-4. WHEN a user deletes a tab group, THE Tab_Group_Manager SHALL remove all associated data and require confirmation
-5. WHEN a user removes individual tabs from a group, THE Tab_Group_Manager SHALL update the group without affecting other groups
-
-### Requirement 4: Tab Group Restoration
-
-**User Story:** As a user, I want to restore all tabs from a saved group with one click, so that I can quickly resume my previous work session.
+**User Story:** As a user, I want to organize tabs between groups via drag-and-drop, so that I can classify tabs flexibly.
 
 #### Acceptance Criteria
 
-1. WHEN a user clicks "Open All" for a tab group, THE Tab_Group_Manager SHALL open all URLs from that group in new tabs
-2. WHEN opening tabs, THE Tab_Group_Manager SHALL open them in the current browser window
-3. WHEN a user clicks on an individual tab title, THE Tab_Group_Manager SHALL open that specific URL in a new tab
-4. WHEN tabs are restored, THE Tab_Group_Manager SHALL preserve the original page titles and URLs
+1. THE Tab_Group_Manager SHALL allow any tab item (from Current Tabs or saved groups) to be dragged.
+2. WHEN dragging a tab over a group in the sidebar, THE group item SHALL show a visual drop-target highlight.
+3. WHEN a tab is dropped onto a target group, THE Tab_Group_Manager SHALL move or add the tab to that group atomically.
+4. THE Tab_Group_Manager SHALL prevent Chrome from triggering native side-by-side or split-view tab navigation during dragging.
+5. THE entire tab item row SHALL display the cross-platform `cursor-move` (✥) cursor to clearly signify draggability.
 
-### Requirement 5: Management Interface
+### Requirement 4: Tab Group Restoration & Background Tab Opening
 
-**User Story:** As a user, I want a clear and intuitive interface to manage my tab groups, so that I can efficiently organize and access my saved sessions.
-
-#### Acceptance Criteria
-
-1. WHEN a user clicks the extension icon, THE Management_Page SHALL open in a new browser tab
-2. WHEN the Management_Page loads, THE Management_Page SHALL display History_Tab_Groups by default in the content area
-3. WHEN the Management_Page loads, THE Management_Page SHALL show a sidebar with "History Tab Group" and all Named_Tab_Groups
-4. WHEN a user clicks a sidebar item, THE Management_Page SHALL display the corresponding tab group content
-5. WHEN displaying tab groups, THE Management_Page SHALL show each group as a TabGroupCard with header, body, and footer sections
-
-### Requirement 6: Tab Card Display
-
-**User Story:** As a user, I want each tab group displayed as a comprehensive card, so that I can see all relevant information and actions at a glance.
+**User Story:** As a user, I want to restore entire groups or individual tabs efficiently.
 
 #### Acceptance Criteria
 
-1. WHEN displaying a TabGroupCard, THE Management_Page SHALL show the group name as an editable title
-2. WHEN displaying a TabGroupCard, THE Management_Page SHALL show the creation date and time as a subtitle
-3. WHEN displaying tab entries, THE TabGroupCard SHALL show favicon, title, and delete button for each tab
-4. WHEN displaying favicons, THE TabGroupCard SHALL use the chrome://favicon/ protocol for efficient loading
-5. WHEN displaying the card footer, THE TabGroupCard SHALL show "Open All", "Save/Update", and "Delete Group" buttons
+1. WHEN a user clicks "Open All" on a tab group, THE Tab_Group_Manager SHALL open all tabs in the current window and display a success notification.
+2. WHEN a user clicks a tab item while holding `Ctrl`, `Cmd`, or `Shift`, THE Tab_Group_Manager SHALL open that single tab in the background without activating it or navigating away from the manager.
+3. WHEN a user clicks the delete button on an individual tab, THE Tab_Group_Manager SHALL remove that tab from the group atomically.
 
-### Requirement 7: Data Synchronization
+### Requirement 5: Management Dashboard & Appearance
 
-**User Story:** As a user, I want my tab groups synchronized across all my devices, so that I can access my saved sessions from any browser where I'm signed in.
+**User Story:** As a user, I want a clean, accessible, modern interface with theme customization.
 
 #### Acceptance Criteria
 
-1. WHEN tab group data is saved, THE Tab_Group_Manager SHALL use Chrome_Storage_Sync for persistence
-2. WHEN data is synchronized, THE Tab_Group_Manager SHALL maintain consistency across all user devices
-3. WHEN conflicts occur during sync, THE Tab_Group_Manager SHALL preserve the most recent changes
-4. WHEN storage operations fail, THE Tab_Group_Manager SHALL provide appropriate error handling
+1. THE Management_Page SHALL feature a permanent two-pane layout with a fixed sidebar and main content view.
+2. THE Tab_Group_Manager SHALL provide a tri-state theme switcher: Auto (System), Light, and Dark.
+3. WHEN in Auto (System) mode, THE Tab_Group_Manager SHALL use the Lucide `SunMoon` icon and dynamically adapt to the operating system's color scheme.
+4. THE UI SHALL use Tailwind CSS Zinc palette styling with high contrast and zero third-party bulky component libraries.
+5. THE Tab_Group_Manager SHALL provide theme-aware Tooltips for all tab items, supporting multi-line instructions without triggering native browser black title bubbles.
 
-### Requirement 8: Individual Tab Management
+### Requirement 6: About Modal & Keyboard Shortcuts
 
-**User Story:** As a user, I want to manage individual tabs within groups, so that I can fine-tune my saved sessions without recreating entire groups.
-
-#### Acceptance Criteria
-
-1. WHEN a user clicks a tab's delete button, THE Tab_Group_Manager SHALL remove only that tab from the current group
-2. WHEN a tab is removed, THE Tab_Group_Manager SHALL update the group immediately without affecting other groups
-3. WHEN a user clicks a tab title link, THE Tab_Group_Manager SHALL open that URL in a new browser tab
-4. WHEN individual tabs are modified, THE Tab_Group_Manager SHALL persist changes using Chrome_Storage_Sync
-
-### Requirement 9: Group Naming and Conversion
-
-**User Story:** As a user, I want to convert unnamed history groups into permanent named groups, so that I can organize important sessions for long-term access.
+**User Story:** As a user, I want to view extension information and configure keyboard shortcuts easily.
 
 #### Acceptance Criteria
 
-1. WHEN a user clicks "Save" on a History_Tab_Group card, THE Management_Page SHALL display a name input dialog
-2. WHEN a user provides a name and confirms, THE Tab_Group_Manager SHALL convert the History_Tab_Group to a Named_Tab_Group
-3. WHEN a group is converted, THE Tab_Group_Manager SHALL move it from history to the named groups list
-4. WHEN a user clicks "Update" on a Named_Tab_Group, THE Tab_Group_Manager SHALL save any modifications immediately
-5. WHEN group conversion completes, THE Tab_Group_Manager SHALL update the sidebar navigation accordingly
+1. WHEN a user clicks the PackTabs brand logo in the sidebar header, THE Management_Page SHALL display the About PackTabs modal.
+2. THE About modal SHALL display the app version, author, GitHub link (`packtabs-extension`), appearance switcher, and active shortcut.
+3. THE default suggested shortcut SHALL be `Alt+Shift+K` on Windows/Linux and `Command+Shift+K` on macOS.
+4. THE About modal SHALL query `browser.commands.getAll()` in real-time, displaying `Not set (Default: Alt + Shift + K)` if unassigned.
+5. WHEN a user clicks "Change", THE Tab_Group_Manager SHALL open `chrome://extensions/shortcuts`, and automatically refresh the displayed shortcut upon window focus.
+
+### Requirement 7: Data Persistence & Storage Architecture
+
+**User Story:** As a user, I want my data saved reliably without storage limit crashes.
+
+#### Acceptance Criteria
+
+1. Tab groups SHALL be persisted in `local:tabGroups`, with support for hundreds of tabs per group without hitting sync quotas.
+2. User preferences (`theme`, `autoCloseAfterSave`) SHALL be persisted in `sync:settings` for cross-device synchronization.
+3. All write operations to storage SHALL pass through a mutex queue (`withLock`) to guarantee atomic serialization.
+4. All update operations SHALL clone data using `structuredClone` before modification to maintain cache immutability.

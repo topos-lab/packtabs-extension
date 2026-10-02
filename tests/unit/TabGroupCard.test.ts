@@ -212,4 +212,18 @@ describe('TabGroupCard Component', () => {
 
     expect(wrapper.text()).toContain('Delete');
   });
+
+  it('renders tab rows with draggable attribute and cursor-move class', () => {
+    const wrapper = mount(TabGroupCard, {
+      props: { group: mockGroup },
+      global: {
+        plugins: [pinia],
+      },
+    });
+
+    const tabRows = wrapper.findAll('[draggable="true"]');
+    expect(tabRows.length).toBe(2);
+    expect(tabRows[0].classes()).toContain('cursor-move');
+    expect(tabRows[1].classes()).toContain('cursor-move');
+  });
 });

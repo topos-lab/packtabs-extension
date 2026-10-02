@@ -1,30 +1,35 @@
-# packtabs-extension
+# PackTabs Extension
 
-A simple, efficient Chrome extension to save and manage groups of browser tabs.
+A high-performance, minimalist Chrome Manifest V3 browser extension built with the WXT Framework, Vue 3, and Tailwind CSS v4 to effortlessly organize, save, and restore browser tab sessions.
 
 ## Features
 
-- One-click save of all tabs in the current window.
-- Organize saved tabs into named groups.
-- Clean, intuitive management interface.
-- Built with Manifest V3.
+- **One-Click Session Capture**: Save all open tabs in the current window with optional window closing.
+- **Smart Auto-Naming**: Intelligent timestamps (e.g. `2026-10-02 20:30`) if no group name is provided.
+- **Automatic History Snapshots**: Silently captures tabs before browser or window closing to prevent data loss.
+- **Drag-and-Drop Categorization**: Drag any tab from Current Tabs or saved groups into other groups on the sidebar.
+- **Background Tab Opening**: Hold `Ctrl`, `Cmd`, or `Shift` and click any tab item to open it silently in the background without switching tabs.
+- **Tri-State Theme System**: Seamless toggle between Light, Dark, and Auto (System) themes using Tailwind Zinc palette (Shadcn UI style).
+- **Accessible & Lightweight UI**: Headless accessible primitives powered by Radix Vue and styled with pure Tailwind CSS v4 (no bulky UI frameworks).
+- **Theme-Adaptive Tooltips**: Custom accessible tooltips supporting multi-line formatting without native OS black tooltip bubbles.
+- **Configurable Shortcut**: Quick launcher configurable via Chrome settings (default: `Alt+Shift+K` on Windows/Linux, `Command+Shift+K` on macOS).
+- **Robust Storage Architecture**: Sharded storage under `local:tabGroups` bypassing Chrome Sync's 8KB quota, paired with `sync:settings` for cross-device preferences.
 
-## Technologies
+## Technology Stack
 
-- **[WXT Framework](https://wxt.dev/)** - Modern web extension development framework
-- **[Vue 3](https://vuejs.org/)** - Progressive JavaScript framework for the UI
-- **[PrimeVue](https://primevue.org/)** - Vue UI Component Library with Material Design Theme
-- **[TypeScript](https://www.typescriptlang.org/)** - Type-safe JavaScript development
-- **[Manifest V3](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3)** - Latest Chrome extension manifest version
-- **[Pinia](https://pinia.vuejs.org/introduction.html)** - Use Pinia to share a state across components/pages
-- **[Bun](https://bun.com/docs)** - Fast JavaScript runtime and package manager
+- **Extension Framework**: [WXT Framework](https://wxt.dev/) (v0.21.x) with Vite 8 bundler
+- **Frontend Stack**: [Vue 3](https://vuejs.org/) (Composition API with `<script setup>`), [Pinia 4](https://pinia.vuejs.org/)
+- **Styling & UI Primitives**: [Tailwind CSS v4](https://tailwindcss.com/), [Radix Vue](https://www.radix-vue.com/), [Lucide Vue Next](https://lucide.dev/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/) (Strict mode)
+- **Runtime & Package Manager**: [Bun](https://bun.sh/)
+- **Testing**: [Vitest](https://vitest.dev/), [@vue/test-utils](https://test-utils.vuejs.org/), [fast-check](https://fast-check.dev/) (Property-based testing)
 
 ## Development
 
 ### Prerequisites
 
-- [Bun](https://bun.sh/) - JavaScript runtime and package manager
-- Chrome or Firefox browser for testing
+- [Bun](https://bun.sh/) (v1.1+)
+- Chrome or Chromium-based browser for testing
 
 ### Setup
 
@@ -36,43 +41,70 @@ bun install
 bun run postinstall
 ```
 
-### Development Commands
+### Common Commands
 
 ```bash
-# Start development server for Chrome
+# Start development server with HMR for Chrome
 bun run dev
 
 # Start development server for Firefox
 bun run dev:firefox
 
-# Build extension for production (Chrome)
+# Build production extension for Chrome MV3
 bun run build
 
-# Build extension for Firefox
+# Build production extension for Firefox
 bun run build:firefox
 
-# Create distributable zip file (Chrome)
-bun run zip
+# Run full test suite (190+ unit and property tests)
+bun run test
 
-# Create distributable zip file (Firefox)
-bun run zip:firefox
-
-# Type check without emitting files
+# TypeScript type check (no emit)
 bun run compile
 
-# Check for linting errors
+# Code style linting
 bun run lint
-
-# Auto-fix fixable issues
-bun run lint:fix
-
-# Format all files
-bun run format
 ```
 
-### Project Structure
+## Directory Structure
 
-- `entrypoints/` - Extension entry points (background, content, popup)
-- `components/` - Vue components
-- `public/` - Static assets and icons
-- `assets/` - Build-time assets
+```
+packtabs-extension/
+├── entrypoints/
+│   ├── background.ts              # Service worker (tab capture, snapshot preservation)
+│   └── dashboard/                 # Full-page manager application (Vue 3)
+│       ├── App.vue                # Main dashboard component
+│       ├── main.ts                # App mount entry
+│       └── style.css              # Global styles & Tailwind entry
+├── components/
+│   ├── ui/                        # Reusable accessible UI primitives
+│   │   ├── badge/                 # Badge component
+│   │   ├── button/                # Button component (cva variants)
+│   │   ├── card/                  # Card, CardHeader, CardContent, CardTitle
+│   │   ├── dialog/                # Accessible Modal (Radix Vue)
+│   │   ├── input/                 # Input component
+│   │   ├── toast/                 # ToastContainer component
+│   │   └── tooltip/               # Multi-line Tooltip component (Radix Vue)
+│   ├── TabGroupCard.vue           # Interactive tab group card
+│   ├── TabGroupList.vue           # Timeline-categorized groups list
+│   └── CollectionDetail.vue       # Dedicated group detail view
+├── stores/
+│   └── useTabStore.ts             # Pinia store with optimistic updates & lock-safe storage
+├── composables/
+│   ├── useTheme.ts                # Tri-state theme manager (light/dark/system)
+│   └── useToast.ts                # Floating toast notifications
+├── utils/
+│   ├── storage.ts                 # Mutex-locked chrome.storage service
+│   ├── tabManager.ts              # Browser tabs capture, restore, and favicon service
+│   └── init-app.ts                # App initialization
+├── types/
+│   ├── TabGroup.ts                # Core tab and group models
+│   └── Storage.ts                 # Storage schemas and items
+└── tests/
+    ├── unit/                      # Component and utility unit tests
+    └── property/                  # fast-check property-based tests
+```
+
+## License
+
+MIT © [Wesley Chen](https://github.com/wesley-chen)

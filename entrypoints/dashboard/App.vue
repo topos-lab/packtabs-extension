@@ -57,6 +57,10 @@ const isSavingCurrent = ref(false);
 const showAboutModal = ref(false);
 const currentShortcut = ref('Alt + Shift + K');
 
+/**
+ * Queries active browser commands in real-time.
+ * Displays formatted shortcut (e.g. 'Alt + Shift + K') or fallback with default suggestion.
+ */
 async function loadShortcut() {
   try {
     if (typeof browser !== 'undefined' && browser.commands?.getAll) {
@@ -78,6 +82,10 @@ function openAboutModal() {
   showAboutModal.value = true;
 }
 
+/**
+ * Opens Chrome extension shortcut settings (chrome://extensions/shortcuts)
+ * in a new browser tab for direct user configuration.
+ */
 function openShortcutSettings() {
   try {
     browser.tabs.create({ url: 'chrome://extensions/shortcuts' });
@@ -132,6 +140,10 @@ function removeCurrentTab(tabId: string) {
   currentTabs.value = currentTabs.value.filter((t) => t.id !== tabId);
 }
 
+/**
+ * Opens the target tab in the background without activating it or navigating away,
+ * triggered when user clicks while holding Ctrl, Cmd (Mac), or Shift.
+ */
 async function handleTabItemRowClick(event: MouseEvent, tab: TabItem) {
   if (event.ctrlKey || event.metaKey || event.shiftKey) {
     try {

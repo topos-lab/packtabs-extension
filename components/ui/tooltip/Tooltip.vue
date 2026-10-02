@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * Accessible, theme-adaptive Tooltip component powered by Radix Vue.
+ * Supports single-line and multi-line content (via \n breaks, string arrays, or #content slot).
+ * Adapts to Tailwind Zinc light/dark palettes without triggering native OS/browser black title bubbles.
+ */
 import {
   TooltipContent,
   TooltipPortal,
