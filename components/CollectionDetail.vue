@@ -20,6 +20,7 @@ import { Input } from '~/components/ui/input';
 import { useToast } from '~/composables/useToast';
 import { useTabStore } from '~/stores/useTabStore';
 import type { TabGroup, TabItem } from '~/types/TabGroup';
+import { normalizeTabs } from '~/utils/storage';
 import { getFaviconUrl, openSingleTab, openTabs } from '~/utils/tabManager';
 
 function getDomain(url?: string): string {
@@ -103,13 +104,20 @@ const formattedDate = computed(() => {
   }
 });
 
+// Total tabs count
+const totalTabsCount = computed(() => {
+  return normalizeTabs(props.group.tabs).length;
+});
+
 // Filtered tabs by search query
 const filteredTabs = computed(() => {
+  const tabsList = normalizeTabs(props.group.tabs);
+
   if (!props.searchQuery?.trim()) {
-    return props.group.tabs;
+    return tabsList;
   }
   const q = props.searchQuery.toLowerCase().trim();
-  return props.group.tabs.filter(
+  return tabsList.filter(
     (t) => t.title.toLowerCase().includes(q) || t.url.toLowerCase().includes(q)
   );
 });
@@ -137,10 +145,11 @@ function handleDragStart(event: DragEvent, tab: TabItem) {
 // Open all tabs
 async function handleOpenAll() {
   try {
-    await openTabs(props.group.tabs);
+    const tabsList = normalizeTabs(props.group.tabs);
+    await openTabs(tabsList);
     toast.add({
       severity: 'success',
-      detail: `Restored ${props.group.tabs.length} tabs in browser`,
+      detail: `Restored ${tabsList.length} tabs in browser`,
       life: 2500,
     });
   } catch {
@@ -261,7 +270,7 @@ async function confirmDeleteGroup() {
           <!-- Right: Actions Toolbar -->
           <div class="flex items-center gap-2 shrink-0">
             <Badge variant="secondary" class="font-medium text-xs">
-              {{ group.tabs.length }} tabs
+              {{ totalTabsCount }} tabs
             </Badge>
 
             <Button
@@ -292,7 +301,7 @@ async function confirmDeleteGroup() {
       <CardContent class="p-3">
         <!-- Empty State -->
         <div v-if="filteredTabs.length === 0" class="py-12 text-center text-slate-400 text-xs">
-          <p v-if="group.tabs.length === 0">No tabs in this collection.</p>
+          <p v-if="totalTabsCount === 0">No tabs in this collection.</p>
           <p v-else>No tabs match your search query.</p>
         </div>
 

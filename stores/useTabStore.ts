@@ -10,6 +10,7 @@ import {
   deserializeTabGroup,
   getTabGroups,
   moveTabBetweenGroups as moveTabBetweenGroupsInStorage,
+  normalizeTabs,
   saveTabGroup as saveTabGroupToStorage,
   StorageQuotaExceededError,
   updateTabGroup as updateTabGroupInStorage,
@@ -86,17 +87,20 @@ export const useTabStore = defineStore('tabs', () => {
     customTabs?: TabItem[]
   ): Promise<TabGroup> {
     try {
-      const tabs = customTabs ?? (await captureCurrentWindow());
+      const rawTabs = customTabs ?? (await captureCurrentWindow());
 
-      if (!tabs || tabs.length === 0) {
+      if (!rawTabs || rawTabs.length === 0) {
         throw new Error('No tabs to save');
       }
+
+      // Detach any Vue reactive proxy to ensure a pure plain array of plain objects
+      const sanitizedTabs = normalizeTabs(rawTabs);
 
       const newGroup: TabGroup = {
         id: crypto.randomUUID(),
         name,
         createdAt: new Date(),
-        tabs,
+        tabs: sanitizedTabs,
         isHistory,
       };
 
@@ -179,7 +183,8 @@ export const useTabStore = defineStore('tabs', () => {
       // Optimistic update
       const group = tabGroups.value.find((g) => g.id === groupId);
       if (group) {
-        group.tabs = group.tabs.filter((t) => t.id !== tabId);
+        const rawTabs = normalizeTabs(group.tabs);
+        group.tabs = rawTabs.filter((t) => t.id !== tabId);
         tabGroups.value = [...tabGroups.value];
       }
     } catch (error) {

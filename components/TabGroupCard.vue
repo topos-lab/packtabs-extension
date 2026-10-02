@@ -21,6 +21,7 @@ import { Input } from '~/components/ui/input';
 import { useToast } from '~/composables/useToast';
 import { useTabStore } from '~/stores/useTabStore';
 import type { TabGroup, TabItem } from '~/types/TabGroup';
+import { normalizeTabs } from '~/utils/storage';
 import { getFaviconUrl, openSingleTab, openTabs } from '~/utils/tabManager';
 
 function getDomain(url?: string): string {
@@ -78,7 +79,9 @@ const formattedDate = computed(() => {
   }
 });
 
-const tabCount = computed(() => props.group.tabs.length);
+const tabList = computed(() => normalizeTabs(props.group.tabs));
+
+const tabCount = computed(() => tabList.value.length);
 
 function startEditingTitle() {
   isEditingTitle.value = true;
@@ -166,10 +169,10 @@ function handleDragStart(event: DragEvent, tab: TabItem) {
 
 async function handleOpenAll() {
   try {
-    await openTabs(props.group.tabs);
+    await openTabs(tabList.value);
     toast.add({
       severity: 'success',
-      detail: `Restored ${props.group.tabs.length} tabs`,
+      detail: `Restored ${tabList.value.length} tabs`,
       life: 3000,
     });
   } catch (error) {
@@ -287,7 +290,7 @@ async function confirmDeleteGroup() {
     <CardContent class="p-3">
       <div class="flex flex-col divide-y divide-slate-100 max-h-96 overflow-y-auto pr-1">
         <div
-          v-for="tab in group.tabs"
+          v-for="tab in tabList"
           :key="tab.id"
           draggable="true"
           class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-slate-50 transition-colors select-none cursor-grab active:cursor-grabbing"

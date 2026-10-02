@@ -23,8 +23,8 @@ import { Input } from '~/components/ui/input';
 import ToastContainer from '~/components/ui/toast/ToastContainer.vue';
 import { useToast } from '~/composables/useToast';
 import { setStoreErrorHandler, useTabStore } from '~/stores/useTabStore';
-import type { TabItem } from '~/types/TabGroup';
-import { StorageQuotaExceededError } from '~/utils/storage';
+import type { TabGroup, TabItem } from '~/types/TabGroup';
+import { normalizeTabs, StorageQuotaExceededError } from '~/utils/storage';
 import {
   captureCurrentWindow,
   closeCurrentTabs,
@@ -207,10 +207,12 @@ async function saveCurrentTabs() {
     const name = newGroupName.value.trim() || null;
     const group = await tabStore.saveGroup(name, false, currentTabs.value);
 
+    const tabsCount = getGroupTabCount(group);
+
     toast.add({
       severity: 'success',
       summary: 'Saved successfully',
-      detail: `Preserved ${group.tabs.length} tabs into "${group.name || 'Saved Group'}".`,
+      detail: `Preserved ${tabsCount} tabs into "${group.name || 'Saved Group'}".`,
       life: 3500,
     });
 
@@ -231,6 +233,10 @@ async function saveCurrentTabs() {
   } finally {
     isSavingCurrent.value = false;
   }
+}
+
+function getGroupTabCount(group: TabGroup): number {
+  return normalizeTabs(group.tabs).length;
 }
 
 onMounted(async () => {
@@ -270,7 +276,8 @@ const displayedGroups = computed(() => {
   const q = searchQuery.value.toLowerCase().trim();
   return list.filter((group) => {
     const matchName = (group.name ?? 'History Tab Group').toLowerCase().includes(q);
-    const matchTabs = group.tabs.some(
+    const tabsList = normalizeTabs(group.tabs);
+    const matchTabs = tabsList.some(
       (tab) => tab.title.toLowerCase().includes(q) || tab.url.toLowerCase().includes(q)
     );
     return matchName || matchTabs;
@@ -379,18 +386,18 @@ function handleSave(groupId: string) {
               @dragleave="handleDragLeave($event, group.id)"
               @drop.prevent="handleDrop($event, group.id)"
             >
-              <div class="flex items-center gap-2 truncate">
+              <div class="flex items-center gap-2 truncate min-w-0 flex-1 mr-2">
                 <Folder
                   class="h-3.5 w-3.5 shrink-0 transition-transform"
                   :class="dragOverGroupId === group.id ? 'text-indigo-600 scale-125' : 'text-slate-400'"
                 />
-                <span class="truncate">{{ group.name }}</span>
+                <span class="truncate">{{ group.name || 'Saved Group' }}</span>
               </div>
               <span
-                class="text-[10px] ml-1 transition-colors"
+                class="text-[10px] ml-1 shrink-0 transition-colors font-medium"
                 :class="dragOverGroupId === group.id ? 'text-indigo-700 font-bold' : 'text-slate-400'"
               >
-                {{ group.tabs.length }}
+                {{ getGroupTabCount(group) }}
               </span>
             </button>
           </div>
