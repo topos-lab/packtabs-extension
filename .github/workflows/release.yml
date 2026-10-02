@@ -1,0 +1,95 @@
+name: Release Extension
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release Tag (例如 v1.0.0；留空则自动根据 package.json 的 version 生成)'
+        required: false
+        default: ''
+        type: string
+      release_title:
+        description: 'Release 标题 (留空则默认为 "PackTabs {Tag}")'
+        required: false
+        default: ''
+        type: string
+      is_draft:
+        description: '是否发布为草稿 (Draft Release)'
+        required: false
+        default: false
+        type: boolean
+      is_prerelease:
+        description: '是否发布为预发布版本 (Pre-release)'
+        required: false
+        default: false
+        type: boolean
+      generate_release_notes:
+        description: '是否自动生成变更日志 (Auto-generate release notes)'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Type Check & Test
+        run: |
+          bun run compile
+          bun run test
+
+      - name: Package extension (Chrome & Firefox zip)
+        run: |
+          bun run zip
+          bun run zip:firefox
+
+      - name: Determine Version and Release Title
+        id: meta
+        shell: bash
+        run: |
+          PKG_VERSION=$(bun -e "console.log(require('./package.json').version)")
+          if [ -n "${{ inputs.tag_name }}" ]; then
+            TAG="${{ inputs.tag_name }}"
+          else
+            TAG="v${PKG_VERSION}"
+          fi
+
+          if [ -n "${{ inputs.release_title }}" ]; then
+            TITLE="${{ inputs.release_title }}"
+          else
+            TITLE="PackTabs ${TAG}"
+          fi
+
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "title=${TITLE}" >> "$GITHUB_OUTPUT"
+          echo "Selected Tag: ${TAG}"
+          echo "Selected Title: ${TITLE}"
+
+      - name: Upload artifacts to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: ${{ steps.meta.outputs.title }}
+          draft: ${{ inputs.is_draft }}
+          prerelease: ${{ inputs.is_prerelease }}
+          generate_release_notes: ${{ inputs.generate_release_notes }}
+          files: |
+            .output/*.zip

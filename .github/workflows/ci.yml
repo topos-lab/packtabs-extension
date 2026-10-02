@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    name: Build & Verify
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: TypeScript Compile & Type Check
+        run: bun run compile
+
+      - name: Run Unit & Property Tests
+        run: bun run test
+
+      - name: Build Chrome MV3 extension
+        run: bun run build
+
+      - name: Build Firefox MV2 extension
+        run: bun run build:firefox

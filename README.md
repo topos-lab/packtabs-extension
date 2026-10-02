@@ -2,6 +2,20 @@
 
 > **Save open tabs for unfinished tasks in one click, banish bookmark clutter, and restore your workspace instantly.**
 
+[![CI](https://github.com/wesley-chen/packtabs-extension/actions/workflows/ci.yml/badge.svg)](https://github.com/wesley-chen/packtabs-extension/actions/workflows/ci.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/wesley-chen/packtabs-extension?logo=github&color=blue)](https://github.com/wesley-chen/packtabs-extension/releases)
+[![Dependabot Status](https://img.shields.io/badge/Dependabot-active-02569B?logo=dependabot&logoColor=white)](https://github.com/wesley-chen/packtabs-extension/security/dependabot)
+[![Dependencies](https://img.shields.io/librariesio/github/wesley-chen/packtabs-extension)](https://libraries.io/github/wesley-chen/packtabs-extension)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Manifest V3](https://img.shields.io/badge/Manifest-V3-success?logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions/mv3/intro/)
+[![Built with WXT](https://img.shields.io/badge/Built%20with-WXT-6C5CE7?logo=wxt&logoColor=white)](https://wxt.dev/)
+[![Vue 3](https://img.shields.io/badge/Vue-3.x-42b883?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Bun](https://img.shields.io/badge/Bun-1.x-f472b6?logo=bun&logoColor=white)](https://bun.sh/)
+[![Tests](https://img.shields.io/badge/tests-234%20passed-brightgreen?logo=vitest&logoColor=white)](https://vitest.dev/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
+
 PackTabs is a productivity-first Chrome Manifest V3 browser extension built with the WXT Framework, Vue 3, and Tailwind CSS v4.
 
 When working on multitasking projects, research topics, or troubleshooting issues, tabs easily pile up. Bookmarking them one by one is tedious, slow, and clutters your permanent browser bookmarks with temporary links. PackTabs eliminates this friction: package all open tabs from an unfinished task into an organized group in one click, cleanly close the window to clear your mind and free browser memory, and restore your entire work context whenever you're ready to pick up where you left off.
@@ -74,9 +88,32 @@ bun run test
 # TypeScript type check (no emit)
 bun run compile
 
+# Run full test suite (230+ unit and property tests)
+bun run test
+
+# Package extensions into release zips (.output/*.zip)
+bun run zip
+bun run zip:firefox
+
 # Code style linting
 bun run lint
 ```
+
+## CI/CD & Automation
+
+This project uses **GitHub Actions** for continuous integration, automated testing, dependency management, and releases:
+
+- **Continuous Integration (`ci.yml`)**:
+  - Automatically triggered whenever code is pushed to `main` or upon creating a Pull Request.
+  - Installs Bun environment and frozen dependencies.
+  - Runs strict TypeScript compilation (`vue-tsc --noEmit`), the complete test suite (234 unit & property-based tests via `vitest`), and builds both Chrome MV3 and Firefox extensions to prevent regressions.
+- **Manual Release Pipeline (`release.yml`)**:
+  - Manually triggered via GitHub's **Actions** tab (`Run workflow`).
+  - Packages production builds for Chrome and Firefox into `.zip` archives.
+  - Automatically reads the version from `package.json` (or accepts a custom tag input), creates a GitHub Release, and uploads extension ZIP files directly to the Release page.
+- **Dependency Management & Security (`dependabot.yml`)**:
+  - Automatically scans npm/bun dependencies weekly and GitHub Actions monthly.
+  - Opens automated Pull Requests for security patches and library upgrades.
 
 ## Directory Structure
 
