@@ -5,6 +5,7 @@ import {
   Folder,
   Globe,
   GripVertical,
+  Info,
   Layers,
   PanelLeftClose,
   PanelLeftOpen,
@@ -20,10 +21,12 @@ import TabGroupList from '~/components/TabGroupList.vue';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader } from '~/components/ui/card';
+import Modal from '~/components/ui/dialog/Modal.vue';
 import { Input } from '~/components/ui/input';
 import ToastContainer from '~/components/ui/toast/ToastContainer.vue';
 import { useToast } from '~/composables/useToast';
 import { setStoreErrorHandler, useTabStore } from '~/stores/useTabStore';
+import { settingsStorage } from '~/types/Storage';
 import type { TabGroup, TabItem } from '~/types/TabGroup';
 import { normalizeTabs, StorageQuotaExceededError } from '~/utils/storage';
 import {
@@ -46,8 +49,9 @@ const isSidebarOpen = ref(true);
 const currentTabs = ref<TabItem[]>([]);
 const currentTabsLoading = ref(false);
 const newGroupName = ref('');
-const closeWindowAfterSave = ref(false);
+const closeWindowAfterSave = ref(true);
 const isSavingCurrent = ref(false);
+const showAboutModal = ref(false);
 
 function getDomain(url?: string): string {
   if (!url) return '';
@@ -276,6 +280,28 @@ watch(
 onMounted(async () => {
   window.addEventListener('dragend', handleDragEndTab);
   window.addEventListener('drop', handleDragEndTab);
+
+  // Load user preference for closeWindowAfterSave
+  try {
+    const settings = await settingsStorage.getValue();
+    closeWindowAfterSave.value = settings.autoCloseAfterSave ?? true;
+  } catch (err) {
+    console.error('Failed to load settings:', err);
+  }
+
+  // Watch and persist changes to sync:settings
+  watch(closeWindowAfterSave, async (newVal) => {
+    try {
+      const current = await settingsStorage.getValue();
+      await settingsStorage.setValue({
+        ...current,
+        autoCloseAfterSave: newVal,
+      });
+    } catch (err) {
+      console.error('Failed to persist settings:', err);
+    }
+  });
+
   await tabStore.loadGroups();
   await refreshCurrentTabs();
   tabStore.selectedGroupId = 'current';
@@ -473,6 +499,21 @@ function handleSave(groupId: string) {
           </div>
         </div>
       </div>
+
+      <!-- Sidebar Footer: About -->
+      <div class="p-2 border-t border-slate-100 shrink-0">
+        <button
+          type="button"
+          class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+          :class="isSidebarOpen ? '' : 'justify-center'"
+          :title="isSidebarOpen ? '' : 'About PackTabs'"
+          @click="showAboutModal = true"
+        >
+          <Info class="h-4 w-4 shrink-0 text-slate-400" />
+          <span v-if="isSidebarOpen" class="flex-1 text-left truncate">About PackTabs</span>
+          <span v-if="isSidebarOpen" class="text-[10px] text-slate-400 font-mono">v1.0.0</span>
+        </button>
+      </div>
     </aside>
 
     <!-- Main Workspace -->
@@ -665,5 +706,54 @@ function handleSave(groupId: string) {
 
     <!-- Floating Toast Notifications -->
     <ToastContainer />
+
+    <!-- About PackTabs Modal -->
+    <Modal
+      v-model:open="showAboutModal"
+      title="About PackTabs"
+      description="Minimalist tab session manager for modern browsers."
+    >
+      <div class="space-y-4 py-1">
+        <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+          <div class="h-10 w-10 rounded-lg bg-indigo-600 flex items-center justify-center text-white shrink-0 shadow-xs">
+            <Layers class="h-5 w-5" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <h4 class="text-sm font-bold text-slate-900 leading-tight">PackTabs</h4>
+            <p class="text-xs text-slate-500 mt-0.5">High-performance Chrome Tab Group & Session Manager</p>
+          </div>
+        </div>
+
+        <div class="text-xs text-slate-600 space-y-2">
+          <div class="flex items-center justify-between py-1.5 border-b border-slate-100">
+            <span class="text-slate-400">Version</span>
+            <span class="font-medium text-slate-700">1.0.0</span>
+          </div>
+          <div class="flex items-center justify-between py-1.5 border-b border-slate-100">
+            <span class="text-slate-400">Author</span>
+            <span class="font-medium text-slate-700">Wesley Chen</span>
+          </div>
+          <div class="flex items-center justify-between py-1.5 border-b border-slate-100">
+            <span class="text-slate-400">GitHub</span>
+            <a
+              href="https://github.com/wesley-chen/packtabs-extension"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-indigo-600 hover:text-indigo-700 hover:underline flex items-center gap-1 font-medium"
+            >
+              <span>wesley-chen/packtabs-extension</span>
+              <ExternalLink class="h-3 w-3" />
+            </a>
+          </div>
+          <div class="flex items-center justify-between py-1.5">
+            <span class="text-slate-400">Shortcut</span>
+            <span class="font-mono text-[11px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">Alt + Shift + P</span>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <Button size="sm" variant="outline" @click="showAboutModal = false">Close</Button>
+      </template>
+    </Modal>
   </div>
 </template>

@@ -33,5 +33,14 @@ export default defineConfig({
       '96': '/icon/96.png',
       '128': '/icon/128.png',
     },
+    commands: {
+      _execute_action: {
+        suggested_key: {
+          default: 'Alt+Shift+P',
+          mac: 'Alt+Shift+P',
+        },
+        description: 'Open PackTabs Manager',
+      },
+    },
   },
 });
