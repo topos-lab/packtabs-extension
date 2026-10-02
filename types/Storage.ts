@@ -19,6 +19,7 @@ export type LocaleMode = 'system' | 'en' | 'zh_CN' | 'zh_TW';
 export interface SettingsSchema {
   autoCloseAfterSave: boolean;
   maxHistoryGroups: number;
+  openOnStartup?: boolean;
   theme?: ThemeMode;
   locale?: LocaleMode;
 }
@@ -48,6 +49,7 @@ export const settingsStorage = storage.defineItem<StorageSchema['settings']>('sy
   defaultValue: {
     autoCloseAfterSave: true,
     maxHistoryGroups: 10,
+    openOnStartup: false,
     theme: 'system',
     locale: 'system',
   },

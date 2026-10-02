@@ -84,6 +84,16 @@ export const zh_CN: Record<MessageKey, string> = {
   enterNameToSavePlaceholder: '输入名称以保存分组...',
   groupNameSimplePlaceholder: '分组名称...',
 
+  // Settings Modal
+  settings: '设置',
+  settingsDesc: '首选项与功能配置',
+  openSettings: '打开设置',
+  closeWindowAfterSaveDesc: '保存分组后自动关闭窗口中的所有网页标签',
+  startupSettingTipTitle: '必须完成的前置设置',
+  startupSettingTipDesc:
+    '若浏览器设为「从上次停下的地方继续」，Chrome 会自动恢复旧标签页导致功能失效或产生重复会话。请务必点击下方按钮，将 Chrome「启动时」设置为「打开新标签页」。',
+  openChromeStartupSettings: '前往 Chrome 启动设置 (必设项)',
+
   // Settings & About Modal
   themeLabel: '外观主题',
   themeDesc: '界面外观偏好',
@@ -103,6 +113,21 @@ export const zh_CN: Record<MessageKey, string> = {
   shortcutDesc: '可在浏览器中配置',
   shortcutNotSet: '未设置 (默认: Alt + Shift + K)',
   change: '修改',
+  startupSettingLabel: '浏览器启动时恢复',
+  startupSettingDesc: '浏览器冷启动时自动打开会话恢复页',
+
+  // Startup Restorer Page
+  startupRestorer: '会话恢复',
+  startupTitle: '恢复会话与工作区',
+  startupSubtitle: '选择一个工作区或恢复上次会话，开启今日浏览',
+  lastClosedSession: '上次关闭的会话',
+  restoreThisSession: '恢复此会话',
+  openFullDashboard: '打开完整管理看板',
+  searchWorkspacesOrHistory: '搜索工作区或历史...',
+  noSavedGroupsInStartup: '暂无保存的工作区',
+  noHistoryGroupsInStartup: '暂无历史会话快照',
+  startupTip: '提示：日常保存或整理标签页，请点击工具栏图标或按 Alt + Shift + K。',
+  remainingTabsCount: '+{count} 个更多标签',
 
   // Notifications / Toasts
   storageQuotaError: '存储空间已满。请删除部分分组以释放空间。',

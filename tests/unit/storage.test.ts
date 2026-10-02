@@ -286,4 +286,20 @@ describe('Storage Service', () => {
       expect(groups[0].tabs[1].id).toBe('tab-new');
     });
   });
+
+  describe('settingsStorage', () => {
+    it('should have default openOnStartup set to false and persist updates', async () => {
+      const { settingsStorage } = await import('../../types/Storage');
+      const defaults = await settingsStorage.getValue();
+      expect(defaults.openOnStartup).toBe(false);
+
+      await settingsStorage.setValue({
+        ...defaults,
+        openOnStartup: true,
+      });
+
+      const updated = await settingsStorage.getValue();
+      expect(updated.openOnStartup).toBe(true);
+    });
+  });
 });

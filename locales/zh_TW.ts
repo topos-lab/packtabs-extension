@@ -84,6 +84,16 @@ export const zh_TW: Record<MessageKey, string> = {
   enterNameToSavePlaceholder: '輸入名稱以儲存分組...',
   groupNameSimplePlaceholder: '分組名稱...',
 
+  // Settings Modal
+  settings: '設定',
+  settingsDesc: '偏好設定與功能配置',
+  openSettings: '開啟設定',
+  closeWindowAfterSaveDesc: '儲存分組後自動關閉視窗中的所有網頁分頁',
+  startupSettingTipTitle: '必須完成的前置設定',
+  startupSettingTipDesc:
+    '若瀏覽器設為「繼續瀏覽上次開啟的網頁」，Chrome 會自動還原舊分頁導致功能失效或產生重複工作階段。請務必點擊下方按鈕，將 Chrome「啟動時」設定為「開啟新分頁」。',
+  openChromeStartupSettings: '前往 Chrome 啟動設定 (必設項)',
+
   // Settings & About Modal
   themeLabel: '外觀主題',
   themeDesc: '介面外觀偏好',
@@ -103,6 +113,21 @@ export const zh_TW: Record<MessageKey, string> = {
   shortcutDesc: '可在瀏覽器中設定',
   shortcutNotSet: '未設定 (預設: Alt + Shift + K)',
   change: '變更',
+  startupSettingLabel: '瀏覽器啟動時恢復',
+  startupSettingDesc: '瀏覽器冷啟動時自動打開會話恢復頁',
+
+  // Startup Restorer Page
+  startupRestorer: '會話恢復',
+  startupTitle: '恢復會話與工作區',
+  startupSubtitle: '選擇一個工作區或恢復上次會話，開啟今日瀏覽',
+  lastClosedSession: '上次關閉的會話',
+  restoreThisSession: '恢復此會話',
+  openFullDashboard: '打開完整管理看板',
+  searchWorkspacesOrHistory: '搜尋工作區或歷史...',
+  noSavedGroupsInStartup: '暫無保存的工作區',
+  noHistoryGroupsInStartup: '暫無歷史會話快照',
+  startupTip: '提示：日常保存或整理標籤頁，請點擊工具列圖示或按 Alt + Shift + K。',
+  remainingTabsCount: '+{count} 個更多分頁',
 
   // Notifications / Toasts
   storageQuotaError: '儲存空間已滿。請刪除部分分組以釋放空間。',

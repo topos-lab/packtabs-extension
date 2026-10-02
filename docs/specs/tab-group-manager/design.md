@@ -77,18 +77,21 @@ graph TD
 ```
 
 ### 1. Presentation Layer
+
 - **Layout**: Permanent two-pane dashboard layout (`w-64` sidebar + flexible main workspace).
 - **Staging View**: Current window tabs staged for review, exclusion, and naming before saving.
 - **Timeline Organization**: History Snapshots categorized into relative time buckets (Today, Yesterday, Previous 7 Days, This Month, Older).
 - **Headless UI Primitives**: Built on Radix Vue (`Modal.vue`, `Tooltip.vue`), styled with Tailwind utility classes.
 
 ### 2. State & Business Logic Layer
+
 - **Pinia Store (`useTabStore`)**:
   - Manages active tab groups, history groups, and selected view navigation.
   - Implements optimistic UI updates for instant drag-and-drop feedback and deletion, rolling back on storage failures.
   - Provides a centralized error handling hook (`setStoreErrorHandler`) triggering accessible toast notifications.
 
 ### 3. Storage & Concurrency Layer
+
 - **Storage Segregation**:
   - `local:tabGroups`: Persists all tab groups in Chrome Local Storage, eliminating the 8KB per-item quota limit imposed by Chrome Sync Storage.
   - `sync:settings`: Persists lightweight user preferences (`theme`, `autoCloseAfterSave`) in Chrome Sync Storage for cross-device synchronization.
@@ -98,6 +101,7 @@ graph TD
   - All write and update operations clone data using `structuredClone` to prevent memory reference leaks.
 
 ### 4. Tab & Favicon Management Layer
+
 - **MV3 Favicon Access**:
   - Uses the Manifest V3 compliant internal URL:
     `chrome-extension://${browser.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=32`
@@ -110,6 +114,7 @@ graph TD
   - Displays standard `cursor-move` (✥) across the entire tab row on both Windows and macOS.
 
 ### 5. Theme & Appearance Layer
+
 - **Tri-State Theme Manager (`useTheme.ts`)**:
   - Supports `system`, `light`, and `dark` modes.
   - Listens to OS `(prefers-color-scheme: dark)` media query when in `system` mode.
@@ -120,12 +125,26 @@ graph TD
   - Renders multi-line hints via newlines `\n`, string arrays `string[]`, or `#content` slots.
 
 ### 6. Keyboard Shortcuts & Commands
+
 - **Command Registration**:
   - Configured under `commands._execute_action` in `wxt.config.ts`.
   - Default suggested key: `Alt+Shift+K` on Windows/Linux, `Command+Shift+K` on macOS (avoiding internal browser key collisions).
 - **Real-time Querying & Focus Refresh**:
   - Queries active status via `browser.commands.getAll()`.
   - Automatically re-queries when the window gains focus (`window.addEventListener('focus', loadShortcut)`).
+
+### 7. Startup Session Restorer (`components/StartupRestorer.vue`)
+
+- **Dual-Track Restorer Architecture**:
+  - Activated conditionally upon browser cold start (`browser.runtime.onStartup`) when `openOnStartup` is enabled in `sync:settings`.
+  - Accessed via query parameter `/dashboard.html?mode=startup` to share build chunks and provide instant transition to the main dashboard.
+- **Ergonomic 2-Column Layout**:
+  - **Left Column (Saved Groups)**: Displays user-curated project workspaces with tab badges, instant "Open All" action, and individual tab click handlers.
+  - **Right Column (History Snapshots)**: Presents chronological session snapshots with visual emphasis (`Last Closed Session` / `⭐ 上次关闭的会话`) for 1-click resumption.
+- **Zero-Friction "Click & Go" Interaction**:
+  - Completely strips out group deletion, renaming, drag-and-drop, and staging panels.
+  - Features real-time multi-column search filtering by group name or tab title/URL.
+  - Seamlessly transitions to full management mode via `open-full-dashboard` event.
 
 ## Testing Strategy
 
@@ -136,4 +155,4 @@ graph TD
   - Group operation isolation
   - Name modification persistence
   - Sidebar content accuracy
-- **Test Coverage**: 194 automated tests across 31 test suites maintaining 100% pass rate.
+- **Test Coverage**: 230 automated tests across 35 test suites maintaining 100% pass rate.

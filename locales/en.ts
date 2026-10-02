@@ -1,7 +1,8 @@
 export const en = {
   // Manifest & Extension Info
   extName: 'PackTabs',
-  extDescription: 'Save open tabs for unfinished tasks in one click and restore your workspace anytime without bookmark clutter.',
+  extDescription:
+    'Save open tabs for unfinished tasks in one click and restore your workspace anytime without bookmark clutter.',
   actionTitle: 'PackTabs Manager',
   commandOpenDashboard: 'Open PackTabs Manager',
 
@@ -82,6 +83,16 @@ export const en = {
   enterNameToSavePlaceholder: 'Enter name to save group...',
   groupNameSimplePlaceholder: 'Group name...',
 
+  // Settings Modal
+  settings: 'Settings',
+  settingsDesc: 'Preferences and feature configurations',
+  openSettings: 'Open Settings',
+  closeWindowAfterSaveDesc: 'Close remaining window tabs after saving a group',
+  startupSettingTipTitle: 'Required Prerequisite Setup',
+  startupSettingTipDesc:
+    'If Chrome is set to "Continue where you left off", Chrome will auto-restore tabs, causing duplicates and breaking this feature. Please click below to set Chrome "On startup" to "Open the New Tab page".',
+  openChromeStartupSettings: 'Open Chrome Startup Settings (Required)',
+
   // Settings & About Modal
   themeLabel: 'Theme',
   themeDesc: 'Appearance preference',
@@ -101,6 +112,21 @@ export const en = {
   shortcutDesc: 'Configurable in Chrome',
   shortcutNotSet: 'Not set (Default: Alt + Shift + K)',
   change: 'Change',
+  startupSettingLabel: 'Restore on Startup',
+  startupSettingDesc: 'Automatically open session restore page when browser starts',
+
+  // Startup Restorer Page
+  startupRestorer: 'Session Restorer',
+  startupTitle: 'Restore Sessions & Workspaces',
+  startupSubtitle: 'Select a workspace or restore previous session to begin browsing',
+  lastClosedSession: 'Last Closed Session',
+  restoreThisSession: 'Restore Session',
+  openFullDashboard: 'Open Full Dashboard',
+  searchWorkspacesOrHistory: 'Search workspaces or history...',
+  noSavedGroupsInStartup: 'No saved workspaces yet',
+  noHistoryGroupsInStartup: 'No history sessions yet',
+  startupTip: 'Tip: To pack or organize tabs during browsing, click the extension icon or press Alt + Shift + K.',
+  remainingTabsCount: '+{count} more tabs',
 
   // Notifications / Toasts
   storageQuotaError: 'Storage quota reached. Please delete some groups to free space.',

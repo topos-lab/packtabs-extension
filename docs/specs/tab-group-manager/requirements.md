@@ -93,6 +93,21 @@ PackTabs is a high-performance Chrome browser extension designed for efficiency-
 #### Acceptance Criteria
 
 1. Tab groups SHALL be persisted in `local:tabGroups`, with support for hundreds of tabs per group without hitting sync quotas.
-2. User preferences (`theme`, `autoCloseAfterSave`) SHALL be persisted in `sync:settings` for cross-device synchronization.
+2. User preferences (`theme`, `autoCloseAfterSave`, `openOnStartup`) SHALL be persisted in `sync:settings` for cross-device synchronization.
 3. All write operations to storage SHALL pass through a mutex queue (`withLock`) to guarantee atomic serialization.
 4. All update operations SHALL clone data using `structuredClone` before modification to maintain cache immutability.
+
+### Requirement 8: Startup Session Restorer
+
+**User Story:** As a user, I want to quickly restore saved workspaces or yesterday's interrupted session when starting the browser, without dealing with complex management overhead.
+
+#### Acceptance Criteria
+
+1. THE Tab_Group_Manager SHALL support an `openOnStartup` user preference persisted in `sync:settings`, configurable via a toggle in the settings modal.
+2. WHEN the browser cold starts (`browser.runtime.onStartup`) AND `openOnStartup` is enabled, THE service worker SHALL automatically open the Startup Restorer view (`/dashboard.html?mode=startup`).
+3. THE Startup Restorer SHALL present a distraction-free 2-column layout:
+   - Left Column: Saved Groups (Workspaces) with tab count, instant "Open All", and individual tab click launchers.
+   - Right Column: History Snapshots with prominent visual highlight on the most recent session ("Last Closed Session" / "上次关闭的会话") and 1-click restore.
+4. THE Startup Restorer SHALL NOT display editing, deleting, or grouping manipulation controls, enforcing a pure "Click & Go" mental model.
+5. THE Startup Restorer SHALL provide a real-time search filter matching group titles and tab URLs/titles across both columns.
+6. THE Startup Restorer SHALL include an "Open Full Dashboard" button allowing smooth transition into the full tab management workspace.
