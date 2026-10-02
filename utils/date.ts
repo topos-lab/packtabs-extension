@@ -11,9 +11,9 @@ let cachedLocale: string | null = null;
 
 function getUserLocale(): string {
   try {
-    if (activeLocale?.value === 'zh_CN') return 'zh-CN';
-    if (activeLocale?.value === 'zh_TW') return 'zh-TW';
-    if (activeLocale?.value === 'en') return 'en-US';
+    if (activeLocale?.value === 'zh_CN') {return 'zh-CN';}
+    if (activeLocale?.value === 'zh_TW') {return 'zh-TW';}
+    if (activeLocale?.value === 'en') {return 'en-US';}
   } catch {
     // Ignore outside Vue reactivity or during unit tests
   }
@@ -63,11 +63,11 @@ const pad = (n: number) => String(n).padStart(2, '0');
 export function formatFullDateTime(dateInput: Date | string | number): string {
   try {
     const d = dateInput instanceof Date ? dateInput : new Date(dateInput);
-    if (isNaN(d.getTime())) return '';
+    if (isNaN(d.getTime())) {return '';}
     return getFullDateTimeFormatter().format(d);
   } catch {
     const d = new Date(dateInput);
-    if (isNaN(d.getTime())) return '';
+    if (isNaN(d.getTime())) {return '';}
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 }
@@ -89,7 +89,7 @@ export function formatDefaultGroupName(date: Date = new Date(), prefix = 'Tab Gr
  * so that sort comparators never produce NaN (which breaks V8 sort).
  */
 export function getTimeSafe(dateInput: Date | string | number | undefined | null): number {
-  if (!dateInput) return 0;
+  if (!dateInput) {return 0;}
   if (dateInput instanceof Date) {
     const t = dateInput.getTime();
     return isNaN(t) ? 0 : t;

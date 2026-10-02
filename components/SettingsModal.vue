@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import { AlertCircle, ExternalLink, Moon, Sparkles, Sun, SunMoon } from 'lucide-vue-next';
+  import { AlertCircle, ExternalLink, Moon, Sun, SunMoon } from 'lucide-vue-next';
   import { onMounted, ref, watch } from 'vue';
 
   import { Button } from '~/components/ui/button';
@@ -29,9 +29,9 @@
         const commands = await browser.commands.getAll();
         const targetCmd =
           commands.find((c) => c.name === 'open_dashboard') || commands.find((c) => c.name === '_execute_action');
-        if (targetCmd && targetCmd.shortcut) {
+        if (targetCmd?.shortcut) {
           currentShortcut.value = targetCmd.shortcut.split('+').join(' + ');
-        } else if (targetCmd && targetCmd.shortcut === '') {
+        } else if (targetCmd?.shortcut === '') {
           currentShortcut.value = t('shortcutNotSet');
         }
       }
@@ -54,7 +54,7 @@
 
   function openShortcutSettings() {
     try {
-      browser.tabs.create({ url: 'chrome://extensions/shortcuts' });
+      void browser.tabs.create({ url: 'chrome://extensions/shortcuts' });
     } catch (err) {
       console.error('Failed to open shortcuts settings:', err);
     }
@@ -62,7 +62,7 @@
 
   function openOnStartupSettings() {
     try {
-      browser.tabs.create({ url: 'chrome://settings/onStartup' });
+      void browser.tabs.create({ url: 'chrome://settings/onStartup' });
     } catch (err) {
       console.error('Failed to open onStartup settings:', err);
     }
@@ -123,7 +123,9 @@
       <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
         <div>
           <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('themeLabel') }}</span>
-          <p class="text-[10px] text-zinc-400 dark:text-zinc-500">{{ t('themeDesc') }}</p>
+          <p class="text-[10px] text-zinc-400 dark:text-zinc-500">
+            {{ t('themeDesc') }}
+          </p>
         </div>
         <div
           class="inline-flex items-center p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60 text-xs">
@@ -170,7 +172,9 @@
       <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
         <div>
           <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('languageLabel') }}</span>
-          <p class="text-[10px] text-zinc-400 dark:text-zinc-500">{{ t('languageDesc') }}</p>
+          <p class="text-[10px] text-zinc-400 dark:text-zinc-500">
+            {{ t('languageDesc') }}
+          </p>
         </div>
         <div
           class="inline-flex items-center p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60 text-xs">
@@ -226,12 +230,14 @@
         <div class="flex items-center justify-between">
           <div>
             <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('startupSettingLabel') }}</span>
-            <p class="text-[10px] text-zinc-400 dark:text-zinc-500">{{ t('startupSettingDesc') }}</p>
+            <p class="text-[10px] text-zinc-400 dark:text-zinc-500">
+              {{ t('startupSettingDesc') }}
+            </p>
           </div>
           <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" v-model="openOnStartup" class="sr-only peer" />
+            <input v-model="openOnStartup" type="checkbox" class="sr-only peer">
             <div
-              class="w-8 h-4.5 bg-zinc-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-3.5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all dark:border-zinc-600 peer-checked:bg-indigo-600"></div>
+              class="w-8 h-4.5 bg-zinc-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-3.5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all dark:border-zinc-600 peer-checked:bg-indigo-600" />
           </label>
         </div>
 
@@ -262,12 +268,14 @@
       <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
         <div>
           <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('closeWindowAfterSave') }}</span>
-          <p class="text-[10px] text-zinc-400 dark:text-zinc-500">{{ t('closeWindowAfterSaveDesc') }}</p>
+          <p class="text-[10px] text-zinc-400 dark:text-zinc-500">
+            {{ t('closeWindowAfterSaveDesc') }}
+          </p>
         </div>
         <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" v-model="closeWindowAfterSave" class="sr-only peer" />
+          <input v-model="closeWindowAfterSave" type="checkbox" class="sr-only peer">
           <div
-            class="w-8 h-4.5 bg-zinc-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-3.5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all dark:border-zinc-600 peer-checked:bg-indigo-600"></div>
+            class="w-8 h-4.5 bg-zinc-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-3.5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all dark:border-zinc-600 peer-checked:bg-indigo-600" />
         </label>
       </div>
 
@@ -275,7 +283,9 @@
       <div class="flex items-center justify-between py-1.5">
         <div>
           <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('shortcutLabel') }}</span>
-          <p class="text-[10px] text-zinc-400 dark:text-zinc-500">{{ t('shortcutDesc') }}</p>
+          <p class="text-[10px] text-zinc-400 dark:text-zinc-500">
+            {{ t('shortcutDesc') }}
+          </p>
         </div>
         <div class="flex items-center gap-2">
           <span

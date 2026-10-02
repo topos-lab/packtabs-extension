@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-vue-next';
+
 import { useToast } from '~/composables/useToast';
 
 const { toasts, remove } = useToast();
@@ -30,8 +31,12 @@ const { toasts, remove } = useToast();
         <Info v-else class="h-5 w-5 text-sky-600 shrink-0 mt-0.5" />
 
         <div class="flex-1 text-sm">
-          <div v-if="toast.title" class="font-semibold mb-0.5">{{ toast.title }}</div>
-          <div class="text-xs opacity-90 leading-relaxed">{{ toast.message }}</div>
+          <div v-if="toast.title" class="font-semibold mb-0.5">
+            {{ toast.title }}
+          </div>
+          <div class="text-xs opacity-90 leading-relaxed">
+            {{ toast.message }}
+          </div>
         </div>
 
         <button

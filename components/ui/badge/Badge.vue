@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { cva, type VariantProps } from 'class-variance-authority';
+import { cva } from 'class-variance-authority';
 import type { HTMLAttributes } from 'vue';
+
 import { cn } from '~/lib/utils';
 
 const badgeVariants = cva(

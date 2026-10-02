@@ -177,7 +177,7 @@ describe('TabGroupList Component', () => {
   });
 
   it('renders single group correctly', () => {
-    const singleGroup: TabGroup[] = [mockGroups[0]!];
+    const singleGroup: TabGroup[] = [mockGroups[0]];
     const wrapper = mount(TabGroupList, {
       props: { groups: singleGroup },
       global: {

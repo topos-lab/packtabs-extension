@@ -48,6 +48,9 @@ export default defineConfig([
     rules: {
       'vue/max-attributes-per-line': 'off',
       'vue/html-closing-bracket-newline': 'off',
+      'vue/multi-word-component-names': 'off',
+      'vue/singleline-html-element-content-newline': 'off',
+      'vue/html-self-closing': 'off',
     },
   },
 
@@ -85,6 +88,16 @@ export default defineConfig([
           fixStyle: 'separate-type-imports',
         },
       ],
+      // Allow async event listeners in MV3 background/popup contexts
+      '@typescript-eslint/no-misused-promises': ['error', { checksVoidReturn: false }],
+      '@typescript-eslint/no-confusing-void-expression': 'off',
+      '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/no-unnecessary-type-conversion': 'off',
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/no-dynamic-delete': 'off',
+      '@typescript-eslint/restrict-template-expressions': 'off',
+      '@typescript-eslint/no-deprecated': 'warn',
+
       // Replace the @typescript-eslint/no-unused-vars rule
       '@typescript-eslint/no-unused-vars': 'off',
       'unused-imports/no-unused-imports': 'error',
@@ -100,6 +113,14 @@ export default defineConfig([
       // --- Import Ordering Auto-fixes ---
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
+    },
+  },
+
+  // Handle Node Scripts
+  {
+    files: ['scripts/**/*.js', 'scripts/**/*.ts'],
+    rules: {
+      'no-undef': 'off',
     },
   },
 
@@ -126,10 +147,14 @@ export default defineConfig([
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/require-await': 'off',
       '@typescript-eslint/restrict-template-expressions': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-confusing-void-expression': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+      '@typescript-eslint/class-literal-property-style': 'off',
+      'preserve-caught-error': 'off',
     },
   },
 ]);

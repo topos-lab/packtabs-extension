@@ -35,3 +35,8 @@ trigger: always_on
    - Avoid empty technical buzzwords ("Minimalist", "High-performance") as primary value propositions.
    - Focus copy on core user productivity (e.g., saving task-focused tabs in one click vs. tedious bookmarking clutter, instant context restoration).
    - Ensure Dialog descriptions and inner card subtitles do not duplicate identical wording.
+
+8. **Automated Quality & Lint Enforcement**:
+   - Always run `bun run check` (or `bun run lint:fix`) before completing any modification.
+   - Ensure 0 errors on TypeScript compile (`vue-tsc --noEmit`), ESLint (`eslint .`), and Vitest test suite (`vitest --run`).
+

@@ -25,12 +25,14 @@ interface Props {
   class?: HTMLAttributes['class'];
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
+  content: undefined,
   side: 'top',
   align: 'center',
   sideOffset: 6,
   delayDuration: 400,
   disabled: false,
+  class: undefined,
 });
 </script>
 

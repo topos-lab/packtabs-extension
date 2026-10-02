@@ -77,14 +77,13 @@ describe('StartupRestorer Component', () => {
 
     // historyGroup1 is from 10-02 18:30 (newer than historyGroup2 10-01 15:00)
     // The component should render the "lastClosedSession" / "上次关闭的会话" indicator for it
-    const cards = wrapper.findAll('.border');
     const hasHighlightBadge =
       wrapper.text().includes('上次关闭的会话') || wrapper.text().includes('Last Closed Session');
     expect(hasHighlightBadge).toBe(true);
   });
 
   it('calls openTabs and automatically closes the extension page when "Open All" / "Restore" button is clicked', async () => {
-    const openTabsSpy = vi.spyOn(tabManager, 'openTabs').mockResolvedValue(undefined as any);
+    const openTabsSpy = vi.spyOn(tabManager, 'openTabs').mockResolvedValue(undefined);
     browser.tabs.getCurrent = vi.fn().mockResolvedValue({ id: 888 } as any);
     browser.tabs.remove = vi.fn().mockResolvedValue(undefined as any);
 
@@ -103,7 +102,7 @@ describe('StartupRestorer Component', () => {
   });
 
   it('calls openSingleTab when an individual tab item is clicked', async () => {
-    const openSingleTabSpy = vi.spyOn(tabManager, 'openSingleTab').mockResolvedValue(undefined as any);
+    const openSingleTabSpy = vi.spyOn(tabManager, 'openSingleTab').mockResolvedValue(undefined);
 
     const wrapper = mount(StartupRestorer, {
       global: { plugins: [pinia] },

@@ -38,7 +38,6 @@
   import { normalizeTabs, StorageQuotaExceededError } from '~/utils/storage';
   import {
     captureCurrentWindow,
-    closeCurrentTabs,
     deduplicateTabsByUrl,
     generateDefaultGroupName,
     getFaviconUrl,
@@ -49,8 +48,8 @@
 
   const tabStore = useTabStore();
   const toast = useToast();
-  const { theme, isDark, initTheme, setTheme, cycleTheme, themeTooltip } = useTheme();
-  const { t, localeMode, setLocale, initLocale } = useI18n();
+  const { theme, initTheme, cycleTheme, themeTooltip } = useTheme();
+  const { t, initLocale } = useI18n();
 
   const searchQuery = ref('');
 
@@ -66,17 +65,6 @@
   const isStartupMode = ref(false);
   const openOnStartup = ref(false);
 
-  function openFullDashboardFromStartup() {
-    isStartupMode.value = false;
-    try {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('mode');
-      window.history.replaceState({}, '', url.toString());
-    } catch {
-      // Ignore in non-browser environments
-    }
-  }
-
   /**
    * Queries active browser commands in real-time.
    * Displays formatted shortcut (e.g. 'Alt + Shift + K') or fallback with default suggestion.
@@ -87,9 +75,9 @@
         const commands = await browser.commands.getAll();
         const targetCmd =
           commands.find((c) => c.name === 'open_dashboard') || commands.find((c) => c.name === '_execute_action');
-        if (targetCmd && targetCmd.shortcut) {
+        if (targetCmd?.shortcut) {
           currentShortcut.value = targetCmd.shortcut.split('+').join(' + ');
-        } else if (targetCmd && targetCmd.shortcut === '') {
+        } else if (targetCmd?.shortcut === '') {
           currentShortcut.value = t('shortcutNotSet');
         }
       }
@@ -103,20 +91,8 @@
     showAboutModal.value = true;
   }
 
-  /**
-   * Opens Chrome extension shortcut settings (chrome://extensions/shortcuts)
-   * in a new browser tab for direct user configuration.
-   */
-  function openShortcutSettings() {
-    try {
-      browser.tabs.create({ url: 'chrome://extensions/shortcuts' });
-    } catch (err) {
-      console.error('Failed to open shortcuts settings:', err);
-    }
-  }
-
   function getDomain(url?: string): string {
-    if (!url) return '';
+    if (!url) {return '';}
     try {
       const parsed = new URL(url);
       return parsed.hostname.replace(/^www\./, '');
@@ -174,7 +150,7 @@
           detail: t('openedBackgroundSuccess', { title: tab.title || t('untitled') }),
           life: 2000,
         });
-      } catch (err) {
+      } catch (_err) {
         toast.add({
           severity: 'error',
           detail: t('openedBackgroundFailed'),
@@ -188,7 +164,7 @@
   const dragOverGroupId = ref<string | null>(null);
 
   function handleDragStartCurrentTab(event: DragEvent, tab: TabItem) {
-    if (!event.dataTransfer) return;
+    if (!event.dataTransfer) {return;}
     tabStore.isDraggingTab = true;
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData(
@@ -243,7 +219,7 @@
       };
       const { sourceGroupId, tab } = payload;
 
-      if (!tab || !tab.id) return;
+      if (!tab?.id) {return;}
 
       if (sourceGroupId === targetGroupId) {
         toast.add({
@@ -287,7 +263,7 @@
   }
 
   async function saveCurrentTabs() {
-    if (isSavingCurrent.value || currentTabs.value.length === 0) return;
+    if (isSavingCurrent.value || currentTabs.value.length === 0) {return;}
     isSavingCurrent.value = true;
 
     try {
@@ -336,7 +312,8 @@
   }
 
   function handleGlobalKeydown(e: KeyboardEvent) {
-    const isMac = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+    const isMac =
+      typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/i.test(navigator.userAgent);
     const modifier = isMac ? e.metaKey : e.altKey;
     if (modifier && e.shiftKey && (e.key === 'K' || e.key === 'k')) {
       e.preventDefault();
@@ -469,11 +446,11 @@
           class="flex items-center gap-2.5 pl-1.5 py-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-left overflow-hidden group/brand focus:outline-none cursor-pointer"
           :title="t('aboutPackTabs')"
           @click="openAboutModal">
-          <img src="/icon/48.png" alt="PackTabs Logo" class="h-8 w-8 rounded-lg shrink-0 shadow-xs object-contain" />
+          <img src="/icon/48.png" alt="PackTabs Logo" class="h-8 w-8 rounded-lg shrink-0 shadow-xs object-contain">
           <div class="flex flex-col">
             <span
               class="font-bold text-sm tracking-tight text-zinc-900 dark:text-zinc-100 group-hover/brand:text-indigo-600 dark:group-hover/brand:text-indigo-400 leading-tight transition-colors"
-              >PackTabs</span
+            >PackTabs</span
             >
             <span class="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium leading-tight">{{
               t('tabManager')
@@ -619,8 +596,12 @@
           <div
             v-else-if="tabStore.isDraggingTab"
             class="px-2.5 py-2.5 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/60 dark:bg-zinc-800/40 text-center">
-            <p class="text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ t('noSavedGroupsYet') }}</p>
-            <p class="text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5">{{ t('saveCurrentTabsFirst') }}</p>
+            <p class="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+              {{ t('noSavedGroupsYet') }}
+            </p>
+            <p class="text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5">
+              {{ t('saveCurrentTabsFirst') }}
+            </p>
           </div>
           <div v-else class="px-2.5 py-2 text-[11px] text-zinc-400 dark:text-zinc-500 italic">
             {{ t('noSavedGroupsYet') }}
@@ -688,9 +669,9 @@
                   <label
                     class="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-300 cursor-pointer select-none">
                     <input
-                      type="checkbox"
                       v-model="closeWindowAfterSave"
-                      class="rounded border-zinc-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5" />
+                      type="checkbox"
+                      class="rounded border-zinc-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5">
                     <span>{{ t('closeWindowAfterSave') }}</span>
                   </label>
 
@@ -711,8 +692,12 @@
                 <div
                   v-if="displayedCurrentTabs.length === 0"
                   class="py-12 text-center text-zinc-400 dark:text-zinc-500 text-xs">
-                  <p v-if="currentTabs.length === 0">{{ t('noCurrentTabs') }}</p>
-                  <p v-else>{{ t('noMatchingTabs') }}</p>
+                  <p v-if="currentTabs.length === 0">
+                    {{ t('noCurrentTabs') }}
+                  </p>
+                  <p v-else>
+                    {{ t('noMatchingTabs') }}
+                  </p>
                 </div>
 
                 <div
@@ -744,7 +729,7 @@
                             :src="tab.faviconUrl || getFaviconUrl(tab.url)"
                             class="h-4 w-4 rounded-xs object-contain"
                             alt=""
-                            loading="lazy" />
+                            loading="lazy">
                           <Globe v-else class="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
                         </div>
 
@@ -820,10 +805,14 @@
       <div class="space-y-4 py-1">
         <div
           class="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-100 dark:border-zinc-800">
-          <img src="/icon/48.png" alt="PackTabs Logo" class="h-10 w-10 rounded-xl shrink-0 shadow-xs object-contain" />
+          <img src="/icon/48.png" alt="PackTabs Logo" class="h-10 w-10 rounded-xl shrink-0 shadow-xs object-contain">
           <div class="min-w-0 flex-1">
-            <h4 class="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-tight">PackTabs</h4>
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{{ t('aboutTagline') }}</p>
+            <h4 class="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-tight">
+              PackTabs
+            </h4>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+              {{ t('aboutTagline') }}
+            </p>
           </div>
         </div>
 
@@ -862,7 +851,9 @@
             <Settings class="h-3.5 w-3.5" />
             <span>{{ t('settings') }}</span>
           </Button>
-          <Button size="sm" variant="outline" @click="showAboutModal = false">{{ t('close') }}</Button>
+          <Button size="sm" variant="outline" @click="showAboutModal = false">
+            {{ t('close') }}
+          </Button>
         </div>
       </template>
     </Modal>

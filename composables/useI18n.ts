@@ -1,8 +1,8 @@
 import { computed, ref } from 'vue';
 
 import { en, type MessageKey, zh_CN, zh_TW } from '~/locales';
-import { settingsStorage } from '~/types/Storage';
 import type { LocaleMode } from '~/types/Storage';
+import { settingsStorage } from '~/types/Storage';
 
 export type SupportedLocale = 'en' | 'zh_CN' | 'zh_TW';
 export { type MessageKey };
@@ -22,7 +22,8 @@ export function getSystemLocale(langInput?: string): SupportedLocale {
       if (typeof browser !== 'undefined' && browser.i18n?.getUILanguage) {
         lang = browser.i18n.getUILanguage();
       } else if (typeof navigator !== 'undefined') {
-        lang = navigator.language || (navigator as any).userLanguage || '';
+        lang =
+          navigator.language || (navigator as unknown as { userLanguage?: string }).userLanguage || '';
       }
     }
 

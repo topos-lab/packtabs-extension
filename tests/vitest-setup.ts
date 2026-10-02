@@ -60,7 +60,7 @@ class FixedTextDecoder {
 
 // Override global TextEncoder/TextDecoder before any other code runs
 global.TextEncoder = FixedTextEncoder as any;
-global.TextDecoder = FixedTextDecoder as any;
+global.TextDecoder = FixedTextDecoder;
 
 // Ensure Uint8Array is properly available
 if (typeof global.Uint8Array === 'undefined') {

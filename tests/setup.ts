@@ -4,7 +4,7 @@ import { beforeEach, vi } from 'vitest';
 // Fix for jsdom TextEncoder issue with esbuild
 if (typeof global.TextEncoder === 'undefined') {
   global.TextEncoder = TextEncoder;
-  global.TextDecoder = TextDecoder as typeof global.TextDecoder;
+  global.TextDecoder = TextDecoder;
 }
 
 // Mock browser APIs before each test

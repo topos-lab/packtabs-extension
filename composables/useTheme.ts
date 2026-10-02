@@ -1,20 +1,20 @@
 import { computed, ref } from 'vue';
 
 import { t } from '~/composables/useI18n';
-import { settingsStorage } from '~/types/Storage';
 import type { ThemeMode } from '~/types/Storage';
+import { settingsStorage } from '~/types/Storage';
 
 const theme = ref<ThemeMode>('system');
 const isDark = ref(false);
 let isInitialized = false;
 
 function getSystemPrefersDark(): boolean {
-  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  if (typeof window === 'undefined' || !window.matchMedia) {return false;}
   return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
 function applyTheme(mode: ThemeMode) {
-  if (typeof document === 'undefined') return;
+  if (typeof document === 'undefined') {return;}
 
   const shouldBeDark = mode === 'dark' || (mode === 'system' && getSystemPrefersDark());
   isDark.value = shouldBeDark;
@@ -53,8 +53,6 @@ export function useTheme() {
       };
       if (typeof mediaQuery.addEventListener === 'function') {
         mediaQuery.addEventListener('change', listener);
-      } else if (typeof (mediaQuery as any).addListener === 'function') {
-        (mediaQuery as any).addListener(listener);
       }
     }
   }

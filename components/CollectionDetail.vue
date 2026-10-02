@@ -27,7 +27,7 @@ import { normalizeTabs } from '~/utils/storage';
 import { deduplicateTabsByUrl, getFaviconUrl, openSingleTab, openTabs } from '~/utils/tabManager';
 
 function getDomain(url?: string): string {
-  if (!url) return '';
+  if (!url) {return '';}
   try {
     const parsed = new URL(url);
     return parsed.hostname.replace(/^www\./, '');
@@ -121,7 +121,7 @@ function handleFaviconError(id: string) {
 
 // Drag & drop tab categorization
 function handleDragStart(event: DragEvent, tab: TabItem) {
-  if (!event.dataTransfer) return;
+  if (!event.dataTransfer) {return;}
   tabStore.isDraggingTab = true;
   event.dataTransfer.effectAllowed = 'move';
   event.dataTransfer.setData(
@@ -305,8 +305,12 @@ async function confirmDeleteGroup() {
       <CardContent class="p-3">
         <!-- Empty State -->
         <div v-if="filteredTabs.length === 0" class="py-12 text-center text-zinc-400 dark:text-zinc-500 text-xs">
-          <p v-if="totalTabsCount === 0">{{ t('noTabsInGroup') }}</p>
-          <p v-else>{{ t('noMatchingTabs') }}</p>
+          <p v-if="totalTabsCount === 0">
+            {{ t('noTabsInGroup') }}
+          </p>
+          <p v-else>
+            {{ t('noMatchingTabs') }}
+          </p>
         </div>
 
         <!-- Tab Rows List -->
@@ -343,7 +347,7 @@ async function confirmDeleteGroup() {
                     alt=""
                     loading="lazy"
                     @error="handleFaviconError(tab.id)"
-                  />
+                  >
                   <Globe v-else class="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
                 </div>
 
@@ -389,8 +393,12 @@ async function confirmDeleteGroup() {
         {{ t('deleteGroupItemDesc', { name: group.name || t('untitledTabGroup'), count: totalTabsCount }) }}
       </div>
       <template #footer>
-        <Button variant="outline" size="sm" @click="showDeleteConfirm = false">{{ t('cancel') }}</Button>
-        <Button variant="destructive" size="sm" @click="confirmDeleteGroup">{{ t('delete') }}</Button>
+        <Button variant="outline" size="sm" @click="showDeleteConfirm = false">
+          {{ t('cancel') }}
+        </Button>
+        <Button variant="destructive" size="sm" @click="confirmDeleteGroup">
+          {{ t('delete') }}
+        </Button>
       </template>
     </Modal>
   </div>

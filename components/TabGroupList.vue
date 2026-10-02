@@ -30,17 +30,17 @@ interface TimeSection {
 
 function getTimeCategory(dateInput: Date | string | number, now = new Date()): TimeCategory {
   const d = new Date(dateInput);
-  if (isNaN(d.getTime())) return 'Older';
+  if (isNaN(d.getTime())) {return 'Older';}
 
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfTarget = new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
   const diffDays = Math.round((startOfToday.getTime() - startOfTarget.getTime()) / (1000 * 60 * 60 * 24));
 
-  if (diffDays <= 0) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
-  if (diffDays <= 7) return 'Previous 7 Days';
-  if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) return 'This Month';
+  if (diffDays <= 0) {return 'Today';}
+  if (diffDays === 1) {return 'Yesterday';}
+  if (diffDays <= 7) {return 'Previous 7 Days';}
+  if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) {return 'This Month';}
   return 'Older';
 }
 
@@ -97,7 +97,9 @@ function handleSave(groupId: string) {
       <div class="h-12 w-12 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 dark:text-zinc-500 mb-3.5">
         <Layers class="h-6 w-6" />
       </div>
-      <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-1">{{ t('noGroupsYet') }}</h3>
+      <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-1">
+        {{ t('noGroupsYet') }}
+      </h3>
       <p class="text-xs text-zinc-500 dark:text-zinc-400 max-w-xs leading-relaxed">
         {{ t('noGroupsYetSubtitle') }}
       </p>

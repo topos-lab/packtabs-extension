@@ -1,4 +1,4 @@
-import type { StorageSchema, StoredTabGroup } from '../types/Storage';
+import type { StoredTabGroup } from '../types/Storage';
 import { tabGroupsStorage } from '../types/Storage';
 import type { TabGroup, TabItem } from '../types/TabGroup';
 import { sortGroupsByDateDesc } from './date';
@@ -41,7 +41,9 @@ let writeLock: Promise<unknown> = Promise.resolve();
 
 async function withLock<T>(operation: () => Promise<T>): Promise<T> {
   const result = writeLock.then(() => operation());
-  writeLock = result.catch(() => {});
+  writeLock = result.catch(() => {
+    // Suppress errors to avoid breaking subsequent lock acquisitions
+  });
   return await result;
 }
 
@@ -139,7 +141,7 @@ export function deserializeTabGroup(stored: StoredTabGroup): TabGroup {
     id: stored.id,
     name: stored.name,
     createdAt: new Date(stored.createdAt),
-    tabs: stored.tabs === null ? (null as any) : normalizeTabs(stored.tabs),
+    tabs: stored.tabs == null ? (null as unknown as TabItem[]) : normalizeTabs(stored.tabs),
     isHistory: Boolean(stored.isHistory),
   };
 }
@@ -160,7 +162,7 @@ export function resolveSyncConflict(localGroup: TabGroup, remoteGroup: StoredTab
  * Saves a tab group to storage
  */
 export async function saveTabGroup(group: TabGroup): Promise<void> {
-  return await withLock(async () => {
+  await withLock(async () => {
     await withRetry(async () => {
       const rawGroups = await tabGroupsStorage.getValue();
       const allGroups: Record<string, StoredTabGroup> = { ...rawGroups };
@@ -194,7 +196,7 @@ export async function getTabGroups(): Promise<TabGroup[]> {
  * Updates a tab group with partial data
  */
 export async function updateTabGroup(id: string, updates: Partial<TabGroup>): Promise<void> {
-  return await withLock(async () => {
+  await withLock(async () => {
     await withRetry(async () => {
       const rawGroups = await tabGroupsStorage.getValue();
       const allGroups: Record<string, StoredTabGroup> = { ...rawGroups };
@@ -222,7 +224,7 @@ export async function updateTabGroup(id: string, updates: Partial<TabGroup>): Pr
  * Deletes a tab group from storage
  */
 export async function deleteTabGroup(id: string): Promise<void> {
-  return await withLock(async () => {
+  await withLock(async () => {
     await withRetry(async () => {
       const rawGroups = await tabGroupsStorage.getValue();
 
@@ -240,7 +242,7 @@ export async function deleteTabGroup(id: string): Promise<void> {
  * Deletes a specific tab from a tab group
  */
 export async function deleteTabFromGroup(groupId: string, tabId: string): Promise<void> {
-  return await withLock(async () => {
+  await withLock(async () => {
     await withRetry(async () => {
       const rawGroups = await tabGroupsStorage.getValue();
       const allGroups: Record<string, StoredTabGroup> = { ...rawGroups };
@@ -279,9 +281,9 @@ export async function moveTabBetweenGroups(
   targetGroupId: string,
   tabId: string
 ): Promise<void> {
-  if (sourceGroupId === targetGroupId) return;
+  if (sourceGroupId === targetGroupId) {return;}
 
-  return await withLock(async () => {
+  await withLock(async () => {
     await withRetry(async () => {
       const rawGroups = await tabGroupsStorage.getValue();
       const allGroups: Record<string, StoredTabGroup> = { ...rawGroups };
@@ -325,7 +327,7 @@ export async function moveTabBetweenGroups(
  * Appends a tab to an existing group in storage
  */
 export async function addTabToGroup(groupId: string, tab: TabItem): Promise<void> {
-  return await withLock(async () => {
+  await withLock(async () => {
     await withRetry(async () => {
       const rawGroups = await tabGroupsStorage.getValue();
       const allGroups: Record<string, StoredTabGroup> = { ...rawGroups };

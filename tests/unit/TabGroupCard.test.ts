@@ -70,7 +70,7 @@ describe('TabGroupCard Component', () => {
 
   it('converts history group to named group when renamed via inline edit', async () => {
     const store = useTabStore();
-    const convertSpy = vi.spyOn(store, 'convertToNamed').mockResolvedValue(undefined as any);
+    const convertSpy = vi.spyOn(store, 'convertToNamed').mockResolvedValue(undefined);
 
     const historyGroup = { ...mockGroup, name: null, isHistory: true };
     const wrapper = mount(TabGroupCard, {

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+
 import sharp from 'sharp';
 
 const SIZES = [16, 32, 48, 96, 128];

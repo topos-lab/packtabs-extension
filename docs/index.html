@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - PackTabs</title>
+  <meta name="description" content="Official Privacy Policy for PackTabs Browser Extension. 100% offline, local storage only, zero data collection.">
+  <link rel="icon" href="../public/icon/32.png" type="image/png">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --accent: #22d3ee;
+      --callout-bg: #f0fdf4;
+      --callout-border: #bbf7d0;
+      --callout-text: #166534;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #09090b;
+        --card-bg: #18181b;
+        --text: #f4f4f5;
+        --text-muted: #a1a1aa;
+        --border: #27272a;
+        --primary: #818cf8;
+        --primary-hover: #6366f1;
+        --callout-bg: #052e16;
+        --callout-border: #14532d;
+        --callout-text: #86efac;
+      }
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 0;
+      margin: 0;
+      transition: background-color 0.2s, color 0.2s;
+    }
+    header {
+      border-bottom: 1px solid var(--border);
+      background-color: var(--card-bg);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(8px);
+    }
+    .header-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: inherit;
+    }
+    .logo-badge {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, #818cf8, #4338ca);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3);
+    }
+    .brand-title {
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+    }
+    .lang-switcher {
+      display: flex;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .lang-btn {
+      border: none;
+      background: transparent;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-muted);
+      border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+    .lang-btn.active {
+      background: var(--card-bg);
+      color: var(--primary);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    main {
+      max-width: 860px;
+      margin: 2rem auto;
+      padding: 0 1.5rem 4rem;
+    }
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.5rem;
+    }
+    .meta {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+    .callout {
+      background-color: var(--callout-bg);
+      border: 1px solid var(--callout-border);
+      color: var(--callout-text);
+      padding: 1.25rem;
+      border-radius: 8px;
+      margin-bottom: 2.5rem;
+      font-weight: 500;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.4rem;
+    }
+    p {
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+    ul {
+      margin-bottom: 1.25rem;
+      padding-left: 1.5rem;
+    }
+    li {
+      margin-bottom: 0.4rem;
+    }
+    strong {
+      color: var(--text);
+    }
+    a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    footer {
+      margin-top: 3rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .lang-section {
+      display: none;
+    }
+    .lang-section.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <a href="https://github.com/wesley-chen/packtabs-extension" class="logo-group" target="_blank" rel="noreferrer">
+        <div class="logo-badge">P</div>
+        <div class="brand-title">PackTabs</div>
+      </a>
+      <div class="lang-switcher">
+        <button id="btn-en" class="lang-btn active" onclick="switchLang('en')">English</button>
+        <button id="btn-zh" class="lang-btn" onclick="switchLang('zh')">简体中文</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="card">
+      <!-- English Section -->
+      <section id="sec-en" class="lang-section active">
+        <h1>Privacy Policy</h1>
+        <div class="meta">Last Updated: October 3, 2026 · Effective Date: October 3, 2026</div>
+
+        <div class="callout">
+          <strong>Zero-Tracking Guarantee:</strong> PackTabs operates 100% locally on your machine. Your tabs, titles, and workspace configurations are stored strictly within your browser's private local sandbox. No data is ever transmitted to external developer servers.
+        </div>
+
+        <h2>1. Overview</h2>
+        <p>PackTabs is a minimalist, task-oriented browser tab and session manager built for Google Chrome, Mozilla Firefox, and Chromium-based browsers. We believe user privacy is a fundamental human right. PackTabs is designed from the ground up with a privacy-by-default architecture.</p>
+
+        <h2>2. Data We Handle</h2>
+        <p>PackTabs only accesses and stores data when you explicitly perform an action or enable a specific browser feature:</p>
+        <ul>
+          <li><strong>Tab Titles and URLs:</strong> Captured only when you save a tab group or when a closed window is preserved as a history snapshot.</li>
+          <li><strong>Website Favicons:</strong> Cached site favicon URLs to help you visually recognize links inside the dashboard.</li>
+          <li><strong>Timestamps:</strong> Created dates to sort and organize your tab groups chronologically.</li>
+          <li><strong>User Preferences:</strong> Local UI settings such as theme mode (dark/light), display language, and startup restore behaviors.</li>
+        </ul>
+        <p><strong>We do NOT collect:</strong> Personal identification (names, emails, IP addresses), passwords, session cookies, form values, financial data, browsing history outside saved sessions, or page contents.</p>
+
+        <h2>3. Data Storage and Security</h2>
+        <ul>
+          <li><strong>Local Storage (<code>chrome.storage.local</code>):</strong> All saved tab groups and snapshots are stored on your local drive with a 10MB quota.</li>
+          <li><strong>Preferences Sync (<code>chrome.storage.sync</code>):</strong> Only UI settings (like dark mode) may sync across your signed-in browser profiles via Google/Mozilla account infrastructure. Tab URLs are never synced.</li>
+          <li><strong>No Developer Servers:</strong> We do not operate, own, or rent any backend servers or databases. Your data never touches our infrastructure.</li>
+        </ul>
+
+        <h2>4. Permissions Usage</h2>
+        <ul>
+          <li><code>tabs</code>: Required to inspect URLs and titles of open tabs to save them into groups, and to open tabs when you click "Open All".</li>
+          <li><code>storage</code>: Required to persist your groups and settings across browser restarts.</li>
+          <li><code>favicon</code> (Chrome only): Required to render tab favicons safely using Chrome's internal <code>_favicon</code> protocol.</li>
+        </ul>
+
+        <h2>5. Third-Party Services & Analytics</h2>
+        <p>PackTabs contains <strong>zero analytics scripts</strong> (no Google Analytics, Mixpanel, etc.), <strong>zero advertisements</strong>, and <strong>zero tracking pixels</strong>. In accordance with Manifest V3 policies, all executable code is self-contained within the extension package with no remote code execution.</p>
+
+        <h2>6. Data Sharing & User Rights</h2>
+        <p>We do not and will never sell, lease, or share your data. You can delete individual tabs or entire groups at any time in the dashboard. Uninstalling the extension permanently wipes all data from your computer.</p>
+
+        <h2>7. Contact</h2>
+        <p>If you have any questions or feedback regarding this policy, please reach out via our open-source repository: <a href="https://github.com/wesley-chen/packtabs-extension/issues" target="_blank" rel="noreferrer">GitHub Issues</a>.</p>
+      </section>
+
+      <!-- Chinese Section -->
+      <section id="sec-zh" class="lang-section">
+        <h1>隐私政策 (Privacy Policy)</h1>
+        <div class="meta">最后更新日期：2026年10月3日 · 生效日期：2026年10月3日</div>
+
+        <div class="callout">
+          <strong>零追踪承诺：</strong> PackTabs 采用 100% 纯本地离线架构。您的标签页标题、网址及分组数据全部仅保存在您本机的浏览器本地沙箱中，绝不向任何外部开发者服务器上传任何数据。
+        </div>
+
+        <h2>1. 概述</h2>
+        <p>PackTabs 是一款面向任务与专注力设计的浏览器标签页与会话管理器，支持 Google Chrome、Mozilla Firefox 及 Chromium 系列浏览器。我们坚信隐私是用户的基本权利，PackTabs 从底层架构上践行“默认隐私（Privacy-by-Default）”原则。</p>
+
+        <h2>2. 我们处理的数据</h2>
+        <p>PackTabs 仅在您显式操作或启用特定功能时访问必要数据：</p>
+        <ul>
+          <li><strong>标签页网址与标题 (URL & Title)：</strong> 仅在您主动点击保存分组或窗口关闭产生历史快照时暂存。</li>
+          <li><strong>网站图标 (Favicon)：</strong> 缓存站点图标 URL 用于在面板中直观辨识标签页。</li>
+          <li><strong>时间戳：</strong> 记录创建时间以按时间倒序排列和检索标签组。</li>
+          <li><strong>偏好设置：</strong> 主题配色（深色/浅色）、界面语言、启动时行为等配置。</li>
+        </ul>
+        <p><strong>我们绝不收集：</strong> 个人身份信息（姓名、邮箱、IP）、密码、Cookies、网页正文 DOM、表单数据或未保存标签的浏览历史。</p>
+
+        <h2>3. 数据存储与安全</h2>
+        <ul>
+          <li><strong>本地存储 (<code>chrome.storage.local</code>)：</strong> 所有标签页分组与快照仅保存在您本地硬盘的浏览器沙箱中（享有 10MB 独立配额）。</li>
+          <li><strong>偏好同步 (<code>chrome.storage.sync</code>)：</strong> 仅外观偏好（如暗黑模式）会通过您浏览器自带的官方账号（如 Google 账号）在您登录的设备间同步，标签页 URL 绝不同步至外部。</li>
+          <li><strong>无开发者自建服务器：</strong> 我们未架设任何外部后台服务器或数据库，您的数据物理上无法上传至第三方。</li>
+        </ul>
+
+        <h2>4. 权限用途说明</h2>
+        <ul>
+          <li><code>tabs</code>：用于读取当前窗口标签页的标题与地址以打包保存，并在您点击“全部打开”时重新还原网页。</li>
+          <li><code>storage</code>：用于在本地跨会话持久化存储您的标签组和偏好配置。</li>
+          <li><code>favicon</code>（仅 Chrome）：用于通过 Chrome 官方受保护的 <code>_favicon</code> 接口安全展示网站图标。</li>
+        </ul>
+
+        <h2>5. 第三方服务与分析</h2>
+        <p>PackTabs <strong>不包含任何第三方统计分析 SDK</strong>（如 Google Analytics、Mixpanel）、<strong>无任何广告植入</strong>、<strong>无跟踪器</strong>。严格遵循 Manifest V3 规范，所有执行代码均打包在扩展包内，无远程代码。</p>
+
+        <h2>6. 数据共享与删除</h2>
+        <p>我们承诺绝不出售、出租或共享您的任何数据。您可随时在管理面板删除任意标签页或分组；卸载扩展将彻底清除本地所有持久化数据。</p>
+
+        <h2>7. 联系我们</h2>
+        <p>如有关于隐私政策的任何问题，欢迎通过开源社区提出：<a href="https://github.com/wesley-chen/packtabs-extension/issues" target="_blank" rel="noreferrer">GitHub Issues</a>。</p>
+      </section>
+    </div>
+
+    <footer>
+      &copy; 2026 PackTabs Extension. Released under the MIT License.
+    </footer>
+  </main>
+
+  <script>
+    function switchLang(lang) {
+      document.querySelectorAll('.lang-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+      
+      const sec = document.getElementById('sec-' + lang);
+      const btn = document.getElementById('btn-' + lang);
+      if (sec) sec.classList.add('active');
+      if (btn) btn.classList.add('active');
+    }
+
+    // Auto-detect browser language on load
+    (function init() {
+      const userLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+      if (userLang.startsWith('zh')) {
+        switchLang('zh');
+      }
+    })();
+  </script>
+</body>
+</html>

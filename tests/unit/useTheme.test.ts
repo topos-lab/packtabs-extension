@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { useTheme } from '~/composables/useTheme';
 import { settingsStorage } from '~/types/Storage';
 

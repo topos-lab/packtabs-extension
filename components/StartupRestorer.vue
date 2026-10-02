@@ -4,7 +4,6 @@
     ExternalLink,
     Folder,
     Globe,
-    Layers,
     Moon,
     Search,
     Settings,
@@ -53,7 +52,7 @@
   }
 
   function getDomain(url?: string): string {
-    if (!url) return '';
+    if (!url) {return '';}
     try {
       const parsed = new URL(url);
       return parsed.hostname.replace(/^www\./, '');
@@ -65,7 +64,7 @@
   // Filter and sort Saved Groups
   const filteredSavedGroups = computed(() => {
     const sorted = sortGroupsByDateDesc(tabStore.namedGroups);
-    if (!searchQuery.value.trim()) return sorted;
+    if (!searchQuery.value.trim()) {return sorted;}
     const q = searchQuery.value.toLowerCase().trim();
     return sorted.filter((g) => {
       const matchName = (g.name || '').toLowerCase().includes(q);
@@ -78,7 +77,7 @@
   // Filter and sort History Groups
   const filteredHistoryGroups = computed(() => {
     const sorted = sortGroupsByDateDesc(tabStore.historyGroups);
-    if (!searchQuery.value.trim()) return sorted;
+    if (!searchQuery.value.trim()) {return sorted;}
     const q = searchQuery.value.toLowerCase().trim();
     return sorted.filter((g) => {
       const defaultName = formatFullDateTime(g.createdAt);
@@ -105,7 +104,7 @@
         }
       }
     } catch (err) {
-      if (err && (err as any).name !== 'MockNotImplementedError') {
+      if (err && (err as Error).name !== 'MockNotImplementedError') {
         console.warn('Failed to close current tab via browser.tabs.remove:', err);
       }
     }
@@ -121,7 +120,7 @@
 
   async function handleRestoreGroup(group: TabGroup) {
     const tabs = getGroupTabs(group);
-    if (tabs.length === 0) return;
+    if (tabs.length === 0) {return;}
     try {
       await openTabs(tabs);
       await closeCurrentPage();
@@ -163,7 +162,7 @@
       <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
         <!-- Brand & Title -->
         <div class="flex items-center gap-3">
-          <img :src="logoUrl" alt="PackTabs Logo" class="h-8 w-8 rounded-lg shadow-2xs object-contain" />
+          <img :src="logoUrl" alt="PackTabs Logo" class="h-8 w-8 rounded-lg shadow-2xs object-contain">
           <div class="flex items-center gap-2">
             <span class="font-bold text-base tracking-tight text-zinc-900 dark:text-zinc-100">PackTabs</span>
             <Badge
@@ -301,7 +300,7 @@
                           :src="tab.faviconUrl || getFaviconUrl(tab.url)"
                           class="h-3.5 w-3.5 rounded-2xs object-contain"
                           alt=""
-                          loading="lazy" />
+                          loading="lazy">
                         <Globe v-else class="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
                       </div>
                       <span
@@ -423,7 +422,7 @@
                           :src="tab.faviconUrl || getFaviconUrl(tab.url)"
                           class="h-3.5 w-3.5 rounded-2xs object-contain"
                           alt=""
-                          loading="lazy" />
+                          loading="lazy">
                         <Globe v-else class="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
                       </div>
                       <span

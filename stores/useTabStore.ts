@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 
 import { tabGroupsStorage } from '~/types/Storage';
 import type { TabGroup, TabItem } from '~/types/TabGroup';
+import { sortGroupsByDateDesc } from '~/utils/date';
 import {
   addTabToGroup as addTabToGroupInStorage,
   deleteTabFromGroup as deleteTabFromGroupInStorage,
@@ -16,7 +17,6 @@ import {
   updateTabGroup as updateTabGroupInStorage,
 } from '~/utils/storage';
 import { captureCurrentWindow, deduplicateTabsByUrl, TabPermissionDeniedError } from '~/utils/tabManager';
-import { sortGroupsByDateDesc } from '~/utils/date';
 
 /**
  * Optional error handler that can be registered from the UI
@@ -242,7 +242,7 @@ export const useTabStore = defineStore('tabs', () => {
    * Moves a tab from one group to another with optimistic update and rollback on failure
    */
   async function moveTab(sourceGroupId: string, targetGroupId: string, tabId: string): Promise<void> {
-    if (sourceGroupId === targetGroupId) return;
+    if (sourceGroupId === targetGroupId) {return;}
     const previousGroups = cloneTabGroups(tabGroups.value);
 
     try {

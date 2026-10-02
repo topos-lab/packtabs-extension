@@ -66,7 +66,7 @@ export function validateUrl(url: string): boolean {
 export function deduplicateTabsByUrl(tabs: TabItem[]): TabItem[] {
   const seen = new Set<string>();
   return tabs.filter((tab) => {
-    if (!tab.url) return false;
+    if (!tab.url) {return false;}
     let key = tab.url.trim();
     try {
       const u = new URL(key);
@@ -87,7 +87,7 @@ export function deduplicateTabsByUrl(tabs: TabItem[]): TabItem[] {
  */
 export function getFaviconUrl(pageUrl: string): string {
   try {
-    if (!pageUrl) return '';
+    if (!pageUrl) {return '';}
     const extId = browser.runtime?.id;
     if (extId) {
       return `chrome-extension://${extId}/_favicon/?pageUrl=${encodeURIComponent(pageUrl)}&size=32`;
@@ -113,7 +113,7 @@ export async function captureCurrentWindow(): Promise<TabItem[]> {
     // Map browser tabs to TabItem format, filtering out restricted URLs
     const tabItems: TabItem[] = tabs
       .filter((tab) => {
-        if (!tab.url) return false;
+        if (!tab.url) {return false;}
         return validateUrl(tab.url);
       })
       .map((tab) => ({
@@ -164,7 +164,10 @@ export async function openTabs(tabs: TabItem[]): Promise<void> {
     if (error instanceof TabPermissionDeniedError) {
       throw error;
     }
-    throw new Error(`Failed to open tabs: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Failed to open tabs: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error }
+    );
   }
 }
 

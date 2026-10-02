@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue';
+
 import { cn } from '~/lib/utils';
 
-const props = defineProps<{
+defineProps<{
   defaultValue?: string | number;
   modelValue?: string | number;
   class?: HTMLAttributes['class'];
 }>();
 
-const emits = defineEmits<{
-  (e: 'update:modelValue', payload: string | number): void;
-}>();
+const emits = defineEmits<(e: 'update:modelValue', payload: string | number) => void>();
 </script>
 
 <template>
@@ -23,5 +22,5 @@ const emits = defineEmits<{
       )
     "
     @input="emits('update:modelValue', ($event.target as HTMLInputElement).value)"
-  />
+  >
 </template>

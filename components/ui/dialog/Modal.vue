@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { X } from 'lucide-vue-next';
 import {
   DialogClose,
   DialogContent,
@@ -8,7 +9,6 @@ import {
   DialogRoot,
   DialogTitle,
 } from 'radix-vue';
-import { X } from 'lucide-vue-next';
 
 defineProps<{
   open: boolean;
@@ -16,9 +16,7 @@ defineProps<{
   description?: string;
 }>();
 
-const emit = defineEmits<{
-  (e: 'update:open', value: boolean): void;
-}>();
+const emit = defineEmits<(e: 'update:open', value: boolean) => void>();
 </script>
 
 <template>

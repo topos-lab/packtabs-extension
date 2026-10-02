@@ -1,7 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
-import { useI18n, getSystemLocale } from '~/composables/useI18n';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { getSystemLocale,useI18n } from '~/composables/useI18n';
 import { en } from '~/locales/en';
 import { zh_CN } from '~/locales/zh_CN';
 import { zh_TW } from '~/locales/zh_TW';

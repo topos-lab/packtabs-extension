@@ -6,7 +6,6 @@ import {
   Globe,
   GripVertical,
   Pencil,
-  Plus,
   Save,
   Trash2,
   X,
@@ -28,7 +27,7 @@ import { normalizeTabs } from '~/utils/storage';
 import { deduplicateTabsByUrl, getFaviconUrl, openSingleTab, openTabs } from '~/utils/tabManager';
 
 function getDomain(url?: string): string {
-  if (!url) return '';
+  if (!url) {return '';}
   try {
     const parsed = new URL(url);
     return parsed.hostname.replace(/^www\./, '');
@@ -106,7 +105,7 @@ async function saveTitle() {
           life: 3000,
         });
       }
-    } catch (error) {
+    } catch (_error) {
       toast.add({
         severity: 'error',
         summary: t('errorTitle'),
@@ -158,7 +157,7 @@ async function handleDeleteTab(tabId: string) {
       detail: t('tabRemovedSuccess'),
       life: 2000,
     });
-  } catch (error) {
+  } catch (_error) {
     toast.add({
       severity: 'error',
       detail: t('removeTabFailed'),
@@ -169,7 +168,7 @@ async function handleDeleteTab(tabId: string) {
 
 // Drag & drop tab categorization
 function handleDragStart(event: DragEvent, tab: TabItem) {
-  if (!event.dataTransfer) return;
+  if (!event.dataTransfer) {return;}
   tabStore.isDraggingTab = true;
   event.dataTransfer.effectAllowed = 'move';
   event.dataTransfer.setData(
@@ -195,7 +194,7 @@ async function handleOpenAll() {
       detail: t('restoredTabsSuccessShort', { count: tabList.value.length }),
       life: 3000,
     });
-  } catch (error) {
+  } catch (_error) {
     toast.add({
       severity: 'error',
       detail: t('restoreTabsFailed'),
@@ -222,7 +221,7 @@ async function saveWithName() {
         detail: t('groupConvertedSuccess'),
         life: 3000,
       });
-    } catch (error) {
+    } catch (_error) {
       toast.add({
         severity: 'error',
         detail: t('saveGroupFailed'),
@@ -245,7 +244,7 @@ async function confirmDeleteGroup() {
       detail: t('tabGroupDeleted'),
       life: 3000,
     });
-  } catch (error) {
+  } catch (_error) {
     toast.add({
       severity: 'error',
       detail: t('deleteGroupFailed'),
@@ -377,7 +376,7 @@ async function confirmDeleteGroup() {
                   alt=""
                   loading="lazy"
                   @error="handleFaviconError(tab.id)"
-                />
+                >
                 <Globe v-else class="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
               </div>
 
@@ -434,7 +433,9 @@ async function confirmDeleteGroup() {
       </div>
     </div>
     <template #footer>
-      <Button variant="outline" size="sm" @click="showNameDialog = false">{{ t('cancel') }}</Button>
+      <Button variant="outline" size="sm" @click="showNameDialog = false">
+        {{ t('cancel') }}
+      </Button>
       <Button size="sm" :disabled="!newGroupName.trim()" @click="saveWithName">
         {{ t('saveGroup') }}
       </Button>
@@ -451,8 +452,12 @@ async function confirmDeleteGroup() {
       {{ t('deleteGroupItemDescShort', { name: displayTitle, count: tabCount }) }}
     </div>
     <template #footer>
-      <Button variant="outline" size="sm" @click="showDeleteConfirm = false">{{ t('cancel') }}</Button>
-      <Button variant="destructive" size="sm" @click="confirmDeleteGroup">{{ t('delete') }}</Button>
+      <Button variant="outline" size="sm" @click="showDeleteConfirm = false">
+        {{ t('cancel') }}
+      </Button>
+      <Button variant="destructive" size="sm" @click="confirmDeleteGroup">
+        {{ t('delete') }}
+      </Button>
     </template>
   </Modal>
 </template>

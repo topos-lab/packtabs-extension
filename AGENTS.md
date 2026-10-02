@@ -62,9 +62,15 @@ packtabs-extension/
 8. **Value-Driven Copywriting**:
    - Prioritize user productivity and task-based context switching in documentation, UI text, and README.
    - Highlight the core pain point: avoiding tedious one-by-one bookmarking and bookmark bar clutter.
+9. **Automated Quality & Lint Enforcement Protocol**:
+   - Every AI agent modifying code in this codebase MUST automatically execute `bun run check` (or `bun run lint:fix`) before completing turn/task.
+   - All TypeScript compilation errors, ESLint rules, and Vitest assertions must be proactively resolved to guarantee 0 errors. Never deliver code with unresolved lint warnings or failures.
 
 ## 5. Standard CLI Commands
 ```powershell
+# Run full automated quality check (TypeCheck + ESLint + Vitest)
+bun run check
+
 # Development server with hot module reload
 bun run dev
 

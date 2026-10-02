@@ -35,7 +35,7 @@ export default defineBackground(() => {
       const currentSessionMap: Record<string, TabItem[]> = {};
 
       for (const win of windows) {
-        if (win.id == null || win.type !== 'normal') continue;
+        if (win.id == null || win.type !== 'normal') {continue;}
 
         const validTabs = (win.tabs ?? [])
           .filter((t) => t.url && validateUrl(t.url))
@@ -114,7 +114,7 @@ export default defineBackground(() => {
   // --- Browser Event Listeners ---
 
   // Track tab changes across all windows
-  browser.tabs.onCreated.addListener(() => debouncedSyncSessionTabs());
+  browser.tabs.onCreated.addListener(() => { debouncedSyncSessionTabs(); });
 
   browser.tabs.onUpdated.addListener((_id, changeInfo) => {
     if (changeInfo.status === 'complete' || changeInfo.url || changeInfo.title) {
@@ -122,9 +122,9 @@ export default defineBackground(() => {
     }
   });
 
-  browser.tabs.onMoved.addListener(() => debouncedSyncSessionTabs());
-  browser.tabs.onAttached.addListener(() => debouncedSyncSessionTabs());
-  browser.tabs.onDetached.addListener(() => debouncedSyncSessionTabs());
+  browser.tabs.onMoved.addListener(() => { debouncedSyncSessionTabs(); });
+  browser.tabs.onAttached.addListener(() => { debouncedSyncSessionTabs(); });
+  browser.tabs.onDetached.addListener(() => { debouncedSyncSessionTabs(); });
 
   browser.tabs.onRemoved.addListener((_tabId, removeInfo) => {
     // If the entire window is closing, do NOT wipe the session map for that window
@@ -185,7 +185,7 @@ export default defineBackground(() => {
    * If a dashboard tab is already open, activates it and focuses its window;
    * otherwise creates a new tab. Resilient against startup window initialization latency.
    */
-  async function openOrFocusDashboard(queryString: string = '') {
+  async function openOrFocusDashboard(queryString = '') {
     const dashboardBaseUrl = browser.runtime.getURL('/dashboard.html');
     const targetUrl = queryString ? `${dashboardBaseUrl}${queryString}` : dashboardBaseUrl;
 
@@ -206,8 +206,8 @@ export default defineBackground(() => {
 
     try {
       const tabs = await browser.tabs.query({});
-      const existingTab = tabs.find((t) => t.url && t.url.startsWith(dashboardBaseUrl));
-      if (existingTab && existingTab.id !== undefined) {
+      const existingTab = tabs.find((t) => t.url?.startsWith(dashboardBaseUrl));
+      if (existingTab?.id !== undefined) {
         if (existingTab.url !== targetUrl) {
           await browser.tabs.update(existingTab.id, { url: targetUrl, active: true });
         } else {
@@ -238,7 +238,7 @@ export default defineBackground(() => {
             ? windowTabs[0]
             : null;
 
-        if (blankTab && blankTab.id !== undefined) {
+        if (blankTab?.id !== undefined) {
           await browser.tabs.update(blankTab.id, {
             url: targetUrl,
             active: true,

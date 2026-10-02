@@ -40,7 +40,7 @@ describe('Storage Error Handling Property Tests', () => {
   beforeEach(async () => {
     await tabGroupsStorage.setValue({});
     vi.restoreAllMocks();
-    vi.spyOn(global, 'setTimeout').mockImplementation((cb) => { if (typeof cb === 'function') cb(); return 0 as any; });
+    vi.spyOn(global, 'setTimeout').mockImplementation((cb) => { if (typeof cb === 'function') {cb();} return 0 as any; });
   });
 
   it('Property 18.1: Storage quota errors are properly detected', async () => {
@@ -86,7 +86,7 @@ describe('Storage Error Handling Property Tests', () => {
         }),
         async (groups) => {
           // Clear storage and restore mocks for this test
-          vi.restoreAllMocks(); vi.spyOn(global, 'setTimeout').mockImplementation((cb) => { if (typeof cb === 'function') cb(); return 0 as any; });
+          vi.restoreAllMocks(); vi.spyOn(global, 'setTimeout').mockImplementation((cb) => { if (typeof cb === 'function') {cb();} return 0 as any; });
           await tabGroupsStorage.setValue({});
 
           // Save initial groups
@@ -100,9 +100,6 @@ describe('Storage Error Handling Property Tests', () => {
 
           // Try to update first group with a failing operation
           const groupToUpdate = groups[0];
-
-          // Mock only setValue to fail once
-          let callCount = 0;
 
           vi.spyOn(tabGroupsStorage, 'setValue').mockRejectedValue(new Error('Network failure'));
 
@@ -119,7 +116,7 @@ describe('Storage Error Handling Property Tests', () => {
           }
 
           // Restore mocks and verify existing data is intact
-          vi.restoreAllMocks(); vi.spyOn(global, 'setTimeout').mockImplementation((cb) => { if (typeof cb === 'function') cb(); return 0 as any; });
+          vi.restoreAllMocks(); vi.spyOn(global, 'setTimeout').mockImplementation((cb) => { if (typeof cb === 'function') {cb();} return 0 as any; });
           const afterFailureGroups = await getTabGroups();
 
           if (afterFailureGroups.length !== initialCount) {
@@ -192,7 +189,7 @@ describe('Storage Error Handling Property Tests', () => {
     await fc.assert(
       fc.asyncProperty(tabGroupArbitrary, async (group) => {
         // Mock getValue to always fail
-        vi.spyOn(global, 'setTimeout').mockImplementation((cb) => { if (typeof cb === 'function') cb(); return 0 as any; });
+        vi.spyOn(global, 'setTimeout').mockImplementation((cb) => { if (typeof cb === 'function') {cb();} return 0 as any; });
         vi.spyOn(tabGroupsStorage, 'getValue').mockRejectedValue(new Error('Persistent network error'));
 
         let errorThrown = false;

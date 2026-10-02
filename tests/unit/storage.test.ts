@@ -130,7 +130,7 @@ describe('Storage Service', () => {
       await saveTabGroup(group);
 
       await updateTabGroup('original-id', {
-        id: 'new-id' as any,
+        id: 'new-id',
         name: 'Updated',
       });
 

@@ -49,7 +49,7 @@ describe('Property 8: Name Modification Persistence', () => {
           groups[originalGroup.id] = {
             ...originalGroup,
             createdAt: originalGroup.createdAt.toISOString(),
-          } as any;
+          };
           await tabGroupsStorage.setValue(groups);
 
           // Update the group name
@@ -87,7 +87,7 @@ describe('Property 8: Name Modification Persistence', () => {
           groups[originalGroup.id] = {
             ...originalGroup,
             createdAt: originalGroup.createdAt.toISOString(),
-          } as any;
+          };
           await tabGroupsStorage.setValue(groups);
 
           // Update the group name
@@ -149,7 +149,7 @@ describe('Property 8: Name Modification Persistence', () => {
         groups[groupWithName.id] = {
           ...groupWithName,
           createdAt: groupWithName.createdAt.toISOString(),
-        } as any;
+        };
         await tabGroupsStorage.setValue(groups);
 
         // Try to update with empty name (should be handled by validation)
@@ -186,7 +186,7 @@ describe('Property 8: Name Modification Persistence', () => {
           groups[originalGroup.id] = {
             ...originalGroup,
             createdAt: originalGroup.createdAt.toISOString(),
-          } as any;
+          };
           await tabGroupsStorage.setValue(groups);
 
           // Apply each name update sequentially
