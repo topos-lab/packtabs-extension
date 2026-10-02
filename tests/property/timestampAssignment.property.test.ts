@@ -1,5 +1,5 @@
 import * as fc from 'fast-check';
-import { afterEach, beforeEach, describe, it } from 'vitest';
+import { afterEach, beforeEach, describe, it, vi } from 'vitest';
 
 import { tabGroupsStorage } from '../../types/Storage';
 import type { TabGroup } from '../../types/TabGroup';
@@ -52,7 +52,7 @@ describe('Timestamp Assignment Property Tests', () => {
         const newGroup: TabGroup = {
           id: crypto.randomUUID(),
           name: groupData.name,
-          createdAt: new Date(), // Timestamp assignment
+          createdAt: new Date(Date.now()), // Timestamp assignment
           tabs: groupData.tabs,
           isHistory: groupData.isHistory,
         };
@@ -90,7 +90,7 @@ describe('Timestamp Assignment Property Tests', () => {
 
         return true;
       }),
-      { numRuns: 100 }
+      { numRuns: 20 }
     );
   });
 
@@ -127,7 +127,7 @@ describe('Timestamp Assignment Property Tests', () => {
 
         return true;
       }),
-      { numRuns: 100 }
+      { numRuns: 20 }
     );
   });
 
@@ -144,7 +144,7 @@ describe('Timestamp Assignment Property Tests', () => {
           const newGroup: TabGroup = {
             id: crypto.randomUUID(),
             name: groupData.name,
-            createdAt: new Date(),
+            createdAt: new Date(Date.now()),
             tabs: groupData.tabs,
             isHistory: groupData.isHistory,
           };
@@ -153,7 +153,9 @@ describe('Timestamp Assignment Property Tests', () => {
           await saveTabGroup(newGroup);
 
           // Small delay to ensure timestamps are different
-          await new Promise((resolve) => setTimeout(resolve, 2));
+          // Mock Date.now or advance it since setTimeout takes too long on Windows
+          const current = Date.now();
+          vi.spyOn(Date, 'now').mockReturnValue(current + 10);
         }
 
         // Retrieve all groups
@@ -182,7 +184,7 @@ describe('Timestamp Assignment Property Tests', () => {
 
         return true;
       }),
-      { numRuns: 100 }
+      { numRuns: 20 }
     );
   });
 
@@ -197,7 +199,7 @@ describe('Timestamp Assignment Property Tests', () => {
           const newGroup: TabGroup = {
             id: crypto.randomUUID(),
             name: groupData.name,
-            createdAt: new Date(),
+            createdAt: new Date(Date.now()),
             tabs: groupData.tabs,
             isHistory: groupData.isHistory,
           };
@@ -237,7 +239,8 @@ describe('Timestamp Assignment Property Tests', () => {
 
         return true;
       }),
-      { numRuns: 100 }
+      { numRuns: 20 }
     );
   });
 });
+

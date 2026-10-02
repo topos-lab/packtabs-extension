@@ -1,8 +1,5 @@
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
-import PrimeVue from 'primevue/config';
-import ConfirmationService from 'primevue/confirmationservice';
-import ToastService from 'primevue/toastservice';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import TabGroupCard from '../../components/TabGroupCard.vue';
@@ -22,11 +19,9 @@ describe('TabGroupList Component', () => {
   let mockGroups: TabGroup[];
 
   beforeEach(() => {
-    // Create fresh Pinia instance
     pinia = createPinia();
     setActivePinia(pinia);
 
-    // Create mock tab groups
     mockGroups = [
       {
         id: 'group-1',
@@ -77,16 +72,14 @@ describe('TabGroupList Component', () => {
     const wrapper = mount(TabGroupList, {
       props: { groups: mockGroups },
       global: {
-        plugins: [pinia, PrimeVue, ConfirmationService, ToastService],
+        plugins: [pinia],
         stubs: {
-          TabGroupCard: false, // Don't stub, render actual component
+          TabGroupCard: false,
         },
       },
     });
 
-    // Find all TabGroupCard components
     const cards = wrapper.findAllComponents(TabGroupCard);
-
     expect(cards).toHaveLength(3);
   });
 
@@ -94,7 +87,7 @@ describe('TabGroupList Component', () => {
     const wrapper = mount(TabGroupList, {
       props: { groups: mockGroups },
       global: {
-        plugins: [pinia, PrimeVue, ConfirmationService, ToastService],
+        plugins: [pinia],
         stubs: {
           TabGroupCard: false,
         },
@@ -103,17 +96,16 @@ describe('TabGroupList Component', () => {
 
     const cards = wrapper.findAllComponents(TabGroupCard);
 
-    // Check that each card receives the correct group
-    expect(cards[0].props('group')).toEqual(mockGroups[0]);
-    expect(cards[1].props('group')).toEqual(mockGroups[1]);
-    expect(cards[2].props('group')).toEqual(mockGroups[2]);
+    expect(cards[0]?.props('group')).toEqual(mockGroups[0]);
+    expect(cards[1]?.props('group')).toEqual(mockGroups[1]);
+    expect(cards[2]?.props('group')).toEqual(mockGroups[2]);
   });
 
   it('renders group names in the list', () => {
     const wrapper = mount(TabGroupList, {
       props: { groups: mockGroups },
       global: {
-        plugins: [pinia, PrimeVue, ConfirmationService, ToastService],
+        plugins: [pinia],
         stubs: {
           TabGroupCard: false,
         },
@@ -121,9 +113,8 @@ describe('TabGroupList Component', () => {
     });
 
     const text = wrapper.text();
-
     expect(text).toContain('Work Tabs');
-    expect(text).toContain('History Tab Group'); // For unnamed group
+    expect(text).toContain('History Tab Group');
     expect(text).toContain('Personal Tabs');
   });
 
@@ -131,11 +122,10 @@ describe('TabGroupList Component', () => {
     const wrapper = mount(TabGroupList, {
       props: { groups: [] },
       global: {
-        plugins: [pinia, PrimeVue, ConfirmationService, ToastService],
+        plugins: [pinia],
       },
     });
 
-    // Check for empty state message
     expect(wrapper.text()).toContain('No tab groups yet');
     expect(wrapper.text()).toContain('Save your current tabs to create your first tab group');
   });
@@ -144,12 +134,11 @@ describe('TabGroupList Component', () => {
     const wrapper = mount(TabGroupList, {
       props: { groups: [] },
       global: {
-        plugins: [pinia, PrimeVue, ConfirmationService, ToastService],
+        plugins: [pinia],
       },
     });
 
     const cards = wrapper.findAllComponents(TabGroupCard);
-
     expect(cards).toHaveLength(0);
   });
 
@@ -157,13 +146,12 @@ describe('TabGroupList Component', () => {
     const wrapper = mount(TabGroupList, {
       props: { groups: [] },
       global: {
-        plugins: [pinia, PrimeVue, ConfirmationService, ToastService],
+        plugins: [pinia],
       },
     });
 
-    // Check for inbox icon in empty state
-    const icon = wrapper.find('.pi-inbox');
-
+    // Check for empty state svg icon
+    const icon = wrapper.find('svg');
     expect(icon.exists()).toBe(true);
   });
 
@@ -171,31 +159,29 @@ describe('TabGroupList Component', () => {
     const wrapper = mount(TabGroupList, {
       props: { groups: mockGroups },
       global: {
-        plugins: [pinia, PrimeVue, ConfirmationService, ToastService],
+        plugins: [pinia],
         stubs: {
           TabGroupCard: false,
         },
       },
     });
 
-    // Find the history group card (group-2)
     const cards = wrapper.findAllComponents(TabGroupCard);
-    const historyCard = cards[1]; // Second card is the history group
+    const historyCard = cards[1];
 
-    // Emit save event from the card
-    await historyCard.vm.$emit('save', 'group-2');
-
-    // Check that TabGroupList emitted the save event
-    expect(wrapper.emitted('save')).toBeTruthy();
-    expect(wrapper.emitted('save')?.[0]).toEqual(['group-2']);
+    if (historyCard) {
+      await historyCard.vm.$emit('save', 'group-2');
+      expect(wrapper.emitted('save')).toBeTruthy();
+      expect(wrapper.emitted('save')?.[0]).toEqual(['group-2']);
+    }
   });
 
   it('renders single group correctly', () => {
-    const singleGroup = [mockGroups[0]];
+    const singleGroup: TabGroup[] = [mockGroups[0]!];
     const wrapper = mount(TabGroupList, {
       props: { groups: singleGroup },
       global: {
-        plugins: [pinia, PrimeVue, ConfirmationService, ToastService],
+        plugins: [pinia],
         stubs: {
           TabGroupCard: false,
         },
@@ -203,7 +189,6 @@ describe('TabGroupList Component', () => {
     });
 
     const cards = wrapper.findAllComponents(TabGroupCard);
-
     expect(cards).toHaveLength(1);
     expect(wrapper.text()).toContain('Work Tabs');
   });

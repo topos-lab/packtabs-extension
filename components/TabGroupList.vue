@@ -1,40 +1,41 @@
 <script lang="ts" setup>
-  import TabGroupCard from '~/components/TabGroupCard.vue';
-  import type { TabGroup } from '~/types/TabGroup';
+import { Layers } from 'lucide-vue-next';
+import TabGroupCard from '~/components/TabGroupCard.vue';
+import type { TabGroup } from '~/types/TabGroup';
 
-  defineProps<{
-    groups: TabGroup[];
-  }>();
+defineProps<{
+  groups: TabGroup[];
+}>();
 
-  const emit = defineEmits<{
-    save: [groupId: string];
-  }>();
+const emit = defineEmits<{
+  save: [groupId: string];
+}>();
 
-  function handleSave(groupId: string) {
-    emit('save', groupId);
-  }
+function handleSave(groupId: string) {
+  emit('save', groupId);
+}
 </script>
 
 <template>
-  <div class="tab-group-list">
+  <div class="w-full">
     <!-- Empty state -->
     <div
       v-if="groups.length === 0"
-      class="empty-state text-center p-6"
+      class="flex flex-col items-center justify-center min-h-[360px] p-8 text-center rounded-2xl border-2 border-dashed border-slate-200 bg-white/50"
     >
-      <i class="pi pi-inbox text-6xl text-color-secondary mb-3" />
-      <h3 class="text-xl font-semibold mb-2">
-        No tab groups yet
-      </h3>
-      <p class="text-color-secondary">
+      <div class="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 mb-3.5">
+        <Layers class="h-6 w-6" />
+      </div>
+      <h3 class="text-base font-semibold text-slate-800 mb-1">No tab groups yet</h3>
+      <p class="text-xs text-slate-500 max-w-xs leading-relaxed">
         Save your current tabs to create your first tab group
       </p>
     </div>
 
-    <!-- Tab group cards -->
+    <!-- Tab group cards grid -->
     <div
       v-else
-      class="tab-group-cards"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
     >
       <TabGroupCard
         v-for="group in groups"
@@ -45,23 +46,3 @@
     </div>
   </div>
 </template>
-
-<style scoped>
-  .tab-group-list {
-    width: 100%;
-  }
-
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 300px;
-  }
-
-  .tab-group-cards {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-</style>

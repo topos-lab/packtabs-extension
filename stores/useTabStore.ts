@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
-import type { TabGroup } from '~/types/TabGroup';
+import type { TabGroup, TabItem } from '~/types/TabGroup';
 import {
   deleteTabFromGroup as deleteTabFromGroupInStorage,
   deleteTabGroup as deleteTabGroupFromStorage,
@@ -13,24 +13,17 @@ import {
 import { captureCurrentWindow, TabPermissionDeniedError } from '~/utils/tabManager';
 
 /**
- * Error handler that can be set from the Vue app
+ * Optional error handler that can be registered from the UI
  */
 let errorHandler: ((error: Error) => void) | null = null;
 
-/**
- * Sets the error handler for the store
- */
 export function setStoreErrorHandler(handler: (error: Error) => void) {
   errorHandler = handler;
 }
 
-/**
- * Handles errors with user-friendly messages
- */
 function handleError(error: unknown, defaultMessage: string): never {
   const err = error instanceof Error ? error : new Error(String(error));
 
-  // Use error handler if available
   if (errorHandler) {
     errorHandler(err);
   } else {
@@ -41,7 +34,7 @@ function handleError(error: unknown, defaultMessage: string): never {
 }
 
 /**
- * Pinia store for managing tab groups
+ * Pinia store for managing tab groups with reactive state and optimistic local updates
  */
 export const useTabStore = defineStore('tabs', () => {
   // State
@@ -50,12 +43,9 @@ export const useTabStore = defineStore('tabs', () => {
 
   // Computed properties
   const historyGroups = computed(() => tabGroups.value.filter((g) => g.isHistory));
-
   const namedGroups = computed(() => tabGroups.value.filter((g) => !g.isHistory));
-
   const selectedGroup = computed(() => tabGroups.value.find((g) => g.id === selectedGroupId.value) ?? null);
 
-  // Actions
   /**
    * Loads all tab groups from storage
    */
@@ -68,20 +58,23 @@ export const useTabStore = defineStore('tabs', () => {
   }
 
   /**
-   * Saves a new tab group by capturing current window tabs
+   * Saves a new tab group. If tabs are provided, saves them directly; otherwise captures from current window.
    * @param name Optional name for the group (null for history groups)
-   * @param isHistory Whether this is a history group
+   * @param isHistory Whether this is an automatic history group
+   * @param customTabs Optional tab list (if omitted, captures from current window)
    */
-  async function saveGroup(name: string | null = null, isHistory = false): Promise<TabGroup> {
+  async function saveGroup(
+    name: string | null = null,
+    isHistory = false,
+    customTabs?: TabItem[]
+  ): Promise<TabGroup> {
     try {
-      // Capture current window tabs
-      const tabs = await captureCurrentWindow();
+      const tabs = customTabs ?? (await captureCurrentWindow());
 
-      if (tabs.length === 0) {
+      if (!tabs || tabs.length === 0) {
         throw new Error('No tabs to save');
       }
 
-      // Create new tab group
       const newGroup: TabGroup = {
         id: crypto.randomUUID(),
         name,
@@ -90,11 +83,15 @@ export const useTabStore = defineStore('tabs', () => {
         isHistory,
       };
 
-      // Save to storage
       await saveTabGroupToStorage(newGroup);
 
-      // Update local state
-      await loadGroups();
+      // Optimistic local state update (prepend to list)
+      const existingIdx = tabGroups.value.findIndex((g) => g.id === newGroup.id);
+      if (existingIdx >= 0) {
+        tabGroups.value[existingIdx] = newGroup;
+      } else {
+        tabGroups.value = [newGroup, ...tabGroups.value];
+      }
 
       return newGroup;
     } catch (error) {
@@ -105,19 +102,29 @@ export const useTabStore = defineStore('tabs', () => {
       } else {
         handleError(error, 'Failed to save tab group');
       }
-      throw error; // Re-throw to satisfy TypeScript
+      throw error;
     }
   }
 
   /**
-   * Updates an existing tab group
-   * @param id Group ID to update
-   * @param updates Partial updates to apply
+   * Updates an existing tab group with optimistic local update
    */
   async function updateGroup(id: string, updates: Partial<TabGroup>): Promise<void> {
     try {
       await updateTabGroupInStorage(id, updates);
-      await loadGroups();
+
+      // Optimistic update
+      const idx = tabGroups.value.findIndex((g) => g.id === id);
+      if (idx >= 0) {
+        tabGroups.value[idx] = {
+          ...tabGroups.value[idx],
+          ...updates,
+          id, // ID must remain immutable
+        };
+        tabGroups.value = [...tabGroups.value];
+      } else {
+        await loadGroups();
+      }
     } catch (error) {
       if (error instanceof StorageQuotaExceededError) {
         handleError(error, 'Storage quota exceeded. Cannot update tab group.');
@@ -128,15 +135,15 @@ export const useTabStore = defineStore('tabs', () => {
   }
 
   /**
-   * Deletes a tab group
-   * @param id Group ID to delete
+   * Deletes a tab group with optimistic local update
    */
   async function deleteGroup(id: string): Promise<void> {
     try {
       await deleteTabGroupFromStorage(id);
-      await loadGroups();
 
-      // Clear selection if deleted group was selected
+      // Optimistic update
+      tabGroups.value = tabGroups.value.filter((g) => g.id !== id);
+
       if (selectedGroupId.value === id) {
         selectedGroupId.value = null;
       }
@@ -146,14 +153,18 @@ export const useTabStore = defineStore('tabs', () => {
   }
 
   /**
-   * Deletes a single tab from a group
-   * @param groupId Group ID containing the tab
-   * @param tabId Tab ID to delete
+   * Deletes a single tab from a group with optimistic local update
    */
   async function deleteTab(groupId: string, tabId: string): Promise<void> {
     try {
       await deleteTabFromGroupInStorage(groupId, tabId);
-      await loadGroups();
+
+      // Optimistic update
+      const group = tabGroups.value.find((g) => g.id === groupId);
+      if (group) {
+        group.tabs = group.tabs.filter((t) => t.id !== tabId);
+        tabGroups.value = [...tabGroups.value];
+      }
     } catch (error) {
       handleError(error, 'Failed to delete tab');
     }
@@ -161,8 +172,6 @@ export const useTabStore = defineStore('tabs', () => {
 
   /**
    * Converts a history group to a named group
-   * @param groupId Group ID to convert
-   * @param name New name for the group
    */
   async function convertToNamed(groupId: string, name: string): Promise<void> {
     try {
@@ -170,11 +179,10 @@ export const useTabStore = defineStore('tabs', () => {
         throw new Error('Group name cannot be empty');
       }
 
-      await updateTabGroupInStorage(groupId, {
+      await updateGroup(groupId, {
         name: name.trim(),
         isHistory: false,
       });
-      await loadGroups();
     } catch (error) {
       handleError(error, 'Failed to convert tab group');
     }

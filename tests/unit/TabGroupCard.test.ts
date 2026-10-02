@@ -1,8 +1,5 @@
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
-import PrimeVue from 'primevue/config';
-import ConfirmationService from 'primevue/confirmationservice';
-import ToastService from 'primevue/toastservice';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import TabGroupCard from '../../components/TabGroupCard.vue';
@@ -21,15 +18,13 @@ describe('TabGroupCard Component', () => {
   let mockGroup: TabGroup;
 
   beforeEach(() => {
-    // Create fresh Pinia instance
     pinia = createPinia();
     setActivePinia(pinia);
 
-    // Create mock tab group
     mockGroup = {
       id: 'test-group-1',
       name: 'Test Group',
-      createdAt: new Date('2024-01-01T12:00:00Z'),
+      createdAt: new Date('2024-01-15T10:30:00Z'),
       tabs: [
         {
           id: 'tab-1',
@@ -41,7 +36,6 @@ describe('TabGroupCard Component', () => {
           id: 'tab-2',
           url: 'https://test.com',
           title: 'Test Site',
-          faviconUrl: undefined,
         },
       ],
       isHistory: false,
@@ -52,7 +46,7 @@ describe('TabGroupCard Component', () => {
     const wrapper = mount(TabGroupCard, {
       props: { group: mockGroup },
       global: {
-        plugins: [pinia, PrimeVue, ConfirmationService, ToastService],
+        plugins: [pinia],
       },
     });
 
@@ -64,7 +58,7 @@ describe('TabGroupCard Component', () => {
     const wrapper = mount(TabGroupCard, {
       props: { group: historyGroup },
       global: {
-        plugins: [pinia, PrimeVue, ConfirmationService, ToastService],
+        plugins: [pinia],
       },
     });
 
@@ -75,7 +69,7 @@ describe('TabGroupCard Component', () => {
     const wrapper = mount(TabGroupCard, {
       props: { group: mockGroup },
       global: {
-        plugins: [pinia, PrimeVue, ConfirmationService, ToastService],
+        plugins: [pinia],
       },
     });
 
@@ -86,13 +80,11 @@ describe('TabGroupCard Component', () => {
     const wrapper = mount(TabGroupCard, {
       props: { group: mockGroup },
       global: {
-        plugins: [pinia, PrimeVue, ConfirmationService, ToastService],
+        plugins: [pinia],
       },
     });
 
-    // Check for date components (format may vary by locale)
     const text = wrapper.text();
-
     expect(text).toMatch(/2024/);
     expect(text).toMatch(/Jan/);
   });
@@ -102,7 +94,7 @@ describe('TabGroupCard Component', () => {
     const wrapper = mount(TabGroupCard, {
       props: { group: historyGroup },
       global: {
-        plugins: [pinia, PrimeVue, ConfirmationService, ToastService],
+        plugins: [pinia],
       },
     });
 
@@ -114,7 +106,7 @@ describe('TabGroupCard Component', () => {
     const wrapper = mount(TabGroupCard, {
       props: { group: mockGroup },
       global: {
-        plugins: [pinia, PrimeVue, ConfirmationService, ToastService],
+        plugins: [pinia],
       },
     });
 
@@ -127,27 +119,19 @@ describe('TabGroupCard Component', () => {
     const wrapper = mount(TabGroupCard, {
       props: { group: historyGroup },
       global: {
-        plugins: [pinia, PrimeVue, ConfirmationService, ToastService],
+        plugins: [pinia],
       },
     });
 
-    // Find and click Save button
     const saveButton = wrapper.findAll('button').find((btn) => btn.text().includes('Save'));
-
     expect(saveButton).toBeDefined();
 
     if (saveButton) {
       await saveButton.trigger('click');
       await wrapper.vm.$nextTick();
 
-      // Check that the dialog is visible
-      const dialog = wrapper.findComponent({ name: 'Dialog' });
-
-      expect(dialog.exists()).toBe(true);
-      expect(dialog.props('visible')).toBe(true);
-
-      // Check that the dialog has the correct header
-      expect(dialog.props('header')).toBe('Name Tab Group');
+      // Check modal open state in vm
+      expect((wrapper.vm as any).showNameDialog).toBe(true);
     }
   });
 
@@ -155,21 +139,17 @@ describe('TabGroupCard Component', () => {
     const wrapper = mount(TabGroupCard, {
       props: { group: mockGroup },
       global: {
-        plugins: [pinia, PrimeVue, ConfirmationService, ToastService],
+        plugins: [pinia],
       },
     });
 
-    // Find edit button
     const editButton = wrapper.find('[aria-label="Edit group name"]');
-
     expect(editButton.exists()).toBe(true);
 
-    // Click edit button
     await editButton.trigger('click');
+    await wrapper.vm.$nextTick();
 
-    // Check that input field appears
-    const input = wrapper.find('input[type="text"]');
-
+    const input = wrapper.find('input');
     expect(input.exists()).toBe(true);
   });
 
@@ -177,7 +157,7 @@ describe('TabGroupCard Component', () => {
     const wrapper = mount(TabGroupCard, {
       props: { group: mockGroup },
       global: {
-        plugins: [pinia, PrimeVue, ConfirmationService, ToastService],
+        plugins: [pinia],
       },
     });
 
@@ -189,7 +169,7 @@ describe('TabGroupCard Component', () => {
     const wrapper = mount(TabGroupCard, {
       props: { group: mockGroup },
       global: {
-        plugins: [pinia, PrimeVue, ConfirmationService, ToastService],
+        plugins: [pinia],
       },
     });
 
@@ -200,7 +180,7 @@ describe('TabGroupCard Component', () => {
     const wrapper = mount(TabGroupCard, {
       props: { group: mockGroup },
       global: {
-        plugins: [pinia, PrimeVue, ConfirmationService, ToastService],
+        plugins: [pinia],
       },
     });
 

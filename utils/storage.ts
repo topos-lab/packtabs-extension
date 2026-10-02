@@ -1,4 +1,4 @@
-import type { StorageSchema } from '../types/Storage';
+import type { StorageSchema, StoredTabGroup } from '../types/Storage';
 import { tabGroupsStorage } from '../types/Storage';
 import type { TabGroup } from '../types/TabGroup';
 
@@ -11,6 +11,7 @@ export interface StorageService {
   updateTabGroup(id: string, updates: Partial<TabGroup>): Promise<void>;
   deleteTabGroup(id: string): Promise<void>;
   deleteTabFromGroup(groupId: string, tabId: string): Promise<void>;
+  clearAllTabGroups(): Promise<void>;
 }
 
 /**
@@ -30,13 +31,31 @@ export class StorageSyncConflictError extends Error {
   }
 }
 
+export class StorageNotFoundError extends Error {
+  constructor(message = 'Resource not found in storage') {
+    super(message);
+    this.name = 'StorageNotFoundError';
+  }
+}
+
+/**
+ * In-memory mutex to ensure atomic serialization of write operations and prevent race conditions
+ */
+let writeLock: Promise<unknown> = Promise.resolve();
+
+async function withLock<T>(operation: () => Promise<T>): Promise<T> {
+  const result = writeLock.then(() => operation());
+  writeLock = result.catch(() => {});
+  return await result;
+}
+
 /**
  * Retry configuration for storage operations
  */
 const RETRY_CONFIG = {
   maxRetries: 3,
-  initialDelay: 100, // ms
-  maxDelay: 2000, // ms
+  initialDelay: 50, // ms
+  maxDelay: 1000, // ms
   backoffMultiplier: 2,
 };
 
@@ -55,6 +74,11 @@ async function withRetry<T>(operation: () => Promise<T>, retries: number = RETRY
       // Check if error is quota exceeded
       if (lastError.message.includes('QUOTA_BYTES') || lastError.message.includes('quota')) {
         throw new StorageQuotaExceededError(lastError.message);
+      }
+
+      // Do not retry on logical errors
+      if (lastError instanceof StorageNotFoundError || lastError.message.includes('not found')) {
+        throw lastError;
       }
 
       // Don't retry on last attempt
@@ -79,10 +103,7 @@ async function withRetry<T>(operation: () => Promise<T>, retries: number = RETRY
 /**
  * Resolves sync conflicts using timestamp-based resolution (most recent wins)
  */
-function resolveSyncConflict(
-  localGroup: TabGroup,
-  remoteGroup: StorageSchema['tabGroups'][string]
-): StorageSchema['tabGroups'][string] {
+function resolveSyncConflict(localGroup: TabGroup, remoteGroup: StoredTabGroup): StoredTabGroup {
   const localTimestamp = localGroup.createdAt.getTime();
   const remoteTimestamp = new Date(remoteGroup.createdAt).getTime();
 
@@ -93,7 +114,7 @@ function resolveSyncConflict(
 /**
  * Serializes a TabGroup for storage (converts Date to ISO string)
  */
-function serializeTabGroup(group: TabGroup): StorageSchema['tabGroups'][string] {
+export function serializeTabGroup(group: TabGroup): StoredTabGroup {
   return {
     id: group.id,
     name: group.name,
@@ -106,7 +127,7 @@ function serializeTabGroup(group: TabGroup): StorageSchema['tabGroups'][string] 
 /**
  * Deserializes a stored tab group (converts ISO string to Date)
  */
-function deserializeTabGroup(stored: StorageSchema['tabGroups'][string]): TabGroup {
+export function deserializeTabGroup(stored: StoredTabGroup): TabGroup {
   return {
     id: stored.id,
     name: stored.name,
@@ -120,20 +141,22 @@ function deserializeTabGroup(stored: StorageSchema['tabGroups'][string]): TabGro
  * Saves a tab group to storage
  */
 export async function saveTabGroup(group: TabGroup): Promise<void> {
-  await withRetry(async () => {
-    const allGroups = await tabGroupsStorage.getValue();
-    const serialized = serializeTabGroup(group);
+  return await withLock(async () => {
+    await withRetry(async () => {
+      const rawGroups = await tabGroupsStorage.getValue();
+      const allGroups: Record<string, StoredTabGroup> = { ...rawGroups };
+      const serialized = serializeTabGroup(group);
 
-    // Check for sync conflicts if group already exists
-    if (group.id in allGroups) {
-      const resolved = resolveSyncConflict(group, allGroups[group.id]);
+      // Check for sync conflicts if group already exists
+      const existing = allGroups[group.id];
+      if (existing) {
+        allGroups[group.id] = resolveSyncConflict(group, existing);
+      } else {
+        allGroups[group.id] = serialized;
+      }
 
-      allGroups[group.id] = resolved;
-    } else {
-      allGroups[group.id] = serialized;
-    }
-
-    await tabGroupsStorage.setValue(allGroups);
+      await tabGroupsStorage.setValue(allGroups);
+    });
   });
 }
 
@@ -152,25 +175,27 @@ export async function getTabGroups(): Promise<TabGroup[]> {
  * Updates a tab group with partial data
  */
 export async function updateTabGroup(id: string, updates: Partial<TabGroup>): Promise<void> {
-  await withRetry(async () => {
-    const allGroups = await tabGroupsStorage.getValue();
-    const existing = allGroups[id];
+  return await withLock(async () => {
+    await withRetry(async () => {
+      const rawGroups = await tabGroupsStorage.getValue();
+      const allGroups: Record<string, StoredTabGroup> = { ...rawGroups };
 
-    if (!(id in allGroups)) {
-      throw new Error(`Tab group with id ${id} not found`);
-    }
+      const existingStored = allGroups[id];
+      if (!existingStored) {
+        throw new StorageNotFoundError(`Tab group with id ${id} not found`);
+      }
 
-    // Deserialize existing group, apply updates, then serialize back
-    const existingGroup = deserializeTabGroup(existing);
-    const updatedGroup: TabGroup = {
-      ...existingGroup,
-      ...updates,
-      // Ensure id cannot be changed
-      id: existingGroup.id,
-    };
+      // Deep clone to prevent mutating in-memory cache if setValue fails
+      const existingGroup = deserializeTabGroup(existingStored);
+      const updatedGroup: TabGroup = {
+        ...structuredClone(existingGroup),
+        ...updates,
+        id: existingGroup.id, // Ensure id cannot be changed
+      };
 
-    allGroups[id] = serializeTabGroup(updatedGroup);
-    await tabGroupsStorage.setValue(allGroups);
+      allGroups[id] = serializeTabGroup(updatedGroup);
+      await tabGroupsStorage.setValue(allGroups);
+    });
   });
 }
 
@@ -178,16 +203,17 @@ export async function updateTabGroup(id: string, updates: Partial<TabGroup>): Pr
  * Deletes a tab group from storage
  */
 export async function deleteTabGroup(id: string): Promise<void> {
-  await withRetry(async () => {
-    const allGroups = await tabGroupsStorage.getValue();
+  return await withLock(async () => {
+    await withRetry(async () => {
+      const rawGroups = await tabGroupsStorage.getValue();
 
-    if (!(id in allGroups)) {
-      throw new Error(`Tab group with id ${id} not found`);
-    }
+      if (!(id in rawGroups)) {
+        throw new StorageNotFoundError(`Tab group with id ${id} not found`);
+      }
 
-    const { [id]: _removed, ...remainingGroups } = allGroups;
-
-    await tabGroupsStorage.setValue(remainingGroups);
+      const { [id]: _removed, ...remainingGroups } = rawGroups;
+      await tabGroupsStorage.setValue(remainingGroups);
+    });
   });
 }
 
@@ -195,23 +221,38 @@ export async function deleteTabGroup(id: string): Promise<void> {
  * Deletes a specific tab from a tab group
  */
 export async function deleteTabFromGroup(groupId: string, tabId: string): Promise<void> {
-  await withRetry(async () => {
-    const allGroups = await tabGroupsStorage.getValue();
-    const group = allGroups[groupId];
+  return await withLock(async () => {
+    await withRetry(async () => {
+      const rawGroups = await tabGroupsStorage.getValue();
+      const allGroups: Record<string, StoredTabGroup> = { ...rawGroups };
 
-    if (!(groupId in allGroups)) {
-      throw new Error(`Tab group with id ${groupId} not found`);
-    }
+      const existingGroup = allGroups[groupId];
+      if (!existingGroup) {
+        throw new StorageNotFoundError(`Tab group with id ${groupId} not found`);
+      }
 
-    const tabIndex = group.tabs.findIndex((tab: { id: string }) => tab.id === tabId);
+      const group: StoredTabGroup = {
+        ...existingGroup,
+        tabs: [...existingGroup.tabs],
+      };
 
-    if (tabIndex === -1) {
-      throw new Error(`Tab with id ${tabId} not found in group ${groupId}`);
-    }
+      const tabIndex = group.tabs.findIndex((tab) => tab.id === tabId);
+      if (tabIndex === -1) {
+        throw new StorageNotFoundError(`Tab with id ${tabId} not found in group ${groupId}`);
+      }
 
-    // Remove the tab from the array
-    group.tabs.splice(tabIndex, 1);
+      // Remove the tab immutably
+      group.tabs = group.tabs.filter((tab) => tab.id !== tabId);
+      allGroups[groupId] = group;
 
-    await tabGroupsStorage.setValue(allGroups);
+      await tabGroupsStorage.setValue(allGroups);
+    });
   });
+}
+
+/**
+ * Clears all tab groups from storage
+ */
+export async function clearAllTabGroups(): Promise<void> {
+  await tabGroupsStorage.setValue({});
 }

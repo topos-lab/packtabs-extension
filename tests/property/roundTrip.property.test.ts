@@ -281,8 +281,8 @@ describe('Round-Trip Integrity Property Tests', () => {
           }
 
           // Verify titles have defaults applied during capture
-          for (let i = 0; i < originalBrowserTabs.length; i++) {
-            const expectedTitle = originalBrowserTabs[i].title ?? 'Untitled';
+          for (let i = 0; i < validTabs.length; i++) {
+            const expectedTitle = validTabs[i].title ?? 'Untitled';
             const capturedTitle = capturedTabs[i].title;
 
             if (capturedTitle !== expectedTitle) {
@@ -343,3 +343,4 @@ describe('Round-Trip Integrity Property Tests', () => {
     );
   });
 });
+

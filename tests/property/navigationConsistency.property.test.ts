@@ -44,7 +44,7 @@ describe('Property 15: Navigation Consistency', () => {
               { minLength: 1, maxLength: 10 }
             ),
             isHistory: fc.boolean(),
-          }),
+          }).filter((group) => !isNaN(group.createdAt.getTime())),
           { minLength: 1, maxLength: 20 }
         ),
         async (groups: TabGroup[]) => {

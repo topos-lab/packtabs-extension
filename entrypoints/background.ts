@@ -4,9 +4,37 @@ import { saveTabGroup } from '~/utils/storage';
 import { captureCurrentWindow, closeCurrentTabs, openSingleTab, openTabs } from '~/utils/tabManager';
 
 export default defineBackground(() => {
-  console.log('PackTabs background script initialized', { id: browser.runtime.id });
+  console.log('PackTabs background service worker initialized', { id: browser.runtime.id });
 
-  // Handle extension icon click - open dashboard
+  // In-memory snapshot of open tabs to safely preserve history snapshots upon browser window close
+  let activeTabsSnapshot: TabItem[] = [];
+
+  async function updateActiveTabsSnapshot() {
+    try {
+      const tabs = await browser.tabs.query({});
+      activeTabsSnapshot = tabs
+        .filter((t) => t.url && !t.url.startsWith('chrome://') && !t.url.startsWith('about:'))
+        .map((t) => ({
+          id: crypto.randomUUID(),
+          url: t.url ?? '',
+          title: t.title ?? 'Untitled',
+          faviconUrl: t.favIconUrl,
+        }));
+    } catch {
+      // Ignore during browser teardown
+    }
+  }
+
+  // Continuously maintain the tab snapshot
+  browser.tabs.onCreated.addListener(() => void updateActiveTabsSnapshot());
+  browser.tabs.onRemoved.addListener(() => void updateActiveTabsSnapshot());
+  browser.tabs.onUpdated.addListener((_id, changeInfo) => {
+    if (changeInfo.status === 'complete' || changeInfo.url) {
+      void updateActiveTabsSnapshot();
+    }
+  });
+
+  // Handle extension action icon click -> open dashboard
   browser.action.onClicked.addListener(() => {
     const dashboardUrl = browser.runtime.getURL('/dashboard.html');
 
@@ -17,39 +45,40 @@ export default defineBackground(() => {
   });
 
   // Listen for browser window closing to create History Tab Group
-  // Note: In Manifest V3, we use windows.onRemoved instead of browser.runtime.onSuspend
   browser.windows.onRemoved.addListener(() => {
     void (async () => {
       try {
-        // Get all remaining windows
         const windows = await browser.windows.getAll();
 
         // Only create history group if this was the last window
         if (windows.length === 0) {
-          // Get all tabs from all windows before they close
+          // Attempt query first; fall back to the live snapshot if browser has already destroyed tabs
           const allTabs = await browser.tabs.query({});
+          let tabItems: TabItem[] = [];
 
           if (allTabs.length > 0) {
-            // Convert browser tabs to TabItem format
-            const tabItems: TabItem[] = allTabs.map((tab) => ({
-              id: crypto.randomUUID(),
-              url: tab.url ?? '',
-              title: tab.title ?? 'Untitled',
-              faviconUrl: tab.favIconUrl,
-            }));
+            tabItems = allTabs
+              .filter((tab) => tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('about:'))
+              .map((tab) => ({
+                id: crypto.randomUUID(),
+                url: tab.url ?? '',
+                title: tab.title ?? 'Untitled',
+                faviconUrl: tab.favIconUrl,
+              }));
+          } else if (activeTabsSnapshot.length > 0) {
+            tabItems = activeTabsSnapshot;
+          }
 
-            // Create History Tab Group
+          if (tabItems.length > 0) {
             const historyGroup: TabGroup = {
               id: crypto.randomUUID(),
-              name: null, // null indicates History Tab Group
+              name: null,
               createdAt: new Date(),
               tabs: tabItems,
               isHistory: true,
             };
 
-            // Save to storage
             await saveTabGroup(historyGroup);
-
             console.log('History Tab Group created on browser close', historyGroup);
           }
         }
@@ -72,15 +101,12 @@ export default defineBackground(() => {
       _sender,
       sendResponse
     ) => {
-      // Handle async operations properly
       void (async () => {
         try {
           switch (message.type) {
             case 'CAPTURE_TABS': {
-              // Capture current window tabs
               const tabs = await captureCurrentWindow();
 
-              // Create new tab group with timestamp
               const newGroup: TabGroup = {
                 id: crypto.randomUUID(),
                 name: message.name ?? null,
@@ -89,12 +115,9 @@ export default defineBackground(() => {
                 isHistory: message.isHistory ?? false,
               };
 
-              // Save to storage
               await saveTabGroup(newGroup);
 
-              // Check if we should auto-close tabs
               const settings = await settingsStorage.getValue();
-
               if (settings.autoCloseAfterSave) {
                 await closeCurrentTabs();
               }
@@ -104,7 +127,6 @@ export default defineBackground(() => {
             }
 
             case 'OPEN_TABS': {
-              // Open all tabs from a group
               if (message.tabs) {
                 await openTabs(message.tabs);
               }
@@ -113,7 +135,6 @@ export default defineBackground(() => {
             }
 
             case 'OPEN_SINGLE_TAB': {
-              // Open a single tab
               if (message.tab) {
                 await openSingleTab(message.tab);
               }
@@ -122,7 +143,6 @@ export default defineBackground(() => {
             }
 
             case 'CLOSE_CURRENT_TABS': {
-              // Close all tabs in current window
               await closeCurrentTabs();
               sendResponse({ success: true });
               break;
@@ -140,7 +160,6 @@ export default defineBackground(() => {
         }
       })();
 
-      // Return true to indicate we'll send response asynchronously
       return true;
     }
   );

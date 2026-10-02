@@ -1,69 +1,61 @@
 <script lang="ts" setup>
-  import Avatar from 'primevue/avatar';
-  import Button from 'primevue/button';
-  import Card from 'primevue/card';
-  import Chip from 'primevue/chip';
-  import DataView from 'primevue/dataview';
-  import Dialog from 'primevue/dialog';
-  import InputText from 'primevue/inputtext';
-  import Skeleton from 'primevue/skeleton';
-  import { useConfirm } from 'primevue/useconfirm';
-  import { useToast } from 'primevue/usetoast';
-  import { computed, ref } from 'vue';
+import {
+  Calendar,
+  Check,
+  ExternalLink,
+  Globe,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Save,
+  Trash2,
+  X,
+} from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
-  import { useTabStore } from '~/stores/useTabStore';
-  import type { TabGroup, TabItem } from '~/types/TabGroup';
-  import { openSingleTab, openTabs } from '~/utils/tabManager';
+import { Badge } from '~/components/ui/badge';
+import { Button } from '~/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader } from '~/components/ui/card';
+import Modal from '~/components/ui/dialog/Modal.vue';
+import { Input } from '~/components/ui/input';
+import { useToast } from '~/composables/useToast';
+import { useTabStore } from '~/stores/useTabStore';
+import type { TabGroup, TabItem } from '~/types/TabGroup';
+import { captureCurrentWindow, getFaviconUrl, openSingleTab, openTabs } from '~/utils/tabManager';
 
-  const props = defineProps<{
-    group: TabGroup;
-  }>();
+const props = defineProps<{
+  group: TabGroup;
+}>();
 
-  const tabStore = useTabStore();
-  const confirm = useConfirm();
-  const toast = useToast();
+const emit = defineEmits<{
+  save: [groupId: string];
+}>();
 
-  // Editable title state
-  const isEditingTitle = ref(false);
-  const editedTitle = ref(props.group.name ?? '');
+const tabStore = useTabStore();
+const toast = useToast();
 
-  // Name input dialog state
-  const showNameDialog = ref(false);
-  const newGroupName = ref('');
+// Editable title state
+const isEditingTitle = ref(false);
+const editedTitle = ref(props.group.name ?? '');
 
-  // Favicon loading state
-  const faviconLoadingStates = ref<Record<string, boolean>>({});
-  const faviconErrorStates = ref<Record<string, boolean>>({});
+// Name input dialog state
+const showNameDialog = ref(false);
+const newGroupName = ref('');
 
-  // Initialize loading states for all tabs
-  props.group.tabs.forEach((tab) => {
-    faviconLoadingStates.value[tab.id] = true;
-    faviconErrorStates.value[tab.id] = false;
-  });
+// Confirm delete dialog state
+const showDeleteConfirm = ref(false);
 
-  // Get favicon URL with fallback
-  function getFaviconUrl(tab: TabItem): string {
-    if (faviconErrorStates.value[tab.id]) {
-      // Return default icon on error
-      return '/icon/32.png';
-    }
-    return `chrome://favicon/${tab.url}`;
-  }
+// Favicon error tracking
+const faviconErrorStates = ref<Record<string, boolean>>({});
 
-  // Handle favicon load success
-  function handleFaviconLoad(tabId: string) {
-    faviconLoadingStates.value[tabId] = false;
-  }
+function handleFaviconError(tabId: string) {
+  faviconErrorStates.value[tabId] = true;
+}
 
-  // Handle favicon load error
-  function handleFaviconError(tabId: string) {
-    faviconLoadingStates.value[tabId] = false;
-    faviconErrorStates.value[tabId] = true;
-  }
-
-  // Format creation date
-  const formattedDate = computed(() => {
-    const date = props.group.createdAt;
+// Format creation date
+const formattedDate = computed(() => {
+  const date = props.group.createdAt;
+  try {
     return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'short',
@@ -71,225 +63,350 @@
       hour: '2-digit',
       minute: '2-digit',
     }).format(date);
-  });
-
-  // Tab count
-  const tabCount = computed(() => props.group.tabs.length);
-
-  // Start editing title
-  function startEditingTitle() {
-    isEditingTitle.value = true;
-    editedTitle.value = props.group.name ?? '';
+  } catch {
+    return String(date);
   }
+});
 
-  // Save edited title
-  async function saveTitle() {
-    if (editedTitle.value.trim()) {
-      try {
-        await tabStore.updateGroup(props.group.id, { name: editedTitle.value.trim() });
-        toast.add({
-          severity: 'success',
-          summary: 'Success',
-          detail: 'Group name updated successfully',
-          life: 3000,
-        });
-      } catch (error) {
-        toast.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to update group name',
-          life: 3000,
-        });
-        console.error('Failed to update group name:', error);
-      }
-    }
-    isEditingTitle.value = false;
-  }
+const tabCount = computed(() => props.group.tabs.length);
 
-  // Cancel editing
-  function cancelEdit() {
-    isEditingTitle.value = false;
-    editedTitle.value = props.group.name ?? '';
-  }
+function startEditingTitle() {
+  isEditingTitle.value = true;
+  editedTitle.value = props.group.name ?? '';
+}
 
-  // Handle key events for inline editing
-  function handleTitleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Enter') {
-      void saveTitle();
-    } else if (event.key === 'Escape') {
-      cancelEdit();
+async function saveTitle() {
+  if (editedTitle.value.trim() && editedTitle.value.trim() !== props.group.name) {
+    try {
+      await tabStore.updateGroup(props.group.id, { name: editedTitle.value.trim() });
+      toast.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Group name updated successfully',
+        life: 3000,
+      });
+    } catch (error) {
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to update group name',
+        life: 3000,
+      });
     }
   }
+  isEditingTitle.value = false;
+}
 
-  // Handle tab click to open single tab
-  async function handleTabClick(tab: TabItem) {
+function cancelEdit() {
+  isEditingTitle.value = false;
+  editedTitle.value = props.group.name ?? '';
+}
+
+function handleTitleKeydown(event: KeyboardEvent) {
+  if (event.key === 'Enter') {
+    void saveTitle();
+  } else if (event.key === 'Escape') {
+    cancelEdit();
+  }
+}
+
+async function handleTabClick(tab: TabItem) {
+  try {
     await openSingleTab(tab);
-  }
-
-  function handleDeleteTab(tabId: string) {
-    confirm.require({
-      message: 'Are you sure you want to delete this tab?',
-      header: 'Confirm Delete',
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        void tabStore.deleteTab(props.group.id, tabId);
-      },
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to open tab',
+      life: 3000,
     });
   }
+}
 
-  async function handleOpenAll() {
+async function handleDeleteTab(tabId: string) {
+  try {
+    await tabStore.deleteTab(props.group.id, tabId);
+    toast.add({
+      severity: 'success',
+      detail: 'Tab removed',
+      life: 2000,
+    });
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      detail: 'Failed to remove tab',
+      life: 3000,
+    });
+  }
+}
+
+async function handleOpenAll() {
+  try {
     await openTabs(props.group.tabs);
+    toast.add({
+      severity: 'success',
+      detail: `Restored ${props.group.tabs.length} tabs`,
+      life: 3000,
+    });
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      detail: 'Failed to restore tabs',
+      life: 3000,
+    });
   }
+}
 
-  defineEmits<{
-    save: [groupId: string];
-  }>();
+function handleSave() {
+  newGroupName.value = '';
+  showNameDialog.value = true;
+  emit('save', props.group.id);
+}
 
-  function handleSave() {
-    newGroupName.value = '';
-    showNameDialog.value = true;
-  }
-
-  async function saveWithName() {
-    if (newGroupName.value.trim()) {
+async function saveWithName() {
+  if (newGroupName.value.trim()) {
+    try {
       await tabStore.convertToNamed(props.group.id, newGroupName.value.trim());
       showNameDialog.value = false;
       newGroupName.value = '';
+      toast.add({
+        severity: 'success',
+        summary: 'Saved',
+        detail: 'Group converted to permanent named group',
+        life: 3000,
+      });
+    } catch (error) {
+      toast.add({
+        severity: 'error',
+        detail: 'Failed to save group',
+        life: 3000,
+      });
     }
   }
+}
 
-  async function handleUpdate() {
-    const { captureCurrentWindow } = await import('~/utils/tabManager');
+async function handleUpdate() {
+  try {
     const tabs = await captureCurrentWindow();
     await tabStore.updateGroup(props.group.id, { tabs });
-  }
-
-  function handleDeleteGroup() {
-    confirm.require({
-      message: 'Are you sure you want to delete this tab group? This action cannot be undone.',
-      header: 'Confirm Delete Group',
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        void tabStore.deleteGroup(props.group.id); // Fixed: avoided misused promise
-      },
+    toast.add({
+      severity: 'success',
+      detail: 'Group updated with current tabs',
+      life: 3000,
+    });
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      detail: 'Failed to update group',
+      life: 3000,
     });
   }
+}
+
+function handleDeleteGroup() {
+  showDeleteConfirm.value = true;
+}
+
+async function confirmDeleteGroup() {
+  try {
+    await tabStore.deleteGroup(props.group.id);
+    showDeleteConfirm.value = false;
+    toast.add({
+      severity: 'success',
+      detail: 'Tab group deleted',
+      life: 3000,
+    });
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      detail: 'Failed to delete group',
+      life: 3000,
+    });
+  }
+}
 </script>
 
 <template>
-  <Card class="mb-3">
-    <template #header>
-      <div class="flex justify-content-between align-items-center p-3">
-        <div class="flex-grow-1">
-          <!-- Editable title -->
-          <div v-if="!isEditingTitle" class="flex align-items-center gap-2">
-            <h3 class="m-0 text-xl font-semibold">
+  <Card class="overflow-hidden border border-slate-200/90 hover:border-slate-300 transition-all duration-200 shadow-xs hover:shadow-md">
+    <!-- Header -->
+    <CardHeader class="p-4 pb-3 border-b border-slate-100 bg-slate-50/50">
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex-1 min-w-0">
+          <!-- Title & Inline Edit -->
+          <div v-if="!isEditingTitle" class="flex items-center gap-2 group/title">
+            <h3 class="text-base font-semibold text-slate-900 truncate">
               {{ group.name || 'History Tab Group' }}
             </h3>
-            <Button
-              icon="pi pi-pencil"
-              text
-              rounded
-              size="small"
+            <button
+              type="button"
+              class="opacity-0 group-hover/title:opacity-100 transition-opacity p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded"
+              title="Edit name"
               aria-label="Edit group name"
-              @click="startEditingTitle" />
+              @click="startEditingTitle"
+            >
+              <Pencil class="h-3.5 w-3.5" />
+            </button>
           </div>
-          <div v-else class="flex align-items-center gap-2">
-            <InputText
+          <div v-else class="flex items-center gap-2">
+            <Input
               v-model="editedTitle"
-              class="flex-grow-1"
+              class="h-8 py-1 text-sm font-medium w-full max-w-sm"
               autofocus
               @keydown="handleTitleKeydown"
-              @blur="saveTitle" />
+              @blur="saveTitle"
+            />
+            <Button size="sm" class="h-8 px-2" @click="saveTitle">
+              <Check class="h-3.5 w-3.5" />
+            </Button>
+            <Button size="sm" variant="ghost" class="h-8 px-2" @click="cancelEdit">
+              <X class="h-3.5 w-3.5" />
+            </Button>
           </div>
 
-          <!-- Creation date -->
-          <div class="text-sm text-color-secondary mt-1">
-            <i class="pi pi-calendar mr-1" />
-            {{ formattedDate }}
+          <!-- Date Subtitle -->
+          <div class="flex items-center gap-1.5 text-xs text-slate-500 mt-1 font-normal">
+            <Calendar class="h-3.5 w-3.5 opacity-70" />
+            <span>{{ formattedDate }}</span>
           </div>
         </div>
 
-        <!-- Tab count chip -->
-        <Chip :label="`${tabCount} tabs`" />
+        <!-- Tab Count Badge -->
+        <Badge :variant="group.isHistory ? 'secondary' : 'default'" class="shrink-0 font-medium">
+          {{ tabCount }} tabs
+        </Badge>
       </div>
-    </template>
+    </CardHeader>
 
-    <template #content>
-      <!-- Tab list display -->
-      <DataView :value="group.tabs" layout="list">
-        <template #list="slotProps">
+    <!-- Body: Tab List -->
+    <CardContent class="p-3">
+      <div class="flex flex-col divide-y divide-slate-100 max-h-80 overflow-y-auto pr-1">
+        <div
+          v-for="tab in group.tabs"
+          :key="tab.id"
+          class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-slate-50 transition-colors"
+        >
+          <!-- Favicon + Title Link -->
           <div
-            v-for="tab in slotProps.items"
-            :key="tab.id"
-            class="flex align-items-center p-2 hover:surface-hover cursor-pointer border-bottom-1 surface-border">
-            <!-- Favicon with loading skeleton and error fallback -->
-            <div class="mr-2" style="width: 32px; height: 32px">
-              <Skeleton v-if="faviconLoadingStates[tab.id]" shape="circle" size="2rem" />
-              <Avatar
-                v-else
-                :image="getFaviconUrl(tab)"
-                shape="circle"
-                size="normal"
+            class="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer"
+            :title="tab.url"
+            @click="handleTabClick(tab)"
+          >
+            <!-- Favicon -->
+            <div class="h-4 w-4 shrink-0 flex items-center justify-center">
+              <img
+                v-if="!faviconErrorStates[tab.id] && (tab.faviconUrl || getFaviconUrl(tab.url))"
+                :src="tab.faviconUrl || getFaviconUrl(tab.url)"
+                class="h-4 w-4 rounded-xs object-contain"
+                alt=""
+                loading="lazy"
                 @error="handleFaviconError(tab.id)"
-                @load="handleFaviconLoad(tab.id)" />
+              />
+              <Globe v-else class="h-3.5 w-3.5 text-slate-400" />
             </div>
 
-            <!-- Tab title as clickable link -->
-            <span class="flex-grow-1 text-color cursor-pointer hover:text-primary" @click="handleTabClick(tab)">
-              {{ tab.title }}
+            <!-- Title -->
+            <span class="text-xs text-slate-700 group-hover/tab:text-indigo-600 truncate transition-colors">
+              {{ tab.title || 'Untitled' }}
             </span>
-
-            <!-- Delete button -->
-            <Button
-              icon="pi pi-times"
-              severity="danger"
-              text
-              rounded
-              size="small"
-              aria-label="Delete tab"
-              @click="handleDeleteTab(tab.id)" />
           </div>
-        </template>
-      </DataView>
-    </template>
 
-    <template #footer>
-      <!-- Footer actions -->
-      <div class="flex gap-2">
-        <!-- Open All button -->
-        <Button label="Open All" icon="pi pi-external-link" severity="success" @click="handleOpenAll" />
-
-        <!-- Save button (for history groups) -->
-        <Button v-if="group.isHistory" label="Save" icon="pi pi-save" @click="handleSave" />
-
-        <!-- Update button (for named groups) -->
-        <Button v-else label="Update" icon="pi pi-refresh" @click="handleUpdate" />
-
-        <!-- Delete button -->
-        <Button label="Delete" icon="pi pi-trash" severity="danger" @click="handleDeleteGroup" />
+          <!-- Remove single tab button -->
+          <button
+            type="button"
+            class="opacity-0 group-hover/tab:opacity-100 transition-opacity p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded"
+            title="Remove tab from group"
+            aria-label="Delete tab"
+            @click.stop="handleDeleteTab(tab.id)"
+          >
+            <X class="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
-    </template>
+    </CardContent>
+
+    <!-- Footer: Actions -->
+    <CardFooter class="p-3 pt-2 bg-slate-50/40 border-t border-slate-100 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <Button size="sm" variant="success" class="h-8 gap-1.5 text-xs" @click="handleOpenAll">
+          <ExternalLink class="h-3.5 w-3.5" />
+          Open All
+        </Button>
+
+        <Button
+          v-if="group.isHistory"
+          size="sm"
+          variant="outline"
+          class="h-8 gap-1.5 text-xs text-slate-700"
+          @click="handleSave"
+        >
+          <Save class="h-3.5 w-3.5 text-slate-500" />
+          Save
+        </Button>
+
+        <Button
+          v-else
+          size="sm"
+          variant="outline"
+          class="h-8 gap-1.5 text-xs text-slate-700"
+          @click="handleUpdate"
+        >
+          <RefreshCw class="h-3.5 w-3.5 text-slate-500" />
+          Update
+        </Button>
+      </div>
+
+      <Button
+        size="sm"
+        variant="ghost"
+        class="h-8 px-2.5 text-xs text-slate-500 hover:text-rose-600 hover:bg-rose-50"
+        @click="handleDeleteGroup"
+      >
+        <Trash2 class="h-3.5 w-3.5" />
+        <span class="sr-only sm:not-sr-only sm:ml-1.5">Delete</span>
+      </Button>
+    </CardFooter>
   </Card>
 
   <!-- Name Input Dialog for History Group Conversion -->
-  <Dialog v-model:visible="showNameDialog" header="Name Tab Group" modal :style="{ width: '400px' }">
-    <div class="flex flex-column gap-2">
-      <label for="groupName">Group Name</label>
-      <InputText
-        id="groupName"
-        v-model="newGroupName"
-        autofocus
-        placeholder="Enter a name for this tab group"
-        @keydown.enter="saveWithName" />
+  <Modal
+    v-model:open="showNameDialog"
+    title="Name Tab Group"
+    description="Give this tab group a name to save it as a permanent collection."
+  >
+    <div class="space-y-4">
+      <div>
+        <label for="groupName" class="block text-xs font-medium text-slate-700 mb-1.5">
+          Group Name
+        </label>
+        <Input
+          id="groupName"
+          v-model="newGroupName"
+          autofocus
+          placeholder="e.g. Research, Project Alpha, Work"
+          @keydown.enter="saveWithName"
+        />
+      </div>
     </div>
     <template #footer>
-      <Button label="Cancel" severity="secondary" @click="showNameDialog = false" />
-      <Button label="Save" :disabled="!newGroupName.trim()" @click="saveWithName" />
+      <Button variant="outline" size="sm" @click="showNameDialog = false">Cancel</Button>
+      <Button size="sm" :disabled="!newGroupName.trim()" @click="saveWithName">
+        Save Group
+      </Button>
     </template>
-  </Dialog>
-</template>
+  </Modal>
 
-<style scoped>
-  /* Component-specific styles */
-</style>
+  <!-- Delete Confirmation Dialog -->
+  <Modal
+    v-model:open="showDeleteConfirm"
+    title="Delete Tab Group"
+    description="Are you sure you want to delete this tab group? This action cannot be undone."
+  >
+    <div class="text-sm text-slate-600">
+      Group: <span class="font-medium text-slate-900">{{ group.name || 'History Tab Group' }}</span> ({{ tabCount }} tabs)
+    </div>
+    <template #footer>
+      <Button variant="outline" size="sm" @click="showDeleteConfirm = false">Cancel</Button>
+      <Button variant="destructive" size="sm" @click="confirmDeleteGroup">Delete</Button>
+    </template>
+  </Modal>
+</template>

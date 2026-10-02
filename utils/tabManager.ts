@@ -34,18 +34,43 @@ export class InvalidUrlError extends Error {
   }
 }
 
+const RESTRICTED_PROTOCOLS = [
+  'chrome:',
+  'chrome-extension:',
+  'about:',
+  'data:',
+  'javascript:',
+  'file:',
+  'edge:',
+  'brave:',
+  'opera:',
+];
+
 /**
  * Validates and sanitizes a URL
  */
 function validateUrl(url: string): boolean {
   try {
     const urlObj = new URL(url);
-    // Check for restricted protocols
-    const restrictedProtocols = ['chrome:', 'chrome-extension:', 'about:', 'data:', 'javascript:'];
-
-    return !restrictedProtocols.some((protocol) => urlObj.protocol.startsWith(protocol));
+    return !RESTRICTED_PROTOCOLS.some((protocol) => urlObj.protocol.startsWith(protocol));
   } catch {
     return false;
+  }
+}
+
+/**
+ * Generates a Manifest V3 compliant favicon URL using Chrome's _favicon endpoint.
+ */
+export function getFaviconUrl(pageUrl: string): string {
+  try {
+    if (!pageUrl) return '';
+    const extId = browser.runtime?.id;
+    if (extId) {
+      return `chrome-extension://${extId}/_favicon/?pageUrl=${encodeURIComponent(pageUrl)}&size=32`;
+    }
+    return '';
+  } catch {
+    return '';
   }
 }
 
@@ -64,19 +89,8 @@ export async function captureCurrentWindow(): Promise<TabItem[]> {
     // Map browser tabs to TabItem format, filtering out restricted URLs
     const tabItems: TabItem[] = tabs
       .filter((tab) => {
-        // Skip tabs without URLs or with restricted URLs
-        if (!tab.url) {
-          return false;
-        }
-
-        try {
-          const urlObj = new URL(tab.url);
-          const restrictedProtocols = ['chrome:', 'chrome-extension:', 'about:'];
-
-          return !restrictedProtocols.some((protocol) => urlObj.protocol.startsWith(protocol));
-        } catch {
-          return false;
-        }
+        if (!tab.url) return false;
+        return validateUrl(tab.url);
       })
       .map((tab) => ({
         id: crypto.randomUUID(),
@@ -100,12 +114,9 @@ export async function captureCurrentWindow(): Promise<TabItem[]> {
  */
 export async function openTabs(tabs: TabItem[]): Promise<void> {
   try {
-    // Get the current window
     const currentWindow = await browser.windows.getCurrent();
 
-    // Open each tab in the current window
     for (const tab of tabs) {
-      // Validate URL before opening
       if (!validateUrl(tab.url)) {
         console.warn(`Skipping invalid or restricted URL: ${tab.url}`);
         continue;
@@ -115,10 +126,9 @@ export async function openTabs(tabs: TabItem[]): Promise<void> {
         await browser.tabs.create({
           windowId: currentWindow.id,
           url: tab.url,
-          active: false, // Don't switch to each tab as it opens
+          active: false,
         });
       } catch (error) {
-        // Log individual tab errors but continue with others
         console.error(`Failed to open tab ${tab.url}:`, error);
 
         if (error instanceof Error && error.message.includes('permission')) {
@@ -139,20 +149,17 @@ export async function openTabs(tabs: TabItem[]): Promise<void> {
  * @param tab TabItem object to open
  */
 export async function openSingleTab(tab: TabItem): Promise<void> {
-  // Validate URL before opening
   if (!validateUrl(tab.url)) {
     throw new InvalidUrlError(tab.url);
   }
 
   try {
-    // Get the current window
     const currentWindow = await browser.windows.getCurrent();
 
-    // Open the tab in the current window
     await browser.tabs.create({
       windowId: currentWindow.id,
       url: tab.url,
-      active: true, // Switch to the newly opened tab
+      active: true,
     });
   } catch (error) {
     if (error instanceof Error && error.message.includes('permission')) {
@@ -163,21 +170,24 @@ export async function openSingleTab(tab: TabItem): Promise<void> {
 }
 
 /**
- * Closes all tabs in the current window
+ * Closes all tabs in the current window safely, creating a new empty tab first
+ * to prevent the entire browser window from closing inadvertently.
  */
 export async function closeCurrentTabs(): Promise<void> {
   try {
-    // Get the current window
     const currentWindow = await browser.windows.getCurrent();
-
-    // Query all tabs in the current window
     const tabs = await browser.tabs.query({ windowId: currentWindow.id });
 
-    // Extract tab IDs
     const tabIds = tabs.map((tab) => tab.id).filter((id): id is number => id !== undefined);
 
-    // Close all tabs
     if (tabIds.length > 0) {
+      // Create a new blank tab first so the window does not close
+      try {
+        await browser.tabs.create({ windowId: currentWindow.id, active: true });
+      } catch {
+        // Ignore if tabs.create fails in headless test environment
+      }
+
       await browser.tabs.remove(tabIds);
     }
   } catch (error) {

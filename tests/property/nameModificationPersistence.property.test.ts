@@ -18,7 +18,7 @@ import { getTabGroups, updateTabGroup } from '~/utils/storage';
 const tabGroupArbitrary = fc.record({
   id: fc.uuid(),
   name: fc.option(fc.string({ minLength: 1, maxLength: 50 }), { nil: null }),
-  createdAt: fc.date(),
+  createdAt: fc.date({ min: new Date('1970-01-01'), max: new Date('2100-01-01') }).filter((d) => !isNaN(d.getTime())),
   tabs: fc.array(
     fc.record({
       id: fc.uuid(),
@@ -216,3 +216,4 @@ describe('Property 8: Name Modification Persistence', () => {
     );
   });
 });
+

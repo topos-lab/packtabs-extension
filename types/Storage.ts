@@ -1,40 +1,43 @@
 import { storage } from 'wxt/utils/storage';
 
-/**
- * Storage schema for the extension
- */
-export interface StorageSchema {
-  // WXT storage key: 'sync:tabGroups'
-  tabGroups: Record<
-    string,
-    {
-      id: string;
-      name: string | null;
-      createdAt: string; // ISO date string for serialization
-      tabs: {
-        id: string;
-        url: string;
-        title: string;
-        faviconUrl?: string;
-      }[];
-      isHistory: boolean;
-    }
-  >;
+import type { TabGroup } from './TabGroup';
 
-  // WXT storage key: 'sync:settings'
-  settings: {
-    autoCloseAfterSave: boolean;
-    maxHistoryGroups: number;
-  };
+/**
+ * Serialized representation of a TabGroup for persistence.
+ * Uses ISO 8601 string for createdAt.
+ */
+export type StoredTabGroup = Omit<TabGroup, 'createdAt'> & {
+  createdAt: string;
+};
+
+/**
+ * Settings configuration schema.
+ */
+export interface SettingsSchema {
+  autoCloseAfterSave: boolean;
+  maxHistoryGroups: number;
 }
 
 /**
- * WXT storage item for tab groups
+ * Storage schema for the extension.
  */
-export const tabGroupsStorage = storage.defineItem<StorageSchema['tabGroups']>('sync:tabGroups', { defaultValue: {} });
+export interface StorageSchema {
+  tabGroups: Record<string, StoredTabGroup>;
+  settings: SettingsSchema;
+}
 
 /**
- * WXT storage item for settings
+ * WXT storage item for tab groups.
+ * Stored in Chrome Local Storage ('local:') to eliminate Chrome Sync's single-item 8KB limit (QUOTA_BYTES_PER_ITEM)
+ * while providing up to 10MB of local storage capacity.
+ */
+export const tabGroupsStorage = storage.defineItem<StorageSchema['tabGroups']>('local:tabGroups', {
+  defaultValue: {},
+});
+
+/**
+ * WXT storage item for settings.
+ * Stored in Chrome Sync Storage ('sync:') so user preferences synchronize across browser instances.
  */
 export const settingsStorage = storage.defineItem<StorageSchema['settings']>('sync:settings', {
   defaultValue: {

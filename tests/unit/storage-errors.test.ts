@@ -9,12 +9,16 @@ describe('Storage Error Handling', () => {
     // Clear storage before each test
     await tabGroupsStorage.setValue({});
     vi.clearAllMocks();
+    vi.spyOn(global, 'setTimeout').mockImplementation((cb) => {
+      if (typeof cb === 'function') cb();
+      return 0 as any;
+    });
   });
 
   describe('Connection Failures', () => {
     it('should handle storage getValue failures gracefully', async () => {
       // Mock getValue to throw an error
-      vi.spyOn(tabGroupsStorage, 'getValue').mockRejectedValueOnce(new Error('Storage connection failed'));
+      vi.spyOn(tabGroupsStorage, 'getValue').mockRejectedValue(new Error('Storage connection failed'));
 
       await expect(getTabGroups()).rejects.toThrow('Storage connection failed');
     });
@@ -29,12 +33,12 @@ describe('Storage Error Handling', () => {
       };
 
       // Mock setValue to throw an error
-      vi.spyOn(tabGroupsStorage, 'setValue').mockRejectedValueOnce(new Error('Storage write failed'));
+      vi.spyOn(tabGroupsStorage, 'setValue').mockRejectedValue(new Error('Storage write failed'));
 
       await expect(saveTabGroup(testGroup)).rejects.toThrow('Storage write failed');
     });
 
-    it('should handle transient failures and succeed on retry', async () => {
+        it('should handle transient failures and succeed on retry', async () => {
       const testGroup: TabGroup = {
         id: 'test-1',
         name: 'Test Group',
@@ -46,14 +50,13 @@ describe('Storage Error Handling', () => {
       // Mock setValue to fail once, then succeed
       const setValueSpy = vi.spyOn(tabGroupsStorage, 'setValue');
 
-      setValueSpy.mockRejectedValueOnce(new Error('Transient failure')).mockResolvedValueOnce(undefined);
+      setValueSpy.mockRejectedValueOnce(new Error('Transient failure'));
 
-      // First call should fail
-      await expect(saveTabGroup(testGroup)).rejects.toThrow('Transient failure');
-
-      // Second call should succeed (mock will use real implementation after restore)
-      setValueSpy.mockRestore();
+      // The call should succeed because withRetry will retry it
       await expect(saveTabGroup(testGroup)).resolves.not.toThrow();
+
+      // Ensure it was called twice (once failed, once succeeded)
+      expect(setValueSpy).toHaveBeenCalledTimes(2);
 
       const groups = await getTabGroups();
 
@@ -188,21 +191,15 @@ describe('Storage Error Handling', () => {
       await saveTabGroup(originalGroup);
 
       // Mock setValue to fail during update
-      const setValueSpy = vi.spyOn(tabGroupsStorage, 'setValue').mockRejectedValueOnce(new Error('Update failed'));
+      const setValueSpy = vi.spyOn(tabGroupsStorage, 'setValue').mockRejectedValue(new Error('Update failed'));
 
       await expect(updateTabGroup('update-1', { name: 'Updated' })).rejects.toThrow('Update failed');
 
-      // Restore the mock
-      setValueSpy.mockRestore();
-
-      // NOTE: Due to the current implementation mutating the object returned by getValue(),
-      // the data is actually changed even though setValue failed.
-      // This is a known limitation of the current implementation.
-      // In a production system, we'd want to implement proper transaction handling
-      // or deep cloning to prevent this.
+      // With deep cloning and structuredClone protection, the data in storage remains unchanged
+      // when setValue fails during an update.
       const groups = await getTabGroups();
 
-      expect(groups[0].name).toBe('Updated'); // Data was mutated despite setValue failure
+      expect(groups[0].name).toBe('Original'); // Data was protected from mutation
     });
 
     it('should handle concurrent modifications', async () => {
@@ -295,3 +292,5 @@ describe('Storage Error Handling', () => {
     });
   });
 });
+
+
