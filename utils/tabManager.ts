@@ -170,8 +170,9 @@ export async function openTabs(tabs: TabItem[]): Promise<void> {
 /**
  * Opens a single tab in the current window
  * @param tab TabItem object to open
+ * @param inBackground Whether to open in background without switching focus
  */
-export async function openSingleTab(tab: TabItem): Promise<void> {
+export async function openSingleTab(tab: TabItem, inBackground = false): Promise<void> {
   if (!validateUrl(tab.url)) {
     throw new InvalidUrlError(tab.url);
   }
@@ -182,7 +183,7 @@ export async function openSingleTab(tab: TabItem): Promise<void> {
     await browser.tabs.create({
       windowId: currentWindow.id,
       url: tab.url,
-      active: true,
+      active: !inBackground,
     });
   } catch (error) {
     if (error instanceof Error && error.message.includes('permission')) {

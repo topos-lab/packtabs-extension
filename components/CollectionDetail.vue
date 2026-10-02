@@ -172,16 +172,23 @@ async function handleOpenAll() {
   }
 }
 
-// Open single tab
-async function handleOpenTab(tab: TabItem) {
-  try {
-    await openSingleTab(tab);
-  } catch {
-    toast.add({
-      severity: 'error',
-      detail: 'Failed to open tab',
-      life: 2500,
-    });
+// Open single tab in background on Ctrl/Shift/Cmd + click
+async function handleTabItemRowClick(event: MouseEvent, tab: TabItem) {
+  if (event.ctrlKey || event.metaKey || event.shiftKey) {
+    try {
+      await openSingleTab(tab, true);
+      toast.add({
+        severity: 'info',
+        detail: `Opened "${tab.title || 'tab'}" in background`,
+        life: 2000,
+      });
+    } catch {
+      toast.add({
+        severity: 'error',
+        detail: 'Failed to open tab in background',
+        life: 2500,
+      });
+    }
   }
 }
 
@@ -323,19 +330,16 @@ async function confirmDeleteGroup() {
             :key="tab.id"
             draggable="true"
             class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-slate-50 transition-colors select-none cursor-grab active:cursor-grabbing"
+            :title="`${tab.title || 'Untitled'}\n${tab.url}\n(Drag to organize • Ctrl/Shift+Click to open in background)`"
             @dragstart="handleDragStart($event, tab)"
             @dragend="handleDragEnd"
+            @click="handleTabItemRowClick($event, tab)"
           >
-            <!-- Favicon + Title + Domain (Click to open tab) -->
-            <div
-              class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer mr-3"
-              :title="tab.url"
-              @click="handleOpenTab(tab)"
-            >
+            <!-- Favicon + Title + Domain (pointer-events-none for seamless drag) -->
+            <div class="flex items-center gap-2 min-w-0 flex-1 mr-3 pointer-events-none">
               <!-- Drag Handle with hover hint -->
               <div
-                class="p-1 -ml-1 rounded text-slate-300 group-hover/tab:text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 transition-colors shrink-0 cursor-grab active:cursor-grabbing"
-                title="Drag to left sidebar saved groups to categorize"
+                class="p-1 -ml-1 rounded text-slate-300 group-hover/tab:text-slate-500 transition-colors shrink-0"
               >
                 <GripVertical class="h-3.5 w-3.5" />
               </div>
@@ -367,21 +371,11 @@ async function confirmDeleteGroup() {
               </span>
             </div>
 
-            <!-- Tab Row Actions: Open in new tab + Remove tab -->
-            <div class="flex items-center gap-1 shrink-0">
+            <!-- Tab Row Actions: Remove tab only -->
+            <div class="flex items-center shrink-0 pointer-events-auto">
               <button
                 type="button"
-                class="p-1 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors shrink-0"
-                title="Open in new tab"
-                aria-label="Open in new tab"
-                @click.stop="handleOpenTab(tab)"
-              >
-                <ExternalLink class="h-3.5 w-3.5" />
-              </button>
-
-              <button
-                type="button"
-                class="p-1 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors shrink-0"
+                class="p-1 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors shrink-0 cursor-pointer"
                 title="Remove tab from tab group"
                 aria-label="Remove tab"
                 @click.stop="handleDeleteTab(tab.id)"

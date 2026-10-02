@@ -5,7 +5,6 @@ import {
   Folder,
   Globe,
   GripVertical,
-  Info,
   Layers,
   PanelLeftClose,
   PanelLeftOpen,
@@ -52,6 +51,36 @@ const newGroupName = ref('');
 const closeWindowAfterSave = ref(true);
 const isSavingCurrent = ref(false);
 const showAboutModal = ref(false);
+const currentShortcut = ref('Alt + Shift + P');
+
+async function loadShortcut() {
+  try {
+    if (typeof browser !== 'undefined' && browser.commands?.getAll) {
+      const commands = await browser.commands.getAll();
+      const actionCmd = commands.find((c) => c.name === '_execute_action');
+      if (actionCmd && actionCmd.shortcut) {
+        currentShortcut.value = actionCmd.shortcut.split('+').join(' + ');
+      } else if (actionCmd && actionCmd.shortcut === '') {
+        currentShortcut.value = 'Not set';
+      }
+    }
+  } catch (err) {
+    console.error('Failed to query extension commands:', err);
+  }
+}
+
+function openAboutModal() {
+  void loadShortcut();
+  showAboutModal.value = true;
+}
+
+function openShortcutSettings() {
+  try {
+    browser.tabs.create({ url: 'chrome://extensions/shortcuts' });
+  } catch (err) {
+    console.error('Failed to open shortcuts settings:', err);
+  }
+}
 
 function getDomain(url?: string): string {
   if (!url) return '';
@@ -99,15 +128,22 @@ function removeCurrentTab(tabId: string) {
   currentTabs.value = currentTabs.value.filter((t) => t.id !== tabId);
 }
 
-async function handleOpenTab(tab: TabItem) {
-  try {
-    await openSingleTab(tab);
-  } catch (error) {
-    toast.add({
-      severity: 'error',
-      detail: 'Failed to open tab',
-      life: 3000,
-    });
+async function handleTabItemRowClick(event: MouseEvent, tab: TabItem) {
+  if (event.ctrlKey || event.metaKey || event.shiftKey) {
+    try {
+      await openSingleTab(tab, true);
+      toast.add({
+        severity: 'info',
+        detail: `Opened "${tab.title || 'tab'}" in background`,
+        life: 2000,
+      });
+    } catch (err) {
+      toast.add({
+        severity: 'error',
+        detail: 'Failed to open tab in background',
+        life: 3000,
+      });
+    }
   }
 }
 
@@ -304,6 +340,7 @@ onMounted(async () => {
 
   await tabStore.loadGroups();
   await refreshCurrentTabs();
+  void loadShortcut();
   tabStore.selectedGroupId = 'current';
 });
 
@@ -366,20 +403,26 @@ function handleSave(groupId: string) {
     >
       <!-- Sidebar Header / Logo -->
       <div class="h-16 flex items-center justify-between px-3 border-b border-slate-100">
-        <div v-if="isSidebarOpen" class="flex items-center gap-2.5 pl-2.5 overflow-hidden">
-          <div class="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-xs shrink-0">
+        <button
+          v-if="isSidebarOpen"
+          type="button"
+          class="flex items-center gap-2.5 pl-1.5 py-1 rounded-lg hover:bg-slate-100 transition-colors text-left overflow-hidden group/brand focus:outline-none cursor-pointer"
+          title="About PackTabs"
+          @click="openAboutModal"
+        >
+          <div class="h-8 w-8 rounded-lg bg-indigo-600 group-hover/brand:bg-indigo-700 flex items-center justify-center text-white shadow-xs shrink-0 transition-colors">
             <Layers class="h-4 w-4" />
           </div>
           <div class="flex flex-col">
-            <span class="font-bold text-sm tracking-tight text-slate-900 leading-tight">PackTabs</span>
+            <span class="font-bold text-sm tracking-tight text-slate-900 group-hover/brand:text-indigo-600 leading-tight transition-colors">PackTabs</span>
             <span class="text-[10px] text-slate-400 font-medium leading-tight">Tab Manager</span>
           </div>
-        </div>
+        </button>
 
         <button
           type="button"
-          class="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors shrink-0"
-          :class="isSidebarOpen ? 'mr-2.5' : 'mx-auto'"
+          class="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors shrink-0 cursor-pointer"
+          :class="isSidebarOpen ? 'mr-1' : 'mx-auto'"
           :title="isSidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'"
           @click="isSidebarOpen = !isSidebarOpen"
         >
@@ -499,21 +542,6 @@ function handleSave(groupId: string) {
           </div>
         </div>
       </div>
-
-      <!-- Sidebar Footer: About -->
-      <div class="p-2 border-t border-slate-100 shrink-0">
-        <button
-          type="button"
-          class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-          :class="isSidebarOpen ? '' : 'justify-center'"
-          :title="isSidebarOpen ? '' : 'About PackTabs'"
-          @click="showAboutModal = true"
-        >
-          <Info class="h-4 w-4 shrink-0 text-slate-400" />
-          <span v-if="isSidebarOpen" class="flex-1 text-left truncate">About PackTabs</span>
-          <span v-if="isSidebarOpen" class="text-[10px] text-slate-400 font-mono">v1.0.0</span>
-        </button>
-      </div>
     </aside>
 
     <!-- Main Workspace -->
@@ -605,19 +633,16 @@ function handleSave(groupId: string) {
                     :key="tab.id"
                     draggable="true"
                     class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-slate-50 transition-colors select-none cursor-grab active:cursor-grabbing"
+                    :title="`${tab.title || 'Untitled'}\n${tab.url}\n(Drag to organize • Ctrl/Shift+Click to open in background)`"
                     @dragstart="handleDragStartCurrentTab($event, tab)"
                     @dragend="handleDragEndTab"
+                    @click="handleTabItemRowClick($event, tab)"
                   >
-                    <!-- Favicon + Title Link -->
-                    <div
-                      class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer mr-3"
-                      :title="tab.url"
-                      @click="handleOpenTab(tab)"
-                    >
+                    <!-- Favicon + Title + Domain (pointer-events-none for seamless drag) -->
+                    <div class="flex items-center gap-2 min-w-0 flex-1 mr-3 pointer-events-none">
                       <!-- Drag Handle with hover hint -->
                       <div
-                        class="p-1 -ml-1 rounded text-slate-300 group-hover/tab:text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 transition-colors shrink-0 cursor-grab active:cursor-grabbing"
-                        title="Drag to left sidebar saved groups to categorize"
+                        class="p-1 -ml-1 rounded text-slate-300 group-hover/tab:text-slate-500 transition-colors shrink-0"
                       >
                         <GripVertical class="h-3.5 w-3.5" />
                       </div>
@@ -645,21 +670,11 @@ function handleSave(groupId: string) {
                       </span>
                     </div>
 
-                    <!-- Right Actions: Open in new tab + Exclude -->
-                    <div class="flex items-center gap-1 shrink-0">
+                    <!-- Right Actions: Only Exclude button -->
+                    <div class="flex items-center shrink-0 pointer-events-auto">
                       <button
                         type="button"
-                        class="p-1 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors shrink-0"
-                        title="Open in new tab"
-                        aria-label="Open in new tab"
-                        @click.stop="handleOpenTab(tab)"
-                      >
-                        <ExternalLink class="h-3.5 w-3.5" />
-                      </button>
-
-                      <button
-                        type="button"
-                        class="p-1 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors shrink-0"
+                        class="p-1 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors shrink-0 cursor-pointer"
                         title="Exclude from group"
                         aria-label="Exclude tab"
                         @click.stop="removeCurrentTab(tab.id)"
@@ -741,13 +756,28 @@ function handleSave(groupId: string) {
               rel="noopener noreferrer"
               class="text-indigo-600 hover:text-indigo-700 hover:underline flex items-center gap-1 font-medium"
             >
-              <span>wesley-chen/packtabs-extension</span>
+              <span>packtabs-extension</span>
               <ExternalLink class="h-3 w-3" />
             </a>
           </div>
           <div class="flex items-center justify-between py-1.5">
-            <span class="text-slate-400">Shortcut</span>
-            <span class="font-mono text-[11px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">Alt + Shift + P</span>
+            <div>
+              <span class="text-slate-400">Shortcut</span>
+              <p class="text-[10px] text-slate-400">Configurable in Chrome</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-[11px] bg-slate-100 px-2 py-0.5 rounded text-slate-700 font-semibold border border-slate-200/60">
+                {{ currentShortcut }}
+              </span>
+              <button
+                type="button"
+                class="text-[11px] text-indigo-600 hover:text-indigo-700 hover:underline font-medium cursor-pointer"
+                title="Open Chrome Shortcut Settings"
+                @click="openShortcutSettings"
+              >
+                Change
+              </button>
+            </div>
           </div>
         </div>
       </div>
