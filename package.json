@@ -3,6 +3,7 @@
   "description": "manifest.json description",
   "private": true,
   "version": "0.0.1",
+  "packageManager": "bun@1.3.5",
   "type": "module",
   "scripts": {
     "dev": "wxt",

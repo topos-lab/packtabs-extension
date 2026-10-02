@@ -1,9 +1,9 @@
 <script lang="ts" setup>
   import Button from 'primevue/button';
   import ConfirmDialog from 'primevue/confirmdialog';
+  import Drawer from 'primevue/drawer';
   import Menu from 'primevue/menu';
   import type { MenuItem } from 'primevue/menuitem';
-  import Sidebar from 'primevue/sidebar';
   import Toast from 'primevue/toast';
   import Toolbar from 'primevue/toolbar';
   import { useToast } from 'primevue/usetoast';
@@ -129,53 +129,31 @@
 </script>
 
 <template>
-  <div class="layout-wrapper">
+  <div class="layout-wrapper2">
     <!-- Sidebar Navigation -->
-    <Sidebar
-      v-model:visible="sidebarVisible"
-      :show-close-icon="true"
-    >
+    <Drawer :visible="true" :show-close-icon="false">
       <template #header>
-        <h2 class="text-xl font-semibold">
-          Tab Groups
-        </h2>
+        <h2 class="text-xl font-semibold">Tab Groups</h2>
       </template>
-      <Menu
-        :model="menuItems"
-        class="w-full border-none"
-      />
-    </Sidebar>
+      <Menu :model="menuItems" class="w-full border-none" />
+    </Drawer>
 
     <!-- Main Content Area -->
     <div class="content-area">
       <!-- Toolbar -->
       <Toolbar class="mb-4">
         <template #start>
-          <Button
-            icon="pi pi-bars"
-            text
-            rounded
-            aria-label="Toggle sidebar"
-            @click="sidebarVisible = true"
-          />
+          <Button icon="pi pi-bars" text rounded aria-label="Toggle sidebar" @click="sidebarVisible = true" />
           <span class="ml-2 text-xl font-semibold">PackTabs</span>
         </template>
         <template #end>
-          <Button
-            label="Save Current Tabs"
-            icon="pi pi-save"
-            severity="success"
-            @click="saveCurrentTabs"
-          />
+          <Button label="Save Current Tabs" icon="pi pi-save" severity="success" @click="saveCurrentTabs" />
         </template>
       </Toolbar>
 
       <!-- Content -->
       <div class="p-4">
-        <TabGroupList
-          :groups="displayedGroups"
-          @save="handleSave"
-        />
+        <TabGroupList :groups="displayedGroups" @save="handleSave" />
       </div>
     </div>
 

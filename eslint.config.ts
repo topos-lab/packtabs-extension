@@ -45,6 +45,10 @@ export default defineConfig([
         tsconfigRootDir: __dirname,
       },
     },
+    rules: {
+      'vue/max-attributes-per-line': 'off',
+      'vue/html-closing-bracket-newline': 'off',
+    },
   },
 
   // Global Language Options
