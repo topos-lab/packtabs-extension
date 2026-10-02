@@ -2,7 +2,6 @@
 import {
   Calendar,
   Check,
-  Clock,
   ExternalLink,
   Globe,
   GripVertical,
@@ -110,13 +109,6 @@ const displayTitle = computed(() => {
   return formatLocalizedDateTime(props.group.createdAt);
 });
 
-const subtitleText = computed(() => {
-  if (props.group.name?.trim()) {
-    return `Created ${formattedDate.value}`;
-  }
-  return 'Automatic session snapshot';
-});
-
 const tabList = computed(() => deduplicateTabsByUrl(normalizeTabs(props.group.tabs)));
 
 const tabCount = computed(() => tabList.value.length);
@@ -127,20 +119,31 @@ function startEditingTitle() {
 }
 
 async function saveTitle() {
-  if (editedTitle.value.trim() && editedTitle.value.trim() !== props.group.name) {
+  const trimmed = editedTitle.value.trim();
+  if (trimmed && trimmed !== props.group.name) {
     try {
-      await tabStore.updateGroup(props.group.id, { name: editedTitle.value.trim() });
-      toast.add({
-        severity: 'success',
-        summary: 'Success',
-        detail: 'Group name updated successfully',
-        life: 3000,
-      });
+      if (props.group.isHistory) {
+        await tabStore.convertToNamed(props.group.id, trimmed);
+        toast.add({
+          severity: 'success',
+          summary: 'Saved',
+          detail: `Saved as "${trimmed}" in Saved Groups`,
+          life: 3000,
+        });
+      } else {
+        await tabStore.updateGroup(props.group.id, { name: trimmed });
+        toast.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: 'Group name updated successfully',
+          life: 3000,
+        });
+      }
     } catch (error) {
       toast.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'Failed to update group name',
+        detail: props.group.isHistory ? 'Failed to save group' : 'Failed to update group name',
         life: 3000,
       });
     }
@@ -293,8 +296,8 @@ async function confirmDeleteGroup() {
             <button
               type="button"
               class="opacity-0 group-hover/title:opacity-100 transition-opacity p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded"
-              title="Edit name"
-              aria-label="Edit group name"
+              :title="group.isHistory ? 'Save as named group' : 'Edit group name'"
+              :aria-label="group.isHistory ? 'Save as named group' : 'Edit group name'"
               @click="startEditingTitle"
             >
               <Pencil class="h-3.5 w-3.5" />
@@ -305,6 +308,7 @@ async function confirmDeleteGroup() {
               v-model="editedTitle"
               class="h-8 py-1 text-sm font-medium w-full max-w-sm"
               autofocus
+              :placeholder="group.isHistory ? 'Enter name to save group...' : 'Group name...'"
               @keydown="handleTitleKeydown"
               @blur="saveTitle"
             />
@@ -316,11 +320,10 @@ async function confirmDeleteGroup() {
             </Button>
           </div>
 
-          <!-- Subtitle -->
-          <div class="flex items-center gap-1.5 text-xs text-slate-500 mt-1 font-normal">
-            <Calendar v-if="group.name" class="h-3.5 w-3.5 opacity-70" />
-            <Clock v-else class="h-3.5 w-3.5 opacity-70" />
-            <span>{{ subtitleText }}</span>
+          <!-- Date Subtitle (only shown when group has custom name) -->
+          <div v-if="group.name" class="flex items-center gap-1.5 text-xs text-slate-500 mt-1 font-normal">
+            <Calendar class="h-3.5 w-3.5 opacity-70" />
+            <span>Created {{ formattedDate }}</span>
           </div>
         </div>
 

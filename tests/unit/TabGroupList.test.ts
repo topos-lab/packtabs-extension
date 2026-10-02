@@ -115,7 +115,7 @@ describe('TabGroupList Component', () => {
     const text = wrapper.text();
     expect(text).toContain('Work Tabs');
     expect(text).toContain('Personal Tabs');
-    expect(text).toContain('Automatic session snapshot');
+    expect(wrapper.findAllComponents(TabGroupCard).length).toBe(3);
   });
 
   it('displays empty state when no groups provided', () => {

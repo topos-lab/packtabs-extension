@@ -1,8 +1,9 @@
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import TabGroupCard from '../../components/TabGroupCard.vue';
+import { useTabStore } from '../../stores/useTabStore';
 import type { TabGroup } from '../../types/TabGroup';
 
 /**
@@ -53,7 +54,7 @@ describe('TabGroupCard Component', () => {
     expect(wrapper.text()).toContain('Test Group');
   });
 
-  it('displays formatted date and snapshot subtitle for groups without name', () => {
+  it('displays formatted date for groups without name and no redundant subtitle', () => {
     const historyGroup = { ...mockGroup, name: null, isHistory: true };
     const wrapper = mount(TabGroupCard, {
       props: { group: historyGroup },
@@ -62,8 +63,33 @@ describe('TabGroupCard Component', () => {
       },
     });
 
-    expect(wrapper.text()).toContain('Automatic session snapshot');
     expect(wrapper.find('h3').text().length).toBeGreaterThan(0);
+    expect(wrapper.text()).not.toContain('Automatic session snapshot');
+    expect(wrapper.text()).not.toContain('History Tab Group');
+  });
+
+  it('converts history group to named group when renamed via inline edit', async () => {
+    const store = useTabStore();
+    const convertSpy = vi.spyOn(store, 'convertToNamed').mockResolvedValue(undefined as any);
+
+    const historyGroup = { ...mockGroup, name: null, isHistory: true };
+    const wrapper = mount(TabGroupCard, {
+      props: { group: historyGroup },
+      global: {
+        plugins: [pinia],
+      },
+    });
+
+    const editButton = wrapper.find('[aria-label="Save as named group"]');
+    expect(editButton.exists()).toBe(true);
+    await editButton.trigger('click');
+    await wrapper.vm.$nextTick();
+
+    const input = wrapper.find('input');
+    await input.setValue('My Saved Group');
+    await (wrapper.vm as any).saveTitle();
+
+    expect(convertSpy).toHaveBeenCalledWith(historyGroup.id, 'My Saved Group');
   });
 
   it('displays correct tab count', () => {
