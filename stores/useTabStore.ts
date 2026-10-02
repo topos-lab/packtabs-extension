@@ -45,6 +45,7 @@ export const useTabStore = defineStore('tabs', () => {
   // State
   const tabGroups = ref<TabGroup[]>([]);
   const selectedGroupId = ref<string | null>(null);
+  const isDraggingTab = ref(false);
 
   // Computed properties
   const historyGroups = computed(() => tabGroups.value.filter((g) => g.isHistory));
@@ -258,6 +259,7 @@ export const useTabStore = defineStore('tabs', () => {
     // State
     tabGroups,
     selectedGroupId,
+    isDraggingTab,
     // Computed
     historyGroups,
     namedGroups,

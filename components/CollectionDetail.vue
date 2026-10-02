@@ -131,6 +131,7 @@ function handleFaviconError(id: string) {
 // Drag & drop tab categorization
 function handleDragStart(event: DragEvent, tab: TabItem) {
   if (!event.dataTransfer) return;
+  tabStore.isDraggingTab = true;
   event.dataTransfer.effectAllowed = 'move';
   event.dataTransfer.setData(
     'application/packtabs-tab',
@@ -139,7 +140,12 @@ function handleDragStart(event: DragEvent, tab: TabItem) {
       tab,
     })
   );
-  event.dataTransfer.setData('text/plain', tab.url);
+  // Avoid setting raw URL on text/plain, which triggers Chrome's native Split View / Side-by-side mode
+  event.dataTransfer.setData('text/plain', `PackTabs: ${tab.title || tab.url}`);
+}
+
+function handleDragEnd() {
+  tabStore.isDraggingTab = false;
 }
 
 // Open all tabs
@@ -313,6 +319,7 @@ async function confirmDeleteGroup() {
             draggable="true"
             class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-slate-50 transition-colors select-none cursor-grab active:cursor-grabbing"
             @dragstart="handleDragStart($event, tab)"
+            @dragend="handleDragEnd"
           >
             <!-- Favicon + Title + Domain (Click to open tab) -->
             <div
@@ -320,8 +327,13 @@ async function confirmDeleteGroup() {
               :title="tab.url"
               @click="handleOpenTab(tab)"
             >
-              <!-- Drag Handle -->
-              <GripVertical class="h-3.5 w-3.5 text-slate-300 group-hover/tab:text-slate-400 shrink-0 cursor-grab" />
+              <!-- Drag Handle with hover hint -->
+              <div
+                class="p-0.5 rounded text-slate-300 group-hover/tab:text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 transition-colors shrink-0 cursor-grab active:cursor-grabbing"
+                title="Drag to left sidebar saved groups to categorize / 拖拽至左侧已保存的分组以分类"
+              >
+                <GripVertical class="h-3.5 w-3.5" />
+              </div>
 
               <!-- Favicon -->
               <div class="h-4 w-4 shrink-0 flex items-center justify-center">

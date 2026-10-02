@@ -12,7 +12,7 @@ import {
   Search,
   X,
 } from 'lucide-vue-next';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 import CollectionDetail from '~/components/CollectionDetail.vue';
 import TabGroupList from '~/components/TabGroupList.vue';
@@ -115,6 +115,7 @@ function handleSidebarDragEnter(event: DragEvent) {
 
 function handleDragStartCurrentTab(event: DragEvent, tab: TabItem) {
   if (!event.dataTransfer) return;
+  tabStore.isDraggingTab = true;
   event.dataTransfer.effectAllowed = 'move';
   event.dataTransfer.setData(
     'application/packtabs-tab',
@@ -123,7 +124,13 @@ function handleDragStartCurrentTab(event: DragEvent, tab: TabItem) {
       tab,
     })
   );
-  event.dataTransfer.setData('text/plain', tab.url);
+  // Avoid setting raw URL on text/plain, which triggers Chrome's native Split View / Side-by-side mode
+  event.dataTransfer.setData('text/plain', `PackTabs: ${tab.title || tab.url}`);
+}
+
+function handleDragEndTab() {
+  tabStore.isDraggingTab = false;
+  dragOverGroupId.value = null;
 }
 
 function handleDragOver(event: DragEvent, groupId: string) {
@@ -150,7 +157,10 @@ function handleDragLeave(event: DragEvent, groupId: string) {
 async function handleDrop(event: DragEvent, targetGroupId: string) {
   dragOverGroupId.value = null;
   const raw = event.dataTransfer?.getData('application/packtabs-tab');
-  if (!raw) return;
+  if (!raw) {
+    tabStore.isDraggingTab = false;
+    return;
+  }
 
   try {
     const payload = JSON.parse(raw) as {
@@ -196,6 +206,9 @@ async function handleDrop(event: DragEvent, targetGroupId: string) {
       detail: 'Failed to move tab',
       life: 3000,
     });
+  } finally {
+    tabStore.isDraggingTab = false;
+    dragOverGroupId.value = null;
   }
 }
 
@@ -239,10 +252,26 @@ function getGroupTabCount(group: TabGroup): number {
   return normalizeTabs(group.tabs).length;
 }
 
+watch(
+  () => tabStore.isDraggingTab,
+  (dragging) => {
+    if (dragging && !isSidebarOpen.value) {
+      isSidebarOpen.value = true;
+    }
+  }
+);
+
 onMounted(async () => {
+  window.addEventListener('dragend', handleDragEndTab);
+  window.addEventListener('drop', handleDragEndTab);
   await tabStore.loadGroups();
   await refreshCurrentTabs();
   tabStore.selectedGroupId = 'current';
+});
+
+onUnmounted(() => {
+  window.removeEventListener('dragend', handleDragEndTab);
+  window.removeEventListener('drop', handleDragEndTab);
 });
 
 // Filtered current tabs when searching in "Current Tabs" view
@@ -361,24 +390,38 @@ function handleSave(groupId: string) {
 
         <!-- Saved Groups List -->
         <div v-if="isSidebarOpen" class="space-y-1">
-          <div class="px-2.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
-            <span>Saved Groups</span>
-            <span class="text-[10px] font-normal text-slate-400">{{ tabStore.namedGroups.length }}</span>
+          <div
+            class="px-2.5 text-[10px] font-semibold uppercase tracking-wider mb-1.5 flex items-center justify-between transition-colors"
+            :class="tabStore.isDraggingTab ? 'text-indigo-600' : 'text-slate-400'"
+          >
+            <div class="flex items-center gap-1.5">
+              <span>Saved Groups</span>
+              <span
+                v-if="tabStore.isDraggingTab"
+                class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-100 text-indigo-700 animate-pulse border border-indigo-200"
+              >
+                Drop Targets
+              </span>
+            </div>
+            <span class="text-[10px]" :class="tabStore.isDraggingTab ? 'text-indigo-600 font-bold' : 'text-slate-400 font-normal'">
+              {{ tabStore.namedGroups.length }}
+            </span>
           </div>
 
-          <div v-if="tabStore.namedGroups.length > 0" class="space-y-0.5 max-h-60 overflow-y-auto">
+          <div v-if="tabStore.namedGroups.length > 0" class="space-y-1 max-h-60 overflow-y-auto">
             <button
               v-for="group in tabStore.namedGroups"
               :key="group.id"
               type="button"
               class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-all relative select-none"
               :class="[
-                tabStore.selectedGroupId === group.id
-                  ? 'bg-indigo-50 text-indigo-700 font-semibold'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
                 dragOverGroupId === group.id
-                  ? 'ring-2 ring-indigo-500 bg-indigo-100/90 text-indigo-800 scale-[1.02] shadow-xs font-semibold'
-                  : ''
+                  ? 'ring-2 ring-indigo-600 bg-indigo-600 text-white font-semibold scale-[1.03] shadow-md z-10'
+                  : tabStore.isDraggingTab
+                    ? 'border border-dashed border-indigo-300 bg-indigo-50/70 text-indigo-950 font-medium hover:bg-indigo-100/80 shadow-2xs'
+                    : tabStore.selectedGroupId === group.id
+                      ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
               ]"
               @click="tabStore.selectedGroupId = group.id"
               @dragover.prevent="handleDragOver($event, group.id)"
@@ -389,17 +432,33 @@ function handleSave(groupId: string) {
               <div class="flex items-center gap-2 truncate min-w-0 flex-1 mr-2">
                 <Folder
                   class="h-3.5 w-3.5 shrink-0 transition-transform"
-                  :class="dragOverGroupId === group.id ? 'text-indigo-600 scale-125' : 'text-slate-400'"
+                  :class="[
+                    dragOverGroupId === group.id
+                      ? 'text-white scale-125'
+                      : tabStore.isDraggingTab
+                        ? 'text-indigo-600'
+                        : 'text-slate-400'
+                  ]"
                 />
                 <span class="truncate">{{ group.name || 'Saved Group' }}</span>
               </div>
               <span
                 class="text-[10px] ml-1 shrink-0 transition-colors font-medium"
-                :class="dragOverGroupId === group.id ? 'text-indigo-700 font-bold' : 'text-slate-400'"
+                :class="[
+                  dragOverGroupId === group.id
+                    ? 'text-indigo-100 font-bold'
+                    : tabStore.isDraggingTab
+                      ? 'text-indigo-700 font-semibold bg-white/90 px-1 py-0.2 rounded-xs'
+                      : 'text-slate-400'
+                ]"
               >
                 {{ getGroupTabCount(group) }}
               </span>
             </button>
+          </div>
+          <div v-else-if="tabStore.isDraggingTab" class="px-2.5 py-2.5 rounded-lg border-2 border-dashed border-indigo-200 bg-indigo-50/70 text-center">
+            <p class="text-xs font-semibold text-indigo-800">No saved groups yet</p>
+            <p class="text-[10px] text-indigo-600 mt-0.5">Save current tabs as a group first to drop tabs here</p>
           </div>
           <div v-else class="px-2.5 py-2 text-[11px] text-slate-400 italic">
             No saved groups yet
@@ -521,6 +580,7 @@ function handleSave(groupId: string) {
                     draggable="true"
                     class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-slate-50 transition-colors select-none cursor-grab active:cursor-grabbing"
                     @dragstart="handleDragStartCurrentTab($event, tab)"
+                    @dragend="handleDragEndTab"
                   >
                     <!-- Favicon + Title Link -->
                     <div
@@ -528,8 +588,13 @@ function handleSave(groupId: string) {
                       :title="tab.url"
                       @click="handleOpenTab(tab)"
                     >
-                      <!-- Drag Handle -->
-                      <GripVertical class="h-3.5 w-3.5 text-slate-300 group-hover/tab:text-slate-400 shrink-0 cursor-grab" />
+                      <!-- Drag Handle with hover hint -->
+                      <div
+                        class="p-0.5 rounded text-slate-300 group-hover/tab:text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 transition-colors shrink-0 cursor-grab active:cursor-grabbing"
+                        title="Drag to left sidebar saved groups to categorize / 拖拽至左侧已保存的分组以分类"
+                      >
+                        <GripVertical class="h-3.5 w-3.5" />
+                      </div>
 
                       <div class="h-4 w-4 shrink-0 flex items-center justify-center">
                         <img
