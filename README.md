@@ -18,6 +18,8 @@
 
 PackTabs is a productivity-first Chrome Manifest V3 browser extension built with the WXT Framework, Vue 3, and Tailwind CSS v4.
 
+> 📘 **Looking for feature walkthroughs & screenshot guides?** See the [User Guide & Screenshot Blueprint](docs/USER_GUIDE.md).
+
 When working on multitasking projects, research topics, or troubleshooting issues, tabs easily pile up. Bookmarking them one by one is tedious, slow, and clutters your permanent browser bookmarks with temporary links. PackTabs eliminates this friction: package all open tabs from an unfinished task into an organized group in one click, cleanly close the window to clear your mind and free browser memory, and restore your entire work context whenever you're ready to pick up where you left off.
 
 ## Why PackTabs?
