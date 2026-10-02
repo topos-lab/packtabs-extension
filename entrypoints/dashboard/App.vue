@@ -619,7 +619,7 @@ function handleSave(groupId: string) {
                   <Tooltip
                     v-for="tab in displayedCurrentTabs"
                     :key="tab.id"
-                    content="Drag to categorize • Ctrl/Cmd+Click to open in background"
+                    :content="['Drag to categorize', 'Ctrl/Cmd+Click to open in background']"
                     side="top"
                     :delay-duration="400"
                   >

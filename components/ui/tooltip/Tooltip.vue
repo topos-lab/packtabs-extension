@@ -11,7 +11,7 @@ import type { HTMLAttributes } from 'vue';
 import { cn } from '~/lib/utils';
 
 interface Props {
-  content?: string;
+  content?: string | string[];
   side?: 'top' | 'right' | 'bottom' | 'left';
   align?: 'start' | 'center' | 'end';
   sideOffset?: number;
@@ -42,13 +42,20 @@ const props = withDefaults(defineProps<Props>(), {
           :side-offset="sideOffset"
           :class="
             cn(
-              'z-50 overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1 text-xs text-zinc-800 dark:text-zinc-200 shadow-md select-none pointer-events-none transition-all',
+              'z-50 overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-800 dark:text-zinc-200 shadow-md select-none pointer-events-none transition-all whitespace-pre-line max-w-xs leading-relaxed',
               $props.class
             )
           "
         >
           <slot name="content">
-            {{ content }}
+            <template v-if="Array.isArray(content)">
+              <div v-for="(line, idx) in content" :key="idx" class="leading-relaxed">
+                {{ line }}
+              </div>
+            </template>
+            <template v-else>
+              {{ content }}
+            </template>
           </slot>
         </TooltipContent>
       </TooltipPortal>

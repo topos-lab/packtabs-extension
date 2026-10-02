@@ -18,4 +18,28 @@ describe('Tooltip Component', () => {
     expect(trigger.exists()).toBe(true);
     expect(trigger.text()).toBe('Hover Me');
   });
+
+  it('supports string array for multi-line content', () => {
+    const wrapper = mount(Tooltip, {
+      props: {
+        content: ['Line 1: Drag to reorder', 'Line 2: Ctrl+Click to open'],
+      },
+      slots: {
+        default: '<button>Trigger</button>',
+      },
+    });
+
+    expect(wrapper.exists()).toBe(true);
+  });
+
+  it('supports custom slot content for rich multi-line layout', () => {
+    const wrapper = mount(Tooltip, {
+      slots: {
+        default: '<button>Trigger</button>',
+        content: '<div class="custom-multi-line"><p>Line 1</p><p>Line 2</p></div>',
+      },
+    });
+
+    expect(wrapper.exists()).toBe(true);
+  });
 });

@@ -329,7 +329,7 @@ async function confirmDeleteGroup() {
           <Tooltip
             v-for="tab in filteredTabs"
             :key="tab.id"
-            content="Drag to categorize • Ctrl/Cmd+Click to open in background"
+            :content="['Drag to categorize', 'Ctrl/Cmd+Click to open in background']"
             side="top"
             :delay-duration="400"
           >
