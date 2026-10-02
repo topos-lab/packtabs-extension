@@ -176,7 +176,7 @@ export default defineBackground(() => {
 
   // Message handler for tab capture and restoration operations
   browser.runtime.onMessage.addListener(
-    (
+    async (
       message: {
         type: string;
         name?: string;
@@ -184,70 +184,61 @@ export default defineBackground(() => {
         tabs?: TabItem[];
         tab?: TabItem;
       },
-      _sender,
-      sendResponse
+      _sender
     ) => {
-      void (async () => {
-        try {
-          switch (message.type) {
-            case 'CAPTURE_TABS': {
-              const tabs = await captureCurrentWindow();
-              const cleanTabs = deduplicateTabsByUrl(tabs);
+      try {
+        switch (message.type) {
+          case 'CAPTURE_TABS': {
+            const tabs = await captureCurrentWindow();
+            const cleanTabs = deduplicateTabsByUrl(tabs);
 
-              const newGroup: TabGroup = {
-                id: crypto.randomUUID(),
-                name: message.name ?? null,
-                createdAt: new Date(),
-                tabs: cleanTabs,
-                isHistory: message.isHistory ?? false,
-              };
+            const newGroup: TabGroup = {
+              id: crypto.randomUUID(),
+              name: message.name ?? null,
+              createdAt: new Date(),
+              tabs: cleanTabs,
+              isHistory: message.isHistory ?? false,
+            };
 
-              await saveTabGroup(newGroup);
+            await saveTabGroup(newGroup);
 
-              const settings = await settingsStorage.getValue();
-              if (settings.autoCloseAfterSave) {
-                await closeCurrentTabs();
-              }
-
-              sendResponse({ success: true, group: newGroup });
-              break;
-            }
-
-            case 'OPEN_TABS': {
-              if (message.tabs) {
-                await openTabs(message.tabs);
-              }
-              sendResponse({ success: true });
-              break;
-            }
-
-            case 'OPEN_SINGLE_TAB': {
-              if (message.tab) {
-                await openSingleTab(message.tab);
-              }
-              sendResponse({ success: true });
-              break;
-            }
-
-            case 'CLOSE_CURRENT_TABS': {
+            const settings = await settingsStorage.getValue();
+            if (settings.autoCloseAfterSave) {
               await closeCurrentTabs();
-              sendResponse({ success: true });
-              break;
             }
 
-            default:
-              sendResponse({ success: false, error: 'Unknown message type' });
+            return { success: true, group: newGroup };
           }
-        } catch (error) {
-          console.error('Error handling message:', error);
-          sendResponse({
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          });
-        }
-      })();
 
-      return true;
+          case 'OPEN_TABS': {
+            if (message.tabs) {
+              await openTabs(message.tabs);
+            }
+            return { success: true };
+          }
+
+          case 'OPEN_SINGLE_TAB': {
+            if (message.tab) {
+              await openSingleTab(message.tab);
+            }
+            return { success: true };
+          }
+
+          case 'CLOSE_CURRENT_TABS': {
+            await closeCurrentTabs();
+            return { success: true };
+          }
+
+          default:
+            return { success: false, error: 'Unknown message type' };
+        }
+      } catch (error) {
+        console.error('Error handling message:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
     }
   );
 });

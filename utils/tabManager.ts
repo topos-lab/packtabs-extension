@@ -1,4 +1,5 @@
 import type { TabItem } from '~/types/TabGroup';
+import { formatDefaultGroupName } from '~/utils/date';
 
 /**
  * Interface for tab management operations
@@ -207,7 +208,7 @@ export async function closeCurrentTabs(): Promise<void> {
     if (tabIds.length > 0) {
       // Create a new blank tab first so the window does not close
       try {
-        await browser.tabs.create({ windowId: currentWindow.id, active: true });
+        await browser.tabs.create({ url: 'chrome://newtab/', windowId: currentWindow.id, active: true });
       } catch {
         // Ignore if tabs.create fails in headless test environment
       }
@@ -228,18 +229,5 @@ export async function closeCurrentTabs(): Promise<void> {
  * Example (zh-CN): "Tab Group · 10月2日 18:40"
  */
 export function generateDefaultGroupName(date: Date = new Date()): string {
-  try {
-    const userLocale = typeof navigator !== 'undefined' && navigator.language ? navigator.language : 'en-US';
-    const formatted = new Intl.DateTimeFormat(userLocale, {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }).format(date);
-    return `Tab Group · ${formatted}`;
-  } catch {
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `Tab Group · ${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-  }
+  return formatDefaultGroupName(date);
 }

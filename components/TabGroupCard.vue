@@ -22,6 +22,7 @@ import { Tooltip } from '~/components/ui/tooltip';
 import { useToast } from '~/composables/useToast';
 import { useTabStore } from '~/stores/useTabStore';
 import type { TabGroup, TabItem } from '~/types/TabGroup';
+import { formatFullDateTime } from '~/utils/date';
 import { normalizeTabs } from '~/utils/storage';
 import { deduplicateTabsByUrl, getFaviconUrl, openSingleTab, openTabs } from '~/utils/tabManager';
 
@@ -64,50 +65,14 @@ function handleFaviconError(tabId: string) {
   faviconErrorStates.value[tabId] = true;
 }
 
-// Localized formatting for display title when unnamed
-function formatLocalizedDateTime(dateInput: Date | string | number): string {
-  try {
-    const d = new Date(dateInput);
-    if (isNaN(d.getTime())) return '';
-    const userLocale = typeof navigator !== 'undefined' && navigator.language ? navigator.language : 'en-US';
-    return new Intl.DateTimeFormat(userLocale, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }).format(d);
-  } catch {
-    const d = new Date(dateInput);
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  }
-}
-
 // Format creation date
-const formattedDate = computed(() => {
-  const date = props.group.createdAt;
-  try {
-    const userLocale = typeof navigator !== 'undefined' && navigator.language ? navigator.language : 'en-US';
-    return new Intl.DateTimeFormat(userLocale, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }).format(new Date(date));
-  } catch {
-    return String(date);
-  }
-});
+const formattedDate = computed(() => formatFullDateTime(props.group.createdAt));
 
 const displayTitle = computed(() => {
   if (props.group.name?.trim()) {
     return props.group.name.trim();
   }
-  return formatLocalizedDateTime(props.group.createdAt);
+  return formatFullDateTime(props.group.createdAt);
 });
 
 const tabList = computed(() => deduplicateTabsByUrl(normalizeTabs(props.group.tabs)));

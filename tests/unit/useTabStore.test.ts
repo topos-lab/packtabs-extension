@@ -700,4 +700,61 @@ describe('useTabStore', () => {
       expect(convertedGroup.createdAt.toISOString()).toBe(originalDate.toISOString());
     });
   });
+
+  describe('Optimistic Rollback Handling', () => {
+    it('should rollback local state if deleteGroup fails in storage', async () => {
+      const store = useTabStore();
+      const group: TabGroup = {
+        id: 'group-rb-1',
+        name: 'Rollback Test',
+        createdAt: new Date(),
+        tabs: [{ id: 'tab-1', url: 'https://example.com', title: 'Example' }],
+        isHistory: false,
+      };
+
+      await tabGroupsStorage.setValue({
+        'group-rb-1': { ...group, createdAt: group.createdAt.toISOString() },
+      });
+      await store.loadGroups();
+      expect(store.tabGroups).toHaveLength(1);
+
+      // Force storage setValue to persistently fail
+      vi.spyOn(tabGroupsStorage, 'setValue').mockRejectedValue(new Error('Storage failure'));
+
+      await expect(store.deleteGroup('group-rb-1')).rejects.toThrow('Storage failure');
+
+      // State should be rolled back
+      expect(store.tabGroups).toHaveLength(1);
+      expect(store.tabGroups[0].id).toBe('group-rb-1');
+    });
+
+    it('should rollback local tabs if deleteTab fails in storage', async () => {
+      const store = useTabStore();
+      const group: TabGroup = {
+        id: 'group-rb-2',
+        name: 'Rollback Tab Test',
+        createdAt: new Date(),
+        tabs: [
+          { id: 'tab-1', url: 'https://example.com/1', title: '1' },
+          { id: 'tab-2', url: 'https://example.com/2', title: '2' },
+        ],
+        isHistory: false,
+      };
+
+      await tabGroupsStorage.setValue({
+        'group-rb-2': { ...group, createdAt: group.createdAt.toISOString() },
+      });
+      await store.loadGroups();
+      expect(store.tabGroups[0].tabs).toHaveLength(2);
+
+      // Force storage setValue to persistently fail
+      vi.spyOn(tabGroupsStorage, 'setValue').mockRejectedValue(new Error('Storage failure'));
+
+      await expect(store.deleteTab('group-rb-2', 'tab-1')).rejects.toThrow('Storage failure');
+
+      // Tab should still be present due to rollback
+      expect(store.tabGroups[0].tabs).toHaveLength(2);
+      expect(store.tabGroups[0].tabs.some((t) => t.id === 'tab-1')).toBe(true);
+    });
+  });
 });

@@ -26,13 +26,6 @@ export class StorageQuotaExceededError extends Error {
   }
 }
 
-export class StorageSyncConflictError extends Error {
-  constructor(message = 'Storage sync conflict detected') {
-    super(message);
-    this.name = 'StorageSyncConflictError';
-  }
-}
-
 export class StorageNotFoundError extends Error {
   constructor(message = 'Resource not found in storage') {
     super(message);
@@ -103,17 +96,6 @@ async function withRetry<T>(operation: () => Promise<T>, retries: number = RETRY
 }
 
 /**
- * Resolves sync conflicts using timestamp-based resolution (most recent wins)
- */
-function resolveSyncConflict(localGroup: TabGroup, remoteGroup: StoredTabGroup): StoredTabGroup {
-  const localTimestamp = localGroup.createdAt.getTime();
-  const remoteTimestamp = new Date(remoteGroup.createdAt).getTime();
-
-  // Keep the most recent version
-  return localTimestamp >= remoteTimestamp ? serializeTabGroup(localGroup) : remoteGroup;
-}
-
-/**
  * Normalizes tab collections to ensure a plain array of TabItem objects
  */
 export function normalizeTabs(tabs: unknown): TabItem[] {
@@ -162,6 +144,18 @@ export function deserializeTabGroup(stored: StoredTabGroup): TabGroup {
 }
 
 /**
+ * Resolves sync conflicts using timestamp-based resolution (most recent wins).
+ * Validates Requirement 2.3 and Property 18.3.
+ */
+export function resolveSyncConflict(localGroup: TabGroup, remoteGroup: StoredTabGroup): StoredTabGroup {
+  const localTimestamp = localGroup.createdAt instanceof Date ? localGroup.createdAt.getTime() : new Date(localGroup.createdAt).getTime();
+  const remoteTimestamp = new Date(remoteGroup.createdAt).getTime();
+
+  // Keep the most recent version (newer wins; on tie, localGroup wins)
+  return localTimestamp >= remoteTimestamp ? serializeTabGroup(localGroup) : remoteGroup;
+}
+
+/**
  * Saves a tab group to storage
  */
 export async function saveTabGroup(group: TabGroup): Promise<void> {
@@ -171,7 +165,6 @@ export async function saveTabGroup(group: TabGroup): Promise<void> {
       const allGroups: Record<string, StoredTabGroup> = { ...rawGroups };
       const serialized = serializeTabGroup(group);
 
-      // Check for sync conflicts if group already exists
       const existing = allGroups[group.id];
       if (existing) {
         allGroups[group.id] = resolveSyncConflict(group, existing);

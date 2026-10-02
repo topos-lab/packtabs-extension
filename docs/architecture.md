@@ -62,3 +62,13 @@ When concurrent operations or quota errors occur, `resolveSyncConflict` provides
 - Manifest V3 command: `_execute_action` mapped to `Alt+Shift+K` (macOS: `Command+Shift+K`), avoiding conflicts with Chrome internal shortcuts.
 - About modal queries real-time status with `browser.commands.getAll()`.
 - Automatically refreshes shortcut binding state on window focus (`window.addEventListener('focus', loadShortcut)`).
+
+### 4.6 Date Formatting & Performance Singleton (`utils/date.ts`)
+- Replaces repeated instantiations of `Intl.DateTimeFormat` across list and card components with cached singleton formatters (`formatFullDateTime` and `formatDefaultGroupName`).
+- Automatically tracks `navigator.language` updates and falls back to ISO-like YYYY-MM-DD HH:mm on legacy or error conditions.
+
+## 5. Service Worker & Messaging Architecture
+- **Stateless Service Worker**: Follows Chrome MV3 lifecycle guidelines without persistent global variables across worker sleep cycles.
+- **Session Tabs Disk Sync**: Synchronizes active tab snapshots to disk on tab modifications with a 400ms debounce to prevent high-frequency write churn.
+- **Polyfill-Compliant Messaging**: Background message listeners use async functions directly returning Promise resolutions, strictly adhering to WXT and `webextension-polyfill` patterns.
+- **Optimistic State Rollback**: Pinia store actions take proxy-safe immutable snapshots (`cloneTabGroups`) before mutating state, automatically restoring memory state if persistent writes reject.

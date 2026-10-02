@@ -39,6 +39,16 @@ function handleError(error: unknown, defaultMessage: string): never {
 }
 
 /**
+ * Proxy-safe deep clone for reactive tab groups array (avoids DataCloneError)
+ */
+function cloneTabGroups(groups: TabGroup[]): TabGroup[] {
+  return groups.map((g) => ({
+    ...g,
+    tabs: (g.tabs || []).map((t) => ({ ...t })),
+  }));
+}
+
+/**
  * Pinia store for managing tab groups with reactive state and optimistic local updates
  */
 export const useTabStore = defineStore('tabs', () => {
@@ -129,9 +139,10 @@ export const useTabStore = defineStore('tabs', () => {
   }
 
   /**
-   * Updates an existing tab group with optimistic local update
+   * Updates an existing tab group with optimistic local update and rollback on failure
    */
   async function updateGroup(id: string, updates: Partial<TabGroup>): Promise<void> {
+    const previousGroups = cloneTabGroups(tabGroups.value);
     try {
       await updateTabGroupInStorage(id, updates);
 
@@ -148,6 +159,7 @@ export const useTabStore = defineStore('tabs', () => {
         await loadGroups();
       }
     } catch (error) {
+      tabGroups.value = previousGroups;
       if (error instanceof StorageQuotaExceededError) {
         handleError(error, 'Storage quota exceeded. Cannot update tab group.');
       } else {
@@ -157,9 +169,11 @@ export const useTabStore = defineStore('tabs', () => {
   }
 
   /**
-   * Deletes a tab group with optimistic local update
+   * Deletes a tab group with optimistic local update and rollback on failure
    */
   async function deleteGroup(id: string): Promise<void> {
+    const previousGroups = cloneTabGroups(tabGroups.value);
+    const previousSelectedId = selectedGroupId.value;
     try {
       await deleteTabGroupFromStorage(id);
 
@@ -170,14 +184,17 @@ export const useTabStore = defineStore('tabs', () => {
         selectedGroupId.value = null;
       }
     } catch (error) {
+      tabGroups.value = previousGroups;
+      selectedGroupId.value = previousSelectedId;
       handleError(error, 'Failed to delete tab group');
     }
   }
 
   /**
-   * Deletes a single tab from a group with optimistic local update
+   * Deletes a single tab from a group with optimistic local update and rollback on failure
    */
   async function deleteTab(groupId: string, tabId: string): Promise<void> {
+    const previousGroups = cloneTabGroups(tabGroups.value);
     try {
       await deleteTabFromGroupInStorage(groupId, tabId);
 
@@ -189,6 +206,7 @@ export const useTabStore = defineStore('tabs', () => {
         tabGroups.value = [...tabGroups.value];
       }
     } catch (error) {
+      tabGroups.value = previousGroups;
       handleError(error, 'Failed to delete tab');
     }
   }
@@ -212,10 +230,11 @@ export const useTabStore = defineStore('tabs', () => {
   }
 
   /**
-   * Moves a tab from one group to another with optimistic update
+   * Moves a tab from one group to another with optimistic update and rollback on failure
    */
   async function moveTab(sourceGroupId: string, targetGroupId: string, tabId: string): Promise<void> {
     if (sourceGroupId === targetGroupId) return;
+    const previousGroups = cloneTabGroups(tabGroups.value);
 
     try {
       await moveTabBetweenGroupsInStorage(sourceGroupId, targetGroupId, tabId);
@@ -233,14 +252,16 @@ export const useTabStore = defineStore('tabs', () => {
         }
       }
     } catch (error) {
+      tabGroups.value = previousGroups;
       handleError(error, 'Failed to move tab between groups');
     }
   }
 
   /**
-   * Appends a tab to an existing group with optimistic update and URL deduplication
+   * Appends a tab to an existing group with optimistic update and rollback on failure
    */
   async function addTab(groupId: string, tab: TabItem): Promise<void> {
+    const previousGroups = cloneTabGroups(tabGroups.value);
     try {
       const targetGroup = tabGroups.value.find((g) => g.id === groupId);
       if (targetGroup) {
@@ -259,6 +280,7 @@ export const useTabStore = defineStore('tabs', () => {
         tabGroups.value = [...tabGroups.value];
       }
     } catch (error) {
+      tabGroups.value = previousGroups;
       handleError(error, 'Failed to add tab to group');
     }
   }

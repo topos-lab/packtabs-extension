@@ -71,3 +71,11 @@ This implementation plan tracks the development, refactoring, and feature enhanc
 - [x] 10.4 Update extension shortcut to unconflicted `Alt+Shift+K` (macOS: `Command+Shift+K`)
 - [x] 10.5 Implement dynamic shortcut querying with real-time focus refresh in About modal
 - [x] 10.6 Maintain 194 automated unit and property tests with 100% pass rate
+
+### Phase 11: Code Quality, Performance & Resilience Enhancements
+- [x] 11.1 Migrate Service Worker `onMessage` listener to async Promise-return pattern compliant with WXT polyfill
+- [x] 11.2 Implement singleton `Intl.DateTimeFormat` cache in `utils/date.ts` to eliminate repeated format instantiations
+- [x] 11.3 Implement proxy-safe `cloneTabGroups` and rollback in Pinia store mutating actions upon persistence failures
+- [x] 11.4 Clean up active Toast timers on manual removal in `useToast.ts`
+- [x] 11.5 Standardize fallback tab creation to `chrome://newtab/` in `closeCurrentTabs`
+- [x] 11.6 Expand test suite with `tests/unit/date.test.ts`, `tests/unit/useToast.test.ts`, and optimistic rollback tests (33 test suites, 206 tests, 100% pass)
