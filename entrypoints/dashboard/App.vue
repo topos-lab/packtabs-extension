@@ -32,6 +32,7 @@ import {
   captureCurrentWindow,
   closeCurrentTabs,
   deduplicateTabsByUrl,
+  generateDefaultGroupName,
   getFaviconUrl,
   InvalidUrlError,
   openSingleTab,
@@ -260,7 +261,7 @@ async function saveCurrentTabs() {
   isSavingCurrent.value = true;
 
   try {
-    const name = newGroupName.value.trim() || null;
+    const name = newGroupName.value.trim() || generateDefaultGroupName();
     const cleanTabs = deduplicateTabsByUrl(currentTabs.value);
     const group = await tabStore.saveGroup(name, false, cleanTabs);
 
@@ -591,7 +592,7 @@ function handleSave(groupId: string) {
                 <div class="flex-1 max-w-sm">
                   <Input
                     v-model="newGroupName"
-                    placeholder="Enter group name (e.g., Work Project)..."
+                    placeholder="Group name (optional, or auto-named with time)..."
                     class="h-8 text-xs bg-slate-50/60 border-slate-200 focus:bg-white focus:border-indigo-500"
                     @keydown.enter="saveCurrentTabs"
                   />

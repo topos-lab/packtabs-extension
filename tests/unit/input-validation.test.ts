@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { setStoreErrorHandler, useTabStore } from '../../stores/useTabStore';
 import { tabGroupsStorage } from '../../types/Storage';
 import type { TabGroup } from '../../types/TabGroup';
+import { generateDefaultGroupName } from '../../utils/tabManager';
 
 describe('User Input Validation', () => {
   let store: ReturnType<typeof useTabStore>;
@@ -377,6 +378,14 @@ describe('User Input Validation', () => {
       const group = store.tabGroups.find((g) => g.id === 'history-1');
 
       expect(group?.name).toBe('123');
+    });
+
+    it('generates an intelligent default group name with timestamp', () => {
+      const fixedDate = new Date('2026-10-02T18:40:00Z');
+      const defaultName = generateDefaultGroupName(fixedDate);
+
+      expect(defaultName).toContain('Tab Group ·');
+      expect(defaultName.length).toBeGreaterThan(12);
     });
   });
 });
