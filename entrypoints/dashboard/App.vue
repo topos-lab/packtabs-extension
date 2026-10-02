@@ -65,7 +65,7 @@ async function loadShortcut() {
       if (actionCmd && actionCmd.shortcut) {
         currentShortcut.value = actionCmd.shortcut.split('+').join(' + ');
       } else if (actionCmd && actionCmd.shortcut === '') {
-        currentShortcut.value = 'Not set';
+        currentShortcut.value = 'Not set (Default: Alt + Shift + P)';
       }
     }
   } catch (err) {
@@ -332,10 +332,12 @@ onMounted(async () => {
   await tabStore.loadGroups();
   await refreshCurrentTabs();
   void loadShortcut();
+  window.addEventListener('focus', loadShortcut);
   tabStore.selectedGroupId = 'current';
 });
 
 onUnmounted(() => {
+  window.removeEventListener('focus', loadShortcut);
   window.removeEventListener('dragend', handleDragEndTab);
   window.removeEventListener('drop', handleDragEndTab);
 });
@@ -619,7 +621,7 @@ function handleSave(groupId: string) {
                   <Tooltip
                     v-for="tab in displayedCurrentTabs"
                     :key="tab.id"
-                    :content="['Drag to categorize', 'Ctrl/Cmd+Click to open in background']"
+                    :content="['Drag tab to categorize into group', 'Ctrl / Cmd / Shift + Click to open in background']"
                     side="top"
                     :delay-duration="400"
                   >
@@ -634,7 +636,7 @@ function handleSave(groupId: string) {
                       <div class="flex items-center gap-2 min-w-0 flex-1 mr-3 pointer-events-none">
                         <!-- Drag Handle with hover hint -->
                         <div
-                          class="p-1 -ml-1 rounded text-zinc-300 dark:text-zinc-600 group-hover/tab:text-zinc-500 dark:group-hover/tab:text-zinc-400 transition-colors shrink-0 cursor-grab active:cursor-grabbing pointer-events-auto"
+                          class="p-1 -ml-1 rounded text-zinc-300 dark:text-zinc-600 group-hover/tab:text-zinc-500 dark:group-hover/tab:text-zinc-400 transition-colors shrink-0 cursor-move active:cursor-move pointer-events-auto"
                         >
                           <GripVertical class="h-3.5 w-3.5" />
                         </div>

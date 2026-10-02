@@ -382,7 +382,7 @@ async function confirmDeleteGroup() {
         <Tooltip
           v-for="tab in tabList"
           :key="tab.id"
-          :content="['Drag to categorize', 'Ctrl/Cmd+Click to open in background']"
+          :content="['Drag tab to categorize into group', 'Ctrl / Cmd / Shift + Click to open in background']"
           side="top"
           :delay-duration="400"
         >
@@ -397,7 +397,7 @@ async function confirmDeleteGroup() {
             <div class="flex items-center gap-2 min-w-0 flex-1 mr-3 pointer-events-none">
               <!-- Drag Handle with hover hint -->
               <div
-                class="p-1 -ml-1 rounded text-zinc-300 dark:text-zinc-600 group-hover/tab:text-zinc-500 dark:group-hover/tab:text-zinc-400 transition-colors shrink-0 cursor-grab active:cursor-grabbing pointer-events-auto"
+                class="p-1 -ml-1 rounded text-zinc-300 dark:text-zinc-600 group-hover/tab:text-zinc-500 dark:group-hover/tab:text-zinc-400 transition-colors shrink-0 cursor-move active:cursor-move pointer-events-auto"
               >
                 <GripVertical class="h-3.5 w-3.5" />
               </div>
