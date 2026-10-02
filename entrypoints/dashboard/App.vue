@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader } from '~/components/ui/card';
 import Modal from '~/components/ui/dialog/Modal.vue';
 import { Input } from '~/components/ui/input';
 import ToastContainer from '~/components/ui/toast/ToastContainer.vue';
+import { Tooltip } from '~/components/ui/tooltip';
 import { useTheme } from '~/composables/useTheme';
 import { useToast } from '~/composables/useToast';
 import { setStoreErrorHandler, useTabStore } from '~/stores/useTabStore';
@@ -615,61 +616,66 @@ function handleSave(groupId: string) {
                 </div>
 
                 <div v-else class="flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800 max-h-[500px] overflow-y-auto pr-1">
-                  <div
+                  <Tooltip
                     v-for="tab in displayedCurrentTabs"
                     :key="tab.id"
-                    draggable="true"
-                    class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors select-none cursor-grab active:cursor-grabbing"
-                    title="Drag to categorize • Ctrl/Cmd+Click to open in background"
-                    @dragstart="handleDragStartCurrentTab($event, tab)"
-                    @dragend="handleDragEndTab"
-                    @click="handleTabItemRowClick($event, tab)"
+                    content="Drag to categorize • Ctrl/Cmd+Click to open in background"
+                    side="top"
+                    :delay-duration="400"
                   >
-                    <!-- Favicon + Title + Domain (pointer-events-none for seamless drag) -->
-                    <div class="flex items-center gap-2 min-w-0 flex-1 mr-3 pointer-events-none">
-                      <!-- Drag Handle with hover hint -->
-                      <div
-                        class="p-1 -ml-1 rounded text-zinc-300 dark:text-zinc-600 group-hover/tab:text-zinc-500 dark:group-hover/tab:text-zinc-400 transition-colors shrink-0"
-                      >
-                        <GripVertical class="h-3.5 w-3.5" />
+                    <div
+                      draggable="true"
+                      class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors select-none cursor-pointer"
+                      @dragstart="handleDragStartCurrentTab($event, tab)"
+                      @dragend="handleDragEndTab"
+                      @click="handleTabItemRowClick($event, tab)"
+                    >
+                      <!-- Favicon + Title + Domain (pointer-events-none for seamless drag) -->
+                      <div class="flex items-center gap-2 min-w-0 flex-1 mr-3 pointer-events-none">
+                        <!-- Drag Handle with hover hint -->
+                        <div
+                          class="p-1 -ml-1 rounded text-zinc-300 dark:text-zinc-600 group-hover/tab:text-zinc-500 dark:group-hover/tab:text-zinc-400 transition-colors shrink-0 cursor-grab active:cursor-grabbing pointer-events-auto"
+                        >
+                          <GripVertical class="h-3.5 w-3.5" />
+                        </div>
+
+                        <div class="h-4 w-4 shrink-0 flex items-center justify-center">
+                          <img
+                            v-if="tab.faviconUrl || getFaviconUrl(tab.url)"
+                            :src="tab.faviconUrl || getFaviconUrl(tab.url)"
+                            class="h-4 w-4 rounded-xs object-contain"
+                            alt=""
+                            loading="lazy"
+                          />
+                          <Globe v-else class="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
+                        </div>
+
+                        <span class="text-xs font-medium text-zinc-800 dark:text-zinc-200 group-hover/tab:text-indigo-600 dark:group-hover/tab:text-indigo-400 truncate transition-colors">
+                          {{ tab.title || 'Untitled' }}
+                        </span>
+
+                        <span
+                          v-if="getDomain(tab.url)"
+                          class="text-[11px] text-zinc-400 dark:text-zinc-500 font-normal shrink-0 ml-auto pr-2 hidden sm:inline"
+                        >
+                          {{ getDomain(tab.url) }}
+                        </span>
                       </div>
 
-                      <div class="h-4 w-4 shrink-0 flex items-center justify-center">
-                        <img
-                          v-if="tab.faviconUrl || getFaviconUrl(tab.url)"
-                          :src="tab.faviconUrl || getFaviconUrl(tab.url)"
-                          class="h-4 w-4 rounded-xs object-contain"
-                          alt=""
-                          loading="lazy"
-                        />
-                        <Globe v-else class="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
+                      <!-- Right Actions: Only Exclude button -->
+                      <div class="flex items-center shrink-0 pointer-events-auto">
+                        <button
+                          type="button"
+                          class="p-1 text-zinc-300 dark:text-zinc-600 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded transition-colors shrink-0 cursor-pointer"
+                          title="Exclude from group"
+                          aria-label="Exclude tab"
+                          @click.stop="removeCurrentTab(tab.id)"
+                        >
+                          <X class="h-3.5 w-3.5" />
+                        </button>
                       </div>
-
-                      <span class="text-xs font-medium text-zinc-800 dark:text-zinc-200 group-hover/tab:text-indigo-600 dark:group-hover/tab:text-indigo-400 truncate transition-colors">
-                        {{ tab.title || 'Untitled' }}
-                      </span>
-
-                      <span
-                        v-if="getDomain(tab.url)"
-                        class="text-[11px] text-zinc-400 dark:text-zinc-500 font-normal shrink-0 ml-auto pr-2 hidden sm:inline"
-                      >
-                        {{ getDomain(tab.url) }}
-                      </span>
                     </div>
-
-                    <!-- Right Actions: Only Exclude button -->
-                    <div class="flex items-center shrink-0 pointer-events-auto">
-                      <button
-                        type="button"
-                        class="p-1 text-zinc-300 dark:text-zinc-600 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded transition-colors shrink-0 cursor-pointer"
-                        title="Exclude from group"
-                        aria-label="Exclude tab"
-                        @click.stop="removeCurrentTab(tab.id)"
-                      >
-                        <X class="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </div>
+                  </Tooltip>
                 </div>
               </CardContent>
             </Card>
