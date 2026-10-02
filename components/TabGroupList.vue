@@ -32,10 +32,10 @@ function handleSave(groupId: string) {
       </p>
     </div>
 
-    <!-- Tab group cards grid -->
+    <!-- Tab group cards list (one card per row) -->
     <div
       v-else
-      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+      class="flex flex-col gap-4 w-full"
     >
       <TabGroupCard
         v-for="group in groups"

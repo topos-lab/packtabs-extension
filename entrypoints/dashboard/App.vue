@@ -117,8 +117,8 @@ function handleSave(groupId: string) {
       :class="isSidebarOpen ? 'w-64' : 'w-16'"
     >
       <!-- Sidebar Header / Logo -->
-      <div class="h-16 flex items-center justify-between px-4 border-b border-slate-100">
-        <div v-if="isSidebarOpen" class="flex items-center gap-2.5 overflow-hidden">
+      <div class="h-16 flex items-center justify-between px-3 border-b border-slate-100">
+        <div v-if="isSidebarOpen" class="flex items-center gap-2.5 pl-2.5 overflow-hidden">
           <div class="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-xs shrink-0">
             <Layers class="h-4 w-4" />
           </div>
@@ -130,7 +130,8 @@ function handleSave(groupId: string) {
 
         <button
           type="button"
-          class="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors mx-auto"
+          class="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors shrink-0"
+          :class="isSidebarOpen ? 'mr-2.5' : 'mx-auto'"
           :title="isSidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'"
           @click="isSidebarOpen = !isSidebarOpen"
         >
@@ -143,7 +144,7 @@ function handleSave(groupId: string) {
       <div class="flex-1 overflow-y-auto p-3 space-y-6">
         <!-- Quick Views -->
         <div class="space-y-1">
-          <div v-if="isSidebarOpen" class="px-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+          <div v-if="isSidebarOpen" class="px-2.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
             Views
           </div>
 
@@ -189,10 +190,10 @@ function handleSave(groupId: string) {
 
         <!-- Named Groups list in sidebar -->
         <div v-if="isSidebarOpen && tabStore.namedGroups.length > 0" class="space-y-1">
-          <div class="px-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+          <div class="px-2.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
             Saved Groups
           </div>
-          <div class="space-y-0.5 max-h-60 overflow-y-auto pr-1">
+          <div class="space-y-0.5 max-h-60 overflow-y-auto">
             <button
               v-for="group in tabStore.namedGroups"
               :key="group.id"
@@ -253,7 +254,7 @@ function handleSave(groupId: string) {
 
       <!-- Content Area -->
       <section class="flex-1 overflow-y-auto p-6">
-        <div class="max-w-7xl mx-auto">
+        <div class="max-w-4xl mx-auto">
           <TabGroupList :groups="displayedGroups" @save="handleSave" />
         </div>
       </section>

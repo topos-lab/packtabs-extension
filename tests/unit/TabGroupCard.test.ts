@@ -99,10 +99,9 @@ describe('TabGroupCard Component', () => {
     });
 
     expect(wrapper.text()).toContain('Save');
-    expect(wrapper.text()).not.toContain('Update');
   });
 
-  it('shows Update button for named groups', () => {
+  it('does not show Save button for named groups', () => {
     const wrapper = mount(TabGroupCard, {
       props: { group: mockGroup },
       global: {
@@ -110,8 +109,8 @@ describe('TabGroupCard Component', () => {
       },
     });
 
-    expect(wrapper.text()).toContain('Update');
     expect(wrapper.text()).not.toContain('Save');
+    expect(wrapper.text()).toContain('Open All');
   });
 
   it('shows name input dialog when Save button clicked on history group', async () => {

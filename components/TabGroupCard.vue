@@ -6,7 +6,6 @@ import {
   Globe,
   Pencil,
   Plus,
-  RefreshCw,
   Save,
   Trash2,
   X,
@@ -21,7 +20,17 @@ import { Input } from '~/components/ui/input';
 import { useToast } from '~/composables/useToast';
 import { useTabStore } from '~/stores/useTabStore';
 import type { TabGroup, TabItem } from '~/types/TabGroup';
-import { captureCurrentWindow, getFaviconUrl, openSingleTab, openTabs } from '~/utils/tabManager';
+import { getFaviconUrl, openSingleTab, openTabs } from '~/utils/tabManager';
+
+function getDomain(url?: string): string {
+  if (!url) return '';
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+}
 
 const props = defineProps<{
   group: TabGroup;
@@ -185,24 +194,6 @@ async function saveWithName() {
   }
 }
 
-async function handleUpdate() {
-  try {
-    const tabs = await captureCurrentWindow();
-    await tabStore.updateGroup(props.group.id, { tabs });
-    toast.add({
-      severity: 'success',
-      detail: 'Group updated with current tabs',
-      life: 3000,
-    });
-  } catch (error) {
-    toast.add({
-      severity: 'error',
-      detail: 'Failed to update group',
-      life: 3000,
-    });
-  }
-}
-
 function handleDeleteGroup() {
   showDeleteConfirm.value = true;
 }
@@ -279,7 +270,7 @@ async function confirmDeleteGroup() {
 
     <!-- Body: Tab List -->
     <CardContent class="p-3">
-      <div class="flex flex-col divide-y divide-slate-100 max-h-80 overflow-y-auto pr-1">
+      <div class="flex flex-col divide-y divide-slate-100 max-h-96 overflow-y-auto pr-1">
         <div
           v-for="tab in group.tabs"
           :key="tab.id"
@@ -287,7 +278,7 @@ async function confirmDeleteGroup() {
         >
           <!-- Favicon + Title Link -->
           <div
-            class="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer"
+            class="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer mr-3"
             :title="tab.url"
             @click="handleTabClick(tab)"
           >
@@ -305,15 +296,23 @@ async function confirmDeleteGroup() {
             </div>
 
             <!-- Title -->
-            <span class="text-xs text-slate-700 group-hover/tab:text-indigo-600 truncate transition-colors">
+            <span class="text-xs font-medium text-slate-800 group-hover/tab:text-indigo-600 truncate transition-colors">
               {{ tab.title || 'Untitled' }}
+            </span>
+
+            <!-- Domain name -->
+            <span
+              v-if="getDomain(tab.url)"
+              class="text-[11px] text-slate-400 font-normal shrink-0 ml-auto pr-2 hidden sm:inline"
+            >
+              {{ getDomain(tab.url) }}
             </span>
           </div>
 
-          <!-- Remove single tab button -->
+          <!-- Directly visible delete single tab button -->
           <button
             type="button"
-            class="opacity-0 group-hover/tab:opacity-100 transition-opacity p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded"
+            class="p-1 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors shrink-0"
             title="Remove tab from group"
             aria-label="Delete tab"
             @click.stop="handleDeleteTab(tab.id)"
@@ -327,7 +326,7 @@ async function confirmDeleteGroup() {
     <!-- Footer: Actions -->
     <CardFooter class="p-3 pt-2 bg-slate-50/40 border-t border-slate-100 flex items-center justify-between gap-2">
       <div class="flex items-center gap-2">
-        <Button size="sm" variant="success" class="h-8 gap-1.5 text-xs" @click="handleOpenAll">
+        <Button size="sm" variant="success" class="h-8 gap-1.5 text-xs font-medium" @click="handleOpenAll">
           <ExternalLink class="h-3.5 w-3.5" />
           Open All
         </Button>
@@ -336,29 +335,18 @@ async function confirmDeleteGroup() {
           v-if="group.isHistory"
           size="sm"
           variant="outline"
-          class="h-8 gap-1.5 text-xs text-slate-700"
+          class="h-8 gap-1.5 text-xs text-slate-700 font-medium"
           @click="handleSave"
         >
           <Save class="h-3.5 w-3.5 text-slate-500" />
           Save
-        </Button>
-
-        <Button
-          v-else
-          size="sm"
-          variant="outline"
-          class="h-8 gap-1.5 text-xs text-slate-700"
-          @click="handleUpdate"
-        >
-          <RefreshCw class="h-3.5 w-3.5 text-slate-500" />
-          Update
         </Button>
       </div>
 
       <Button
         size="sm"
         variant="ghost"
-        class="h-8 px-2.5 text-xs text-slate-500 hover:text-rose-600 hover:bg-rose-50"
+        class="h-8 px-2.5 text-xs text-slate-500 hover:text-rose-600 hover:bg-rose-50 font-medium"
         @click="handleDeleteGroup"
       >
         <Trash2 class="h-3.5 w-3.5" />
