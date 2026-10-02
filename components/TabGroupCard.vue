@@ -388,7 +388,7 @@ async function confirmDeleteGroup() {
           >
             <!-- Drag Handle with hover hint -->
             <div
-              class="p-0.5 rounded text-slate-300 group-hover/tab:text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 transition-colors shrink-0 cursor-grab active:cursor-grabbing"
+              class="p-1 -ml-1 rounded text-slate-300 group-hover/tab:text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 transition-colors shrink-0 cursor-grab active:cursor-grabbing"
               title="Drag to left sidebar saved groups to categorize"
             >
               <GripVertical class="h-3.5 w-3.5" />
@@ -421,16 +421,28 @@ async function confirmDeleteGroup() {
             </span>
           </div>
 
-          <!-- Directly visible delete single tab button -->
-          <button
-            type="button"
-            class="p-1 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors shrink-0"
-            title="Remove tab from group"
-            aria-label="Delete tab"
-            @click.stop="handleDeleteTab(tab.id)"
-          >
-            <X class="h-3.5 w-3.5" />
-          </button>
+          <!-- Tab Actions: Open in new tab + Remove tab -->
+          <div class="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              class="p-1 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors shrink-0"
+              title="Open in new tab"
+              aria-label="Open in new tab"
+              @click.stop="handleTabClick(tab)"
+            >
+              <ExternalLink class="h-3.5 w-3.5" />
+            </button>
+
+            <button
+              type="button"
+              class="p-1 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors shrink-0"
+              title="Remove tab from group"
+              aria-label="Delete tab"
+              @click.stop="handleDeleteTab(tab.id)"
+            >
+              <X class="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       </div>
     </CardContent>

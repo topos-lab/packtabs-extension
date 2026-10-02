@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import {
   Clock,
+  ExternalLink,
   Folder,
   Globe,
   GripVertical,
@@ -45,7 +46,7 @@ const isSidebarOpen = ref(true);
 const currentTabs = ref<TabItem[]>([]);
 const currentTabsLoading = ref(false);
 const newGroupName = ref('');
-const autoCloseTabs = ref(false);
+const closeWindowAfterSave = ref(false);
 const isSavingCurrent = ref(false);
 
 function getDomain(url?: string): string {
@@ -232,8 +233,16 @@ async function saveCurrentTabs() {
       life: 3500,
     });
 
-    if (autoCloseTabs.value) {
-      await closeCurrentTabs();
+    if (closeWindowAfterSave.value) {
+      try {
+        const currentWindow = await browser.windows.getCurrent();
+        if (currentWindow.id !== undefined) {
+          await browser.windows.remove(currentWindow.id);
+          return;
+        }
+      } catch (err) {
+        console.error('Failed to close window after save:', err);
+      }
     }
 
     newGroupName.value = '';
@@ -523,10 +532,10 @@ function handleSave(groupId: string) {
                   <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer select-none">
                     <input
                       type="checkbox"
-                      v-model="autoCloseTabs"
+                      v-model="closeWindowAfterSave"
                       class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5"
                     />
-                    <span>Close tabs after save</span>
+                    <span>Close window after save</span>
                   </label>
 
                   <Button
@@ -566,7 +575,7 @@ function handleSave(groupId: string) {
                     >
                       <!-- Drag Handle with hover hint -->
                       <div
-                        class="p-0.5 rounded text-slate-300 group-hover/tab:text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 transition-colors shrink-0 cursor-grab active:cursor-grabbing"
+                        class="p-1 -ml-1 rounded text-slate-300 group-hover/tab:text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 transition-colors shrink-0 cursor-grab active:cursor-grabbing"
                         title="Drag to left sidebar saved groups to categorize"
                       >
                         <GripVertical class="h-3.5 w-3.5" />
@@ -595,16 +604,28 @@ function handleSave(groupId: string) {
                       </span>
                     </div>
 
-                    <!-- Remove from staging list button -->
-                    <button
-                      type="button"
-                      class="p-1 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors shrink-0"
-                      title="Exclude from group"
-                      aria-label="Exclude tab"
-                      @click.stop="removeCurrentTab(tab.id)"
-                    >
-                      <X class="h-3.5 w-3.5" />
-                    </button>
+                    <!-- Right Actions: Open in new tab + Exclude -->
+                    <div class="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        class="p-1 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors shrink-0"
+                        title="Open in new tab"
+                        aria-label="Open in new tab"
+                        @click.stop="handleOpenTab(tab)"
+                      >
+                        <ExternalLink class="h-3.5 w-3.5" />
+                      </button>
+
+                      <button
+                        type="button"
+                        class="p-1 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors shrink-0"
+                        title="Exclude from group"
+                        aria-label="Exclude tab"
+                        @click.stop="removeCurrentTab(tab.id)"
+                      >
+                        <X class="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
