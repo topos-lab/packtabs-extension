@@ -49,7 +49,7 @@ export default defineConfig({
             browser_specific_settings: {
               gecko: {
                 id: 'packtabs@topos-lab.github.io',
-                strict_min_version: '109.0',
+                strict_min_version: '142.0',
                 data_collection_permissions: {
                   required: ['none'],
                 },
