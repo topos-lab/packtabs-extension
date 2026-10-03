@@ -19,6 +19,7 @@ export default defineBackground(() => {
   console.log('PackTabs background service worker initialized', { id: browser.runtime.id });
 
   let syncTimeout: ReturnType<typeof setTimeout> | null = null;
+  let isStartupComplete = false;
 
   /**
    * Debounced sync of open tabs across all browser windows to storage.
@@ -31,10 +32,14 @@ export default defineBackground(() => {
     }
     syncTimeout = setTimeout(() => {
       void syncCurrentSessionTabs();
-    }, 400);
+    }, 150);
   }
 
   async function syncCurrentSessionTabs() {
+    // If startup recovery has not finished yet, do not overwrite activeSessionTabsStorage
+    if (isRecovering || !isStartupComplete) {
+      return;
+    }
     try {
       const windows = await browser.windows.getAll({ populate: true });
       const currentSessionMap: Record<string, TabItem[]> = {};
@@ -136,10 +141,9 @@ export default defineBackground(() => {
     }
   }
 
-  // --- Browser Event Listeners ---
-
-  // Track tab changes across all windows
+  // Track tab and window changes across all windows
   browser.tabs.onCreated.addListener(() => { debouncedSyncSessionTabs(); });
+  browser.windows.onCreated.addListener(() => { debouncedSyncSessionTabs(); });
 
   browser.tabs.onUpdated.addListener((_id, changeInfo) => {
     if (changeInfo.status === 'complete' || changeInfo.url || changeInfo.title) {
@@ -197,22 +201,86 @@ export default defineBackground(() => {
     })();
   });
 
-  // Recover on browser startup and optionally open Startup Restorer
-  browser.runtime.onStartup.addListener(async () => {
-    await recoverPendingHistoryGroups(true);
+  let hasInitializedProcess = false;
 
+  /**
+   * Determines whether this background execution is a fresh browser startup (cold start)
+   * vs a service worker wake-up from dormancy within an already running browser.
+   * Uses browser.storage.session (cleared automatically by browser engine on browser process exit).
+   */
+  async function isColdBrowserStart(): Promise<boolean> {
     try {
-      const settings = await settingsStorage.getValue();
-      if (settings.openOnStartup) {
-        await openOrFocusDashboard('?mode=startup');
+      const sessionApi = (browser.storage as { session?: { get: (k: string) => Promise<Record<string, unknown>>; set: (v: Record<string, unknown>) => Promise<void> } })?.session;
+      if (sessionApi && typeof sessionApi.get === 'function') {
+        const result = await sessionApi.get('packtabs_initialized');
+        if (result?.packtabs_initialized) {
+          return false;
+        }
+        await sessionApi.set({ packtabs_initialized: true });
+        return true;
       }
-    } catch (err) {
-      console.error('Failed to open startup restorer on browser startup:', err);
+    } catch {
+      // Session storage not available or restricted
     }
+
+    if (!hasInitializedProcess) {
+      hasInitializedProcess = true;
+      return true;
+    }
+    return false;
+  }
+
+  let startupPromise: Promise<void> | null = null;
+
+  /**
+   * Unified startup handler executed on browser startup or background script cold start.
+   * Idempotent: ensures history snapshot recovery and Startup Restorer launch occur once per browser startup.
+   */
+  async function handleStartup(source: 'onStartup' | 'coldInit') {
+    if (startupPromise) {
+      return startupPromise;
+    }
+
+    startupPromise = (async () => {
+      try {
+        const isCold = await isColdBrowserStart();
+        const isStartup = isCold || source === 'onStartup';
+
+        if (!isStartup) {
+          // Service worker woke up from dormancy during normal browsing;
+          // only recover windows that closed while background worker was dormant
+          await recoverPendingHistoryGroups(false);
+          return;
+        }
+
+        // Cold startup: recover all pending sessions from previous browser run into history snapshots
+        await recoverPendingHistoryGroups(true);
+
+        try {
+          const settings = await settingsStorage.getValue();
+          if (settings.openOnStartup) {
+            await openOrFocusDashboard('?mode=startup');
+          }
+        } catch (err) {
+          console.error('Failed to open startup restorer on browser startup:', err);
+        }
+      } finally {
+        isStartupComplete = true;
+        // Run initial session tabs sync for current browser window
+        await syncCurrentSessionTabs();
+      }
+    })();
+
+    return startupPromise;
+  }
+
+  // Recover on browser startup and optionally open Startup Restorer
+  browser.runtime.onStartup.addListener(() => {
+    void handleStartup('onStartup');
   });
 
-  // Also initialize and recover when service worker wakes up
-  void recoverPendingHistoryGroups();
+  // Also initialize and recover when service worker / background script wakes up
+  void handleStartup('coldInit');
 
   /**
    * Opens or switches to the PackTabs Dashboard tab.
@@ -227,9 +295,10 @@ export default defineBackground(() => {
     let targetWindowId: number | undefined;
     for (let attempt = 0; attempt < 8; attempt++) {
       try {
-        const windows = await browser.windows.getAll({ windowTypes: ['normal'] });
-        if (windows.length > 0 && windows[0].id !== undefined) {
-          targetWindowId = windows[0].id;
+        const windows = await browser.windows.getAll();
+        const normalWin = windows.find((w) => !w.type || w.type === 'normal');
+        if (normalWin?.id !== undefined) {
+          targetWindowId = normalWin.id;
           break;
         }
       } catch {
@@ -268,6 +337,7 @@ export default defineBackground(() => {
             windowTabs[0].url === 'chrome://newtab/' ||
             windowTabs[0].url === 'about:blank' ||
             windowTabs[0].url === 'about:newtab' ||
+            windowTabs[0].url === 'about:home' ||
             windowTabs[0].url.startsWith('chrome://new-tab-page') ||
             windowTabs[0].url.startsWith('edge://newtab'))
             ? windowTabs[0]
