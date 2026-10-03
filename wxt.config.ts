@@ -5,6 +5,11 @@ import { defineConfig } from 'wxt';
 const firefoxWindowsBinary = 'C:\\Program Files\\Mozilla Firefox\\firefox.exe';
 const hasFirefoxBinary = process.platform === 'win32' && fs.existsSync(firefoxWindowsBinary);
 
+const firefoxProfileDir = './.wxt/firefox-data';
+if (!fs.existsSync(firefoxProfileDir)) {
+  fs.mkdirSync(firefoxProfileDir, { recursive: true });
+}
+
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   modules: ['@wxt-dev/module-vue'],
@@ -13,6 +18,11 @@ export default defineConfig({
   },
   webExt: {
     chromiumArgs: ['--user-data-dir=./.wxt/chrome-data'],
+    firefoxProfile: firefoxProfileDir,
+    keepProfileChanges: true,
+    firefoxPref: {
+      'browser.startup.page': 1,
+    },
     ...(hasFirefoxBinary
       ? {
           binaries: {
