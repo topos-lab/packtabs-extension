@@ -67,10 +67,13 @@ export default defineBackground(() => {
 
   /**
    * Recovers any tabs from previous sessions that were not converted to history snapshots.
-   * This is critical when the user closes the entire browser (where Chrome exits before
+   * This is critical when the user closes the entire browser (where Chrome/Firefox exits before
    * window close handlers can finish writing) or after a restart.
+   *
+   * @param isBrowserStartup If true, the entire browser just launched; all saved sessions in activeSessionTabsStorage
+   * belong to the previous browser run and should be recovered into history snapshots.
    */
-  async function recoverPendingHistoryGroups() {
+  async function recoverPendingHistoryGroups(isBrowserStartup = false) {
     if (isRecovering) {return;}
     isRecovering = true;
     try {
@@ -85,19 +88,6 @@ export default defineBackground(() => {
       const currentWindows = await browser.windows.getAll();
       const currentWindowIds = new Set(currentWindows.map((w) => String(w.id)));
 
-      // Query currently open tabs across all active windows
-      let openUrlSet = new Set<string>();
-      try {
-        const allTabs = await browser.tabs.query({});
-        openUrlSet = new Set(
-          allTabs
-            .map((t) => t.url?.trim().toLowerCase())
-            .filter((u): u is string => Boolean(u && validateUrl(u)))
-        );
-      } catch {
-        // Fallback if tabs query is restricted
-      }
-
       // Query existing saved groups to prevent duplicate captures
       const existingGroups = await getTabGroups();
       const existingSignatures = new Set(existingGroups.map((g) => getTabsSignature(g.tabs)));
@@ -105,8 +95,8 @@ export default defineBackground(() => {
       const remainingMap = { ...sessionMap };
 
       for (const winId of windowIds) {
-        // If the window is not currently open, it belonged to a closed/previous session
-        if (!currentWindowIds.has(winId)) {
+        // If the entire browser restarted, or the window is not currently open, it belonged to a closed/previous session
+        if (isBrowserStartup || !currentWindowIds.has(winId)) {
           const tabs = sessionMap[winId];
           if (tabs && tabs.length > 0) {
             const cleanTabs = deduplicateTabsByUrl(tabs);
@@ -118,13 +108,7 @@ export default defineBackground(() => {
             // 2. Never duplicate existing tab groups
             const alreadyExists = existingSignatures.has(sig);
 
-            // 3. If all tabs in this closed window are currently open in the active browser,
-            // then Chrome restored the session upon startup. Do not create a redundant history snapshot!
-            const allTabsCurrentlyOpen =
-              openUrlSet.size > 0 &&
-              cleanTabs.every((t) => openUrlSet.has(t.url.trim().toLowerCase()));
-
-            if (!isDeleted && !alreadyExists && !allTabsCurrentlyOpen) {
+            if (!isDeleted && !alreadyExists) {
               const historyGroup: TabGroup = {
                 id: crypto.randomUUID(),
                 name: null,
@@ -215,7 +199,7 @@ export default defineBackground(() => {
 
   // Recover on browser startup and optionally open Startup Restorer
   browser.runtime.onStartup.addListener(async () => {
-    await recoverPendingHistoryGroups();
+    await recoverPendingHistoryGroups(true);
 
     try {
       const settings = await settingsStorage.getValue();

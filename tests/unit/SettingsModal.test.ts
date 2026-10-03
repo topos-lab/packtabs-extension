@@ -121,4 +121,48 @@ describe('SettingsModal Component', () => {
       url: 'chrome://extensions/shortcuts',
     });
   });
+
+  it('copies about:preferences#general to clipboard when on Firefox', async () => {
+    const originalUserAgent = navigator.userAgent;
+    Object.defineProperty(navigator, 'userAgent', {
+      value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0',
+      configurable: true,
+    });
+
+    const writeTextSpy = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: writeTextSpy },
+      configurable: true,
+    });
+
+    await settingsStorage.setValue({
+      openOnStartup: true,
+      autoCloseAfterSave: true,
+      maxHistoryGroups: 10,
+    });
+
+    mount(SettingsModal, {
+      props: {
+        open: true,
+      },
+      attachTo: document.body,
+    });
+
+    await nextTick();
+    await new Promise((r) => setTimeout(r, 20));
+
+    const buttons = Array.from(document.body.querySelectorAll('button'));
+    const tipButton = buttons.find((b) => b.textContent?.includes('Firefox'));
+    expect(tipButton).toBeDefined();
+
+    tipButton?.click();
+    await nextTick();
+    expect(writeTextSpy).toHaveBeenCalledWith('about:preferences#general');
+
+    // Restore userAgent
+    Object.defineProperty(navigator, 'userAgent', {
+      value: originalUserAgent,
+      configurable: true,
+    });
+  });
 });

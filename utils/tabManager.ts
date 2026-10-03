@@ -38,6 +38,7 @@ export class InvalidUrlError extends Error {
 const RESTRICTED_PROTOCOLS = [
   'chrome:',
   'chrome-extension:',
+  'moz-extension:',
   'about:',
   'data:',
   'javascript:',

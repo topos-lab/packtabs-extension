@@ -91,8 +91,19 @@ export const zh_CN: Record<MessageKey, string> = {
   closeWindowAfterSaveDesc: '保存分组后自动关闭窗口中的所有网页标签',
   startupSettingTipTitle: '必须完成的前置设置',
   startupSettingTipDesc:
-    '若浏览器设为「从上次停下的地方继续」，Chrome 会自动恢复旧标签页导致功能失效或产生重复会话。请务必点击下方按钮，将 Chrome「启动时」设置为「打开新标签页」。',
+    '若浏览器设为「从上次停下的地方继续」或「打开之前的窗口和标签页」，浏览器会自动恢复旧标签页导致功能失效或产生重复会话。请务必前往浏览器启动设置，设置为「打开新标签页」。',
   openChromeStartupSettings: '前往 Chrome 启动设置 (必设项)',
+  openFirefoxStartupSettings: '复制设置地址并在地址栏打开 (Firefox)',
+  openEdgeStartupSettings: '前往 Edge 启动设置 (必设项)',
+  firefoxSettingsCopiedTitle: '设置地址已复制',
+  firefoxStartupSettingsCopiedDesc:
+    '已复制「about:preferences#general」到剪贴板。因 Firefox 安全限制，请在地址栏粘贴打开，取消勾选「打开之前的窗口和标签页」。',
+  firefoxStartupSettingsManualDesc:
+    '请在 Firefox 地址栏输入「about:preferences#general」打开，取消勾选「打开之前的窗口和标签页」。',
+  firefoxShortcutSettingsCopiedDesc:
+    '已复制「about:addons」到剪贴板。请在 Firefox 地址栏粘贴打开，点击右上角齿轮⚙️选择「管理扩展快捷键」。',
+  firefoxShortcutSettingsManualDesc:
+    '请在 Firefox 地址栏输入「about:addons」打开，点击右上角齿轮⚙️选择「管理扩展快捷键」。',
 
   // Settings & About Modal
   themeLabel: '外观主题',

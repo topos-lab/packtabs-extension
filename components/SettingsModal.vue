@@ -1,11 +1,13 @@
 <script lang="ts" setup>
-  import { AlertCircle, ExternalLink, Moon, Sun, SunMoon } from 'lucide-vue-next';
-  import { onMounted, ref, watch } from 'vue';
+  import { AlertCircle, Copy, ExternalLink, Moon, Sun, SunMoon } from 'lucide-vue-next';
+  import { computed, onMounted, ref, watch } from 'vue';
 
   import { Button } from '~/components/ui/button';
   import Modal from '~/components/ui/dialog/Modal.vue';
   import { useI18n } from '~/composables/useI18n';
   import { useTheme } from '~/composables/useTheme';
+  import { useToast } from '~/composables/useToast';
+  import { getBrowserType } from '~/lib/utils';
   import { settingsStorage } from '~/types/Storage';
 
   const props = defineProps<{
@@ -52,17 +54,72 @@
     }
   }
 
-  function openShortcutSettings() {
+  const toast = useToast();
+  const browserType = computed(() => getBrowserType());
+
+  const startupButtonLabel = computed(() => {
+    if (browserType.value === 'firefox') {
+      return t('openFirefoxStartupSettings');
+    }
+    if (browserType.value === 'edge') {
+      return t('openEdgeStartupSettings');
+    }
+    return t('openChromeStartupSettings');
+  });
+
+  async function openShortcutSettings() {
+    if (browserType.value === 'firefox') {
+      try {
+        await navigator.clipboard.writeText('about:addons');
+        toast.add({
+          severity: 'info',
+          summary: t('firefoxSettingsCopiedTitle'),
+          detail: t('firefoxShortcutSettingsCopiedDesc'),
+          life: 6000,
+        });
+      } catch {
+        toast.add({
+          severity: 'info',
+          summary: t('firefoxSettingsCopiedTitle'),
+          detail: t('firefoxShortcutSettingsManualDesc'),
+          life: 6000,
+        });
+      }
+      return;
+    }
+
+    const url = browserType.value === 'edge' ? 'edge://extensions/shortcuts' : 'chrome://extensions/shortcuts';
     try {
-      void browser.tabs.create({ url: 'chrome://extensions/shortcuts' });
+      await browser.tabs.create({ url });
     } catch (err) {
       console.error('Failed to open shortcuts settings:', err);
     }
   }
 
-  function openOnStartupSettings() {
+  async function openOnStartupSettings() {
+    if (browserType.value === 'firefox') {
+      try {
+        await navigator.clipboard.writeText('about:preferences#general');
+        toast.add({
+          severity: 'info',
+          summary: t('firefoxSettingsCopiedTitle'),
+          detail: t('firefoxStartupSettingsCopiedDesc'),
+          life: 6000,
+        });
+      } catch {
+        toast.add({
+          severity: 'info',
+          summary: t('firefoxSettingsCopiedTitle'),
+          detail: t('firefoxStartupSettingsManualDesc'),
+          life: 6000,
+        });
+      }
+      return;
+    }
+
+    const url = browserType.value === 'edge' ? 'edge://settings/startHomeNTP' : 'chrome://settings/onStartup';
     try {
-      void browser.tabs.create({ url: 'chrome://settings/onStartup' });
+      await browser.tabs.create({ url });
     } catch (err) {
       console.error('Failed to open onStartup settings:', err);
     }
@@ -257,8 +314,9 @@
               type="button"
               class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-500/15 dark:hover:bg-amber-500/25 dark:text-amber-300 dark:border dark:border-amber-500/30 font-medium text-[11px] shadow-2xs transition-colors cursor-pointer"
               @click="openOnStartupSettings">
-              <span>{{ t('openChromeStartupSettings') }}</span>
-              <ExternalLink class="h-3 w-3" />
+              <span>{{ startupButtonLabel }}</span>
+              <Copy v-if="browserType === 'firefox'" class="h-3 w-3" />
+              <ExternalLink v-else class="h-3 w-3" />
             </button>
           </div>
         </div>
@@ -295,7 +353,7 @@
           <button
             type="button"
             class="text-[11px] text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline font-medium cursor-pointer"
-            title="Open Chrome Shortcut Settings"
+            :title="browserType === 'firefox' ? 'Copy about:addons' : 'Open Shortcut Settings'"
             @click="openShortcutSettings">
             {{ t('change') }}
           </button>

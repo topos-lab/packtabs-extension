@@ -90,8 +90,19 @@ export const en = {
   closeWindowAfterSaveDesc: 'Close remaining window tabs after saving a group',
   startupSettingTipTitle: 'Required Prerequisite Setup',
   startupSettingTipDesc:
-    'If Chrome is set to "Continue where you left off", Chrome will auto-restore tabs, causing duplicates and breaking this feature. Please click below to set Chrome "On startup" to "Open the New Tab page".',
+    'If your browser is set to restore previous sessions, it will auto-restore tabs, causing duplicates and conflicts. Please set the browser startup setting to "Open the New Tab page".',
   openChromeStartupSettings: 'Open Chrome Startup Settings (Required)',
+  openFirefoxStartupSettings: 'Copy Settings URL & Open in Firefox',
+  openEdgeStartupSettings: 'Open Edge Startup Settings (Required)',
+  firefoxSettingsCopiedTitle: 'Settings URL Copied',
+  firefoxStartupSettingsCopiedDesc:
+    'Copied "about:preferences#general" to clipboard. Due to Firefox security restrictions, paste it into the address bar and uncheck "Open previous windows and tabs".',
+  firefoxStartupSettingsManualDesc:
+    'Please enter "about:preferences#general" in the Firefox address bar, then uncheck "Open previous windows and tabs".',
+  firefoxShortcutSettingsCopiedDesc:
+    'Copied "about:addons" to clipboard. Paste it into the Firefox address bar, click the gear icon ⚙️, and select "Manage Extension Shortcuts".',
+  firefoxShortcutSettingsManualDesc:
+    'Please enter "about:addons" in the Firefox address bar, click the gear icon ⚙️, and select "Manage Extension Shortcuts".',
 
   // Settings & About Modal
   themeLabel: 'Theme',
