@@ -143,7 +143,7 @@ PackTabs 是一款面向任务与专注力设计的标签页与工作区会话�
 
 ## 5. Firefox AMO Specific Settings (Firefox 专属配置)
 
-- **Gecko ID**: `packtabs@top.build` (已在 `wxt.config.ts` 中配置)
+- **Gecko ID**: `packtabs@topos-lab.github.io` (已在 `wxt.config.ts` 中配置)
 - **Minimum Firefox Version**: `109.0`
 - **Data Collection Compliance**: `data_collection_permissions: { required: ['none'] }` (符合 2025 年 11 月新规)
 - **Sources Package**: `.output/packtabs-extension-1.0.0-sources.zip`（WXT 构建自动生成，包含未混淆源码及构建说明，提交流程中上传至 "Source code" 项即可）

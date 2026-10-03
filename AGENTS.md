@@ -42,7 +42,7 @@ packtabs-extension/
    - Never access extension APIs at the top level outside lifecycle functions.
 2. **Unified Browser API & Extension Identity**:
    - Always use `browser.*` (unified promise-based API provided by WXT), avoid using the global callback `chrome.*` directly.
-   - Firefox `gecko.id` (`packtabs@top.build`) is purely an internal unique namespace. Mozilla never verifies DNS records or domain ownership; never purchase domains solely for `gecko.id`.
+   - Firefox `gecko.id` (`packtabs@topos-lab.github.io`) is purely an internal unique namespace. Mozilla never verifies DNS records or domain ownership; never purchase domains solely for `gecko.id`.
 3. **Favicon Access Protocol**:
    - Chrome MV3 forbids direct `chrome://favicon/` URLs in extensions.
    - Always use `chrome-extension://${browser.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=32`.

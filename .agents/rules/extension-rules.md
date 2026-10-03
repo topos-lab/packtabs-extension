@@ -12,7 +12,7 @@ trigger: always_on
 2. **WXT Conventions & Extension Identity**:
    - All runtime code in JS/TS entry points must reside inside the main callback (e.g., `defineBackground(() => { ... })`).
    - Use unified `browser` APIs provided by WXT across all browser targets.
-   - **Firefox gecko.id & AMO Namespace**: Firefox `browser_specific_settings.gecko.id` only requires a valid email string format (e.g. `packtabs@top.build`) or UUID format. Mozilla NEVER verifies DNS records, domain ownership, or MX mailboxes; it is purely an internal unique namespace. Do not purchase domains solely for `gecko.id`.
+   - **Firefox gecko.id & AMO Namespace**: Firefox `browser_specific_settings.gecko.id` only requires a valid email string format (e.g. `packtabs@topos-lab.github.io`) or UUID format. Mozilla NEVER verifies DNS records, domain ownership, or MX mailboxes; it is purely an internal unique namespace. Do not purchase domains solely for `gecko.id`.
 
 3. **Favicon Handling**:
    - Access favicons exclusively through `chrome-extension://${browser.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=32`.

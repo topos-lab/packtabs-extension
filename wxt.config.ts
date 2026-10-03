@@ -26,7 +26,7 @@ export default defineConfig({
         ? {
             browser_specific_settings: {
               gecko: {
-                id: 'packtabs@top.build',
+                id: 'packtabs@topos-lab.github.io',
                 strict_min_version: '109.0',
               },
             },
