@@ -67,6 +67,16 @@
     return t('openChromeStartupSettings');
   });
 
+  const startupTipDesc = computed(() => {
+    if (browserType.value === 'firefox') {
+      return t('startupSettingTipDescFirefox');
+    }
+    if (browserType.value === 'edge') {
+      return t('startupSettingTipDescEdge');
+    }
+    return t('startupSettingTipDescChrome');
+  });
+
   async function openShortcutSettings() {
     if (browserType.value === 'firefox') {
       try {
@@ -307,7 +317,7 @@
             <span>{{ t('startupSettingTipTitle') }}</span>
           </div>
           <p class="text-amber-900/80 dark:text-zinc-400 leading-relaxed text-[11px]">
-            {{ t('startupSettingTipDesc') }}
+            {{ startupTipDesc }}
           </p>
           <div class="pt-0.5">
             <button

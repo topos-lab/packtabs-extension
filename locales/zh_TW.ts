@@ -91,7 +91,13 @@ export const zh_TW: Record<MessageKey, string> = {
   closeWindowAfterSaveDesc: '儲存分組後自動關閉視窗中的所有網頁分頁',
   startupSettingTipTitle: '必須完成的前置設定',
   startupSettingTipDesc:
-    '若瀏覽器設為「從上次停下的地方繼續」或「打開之前的視窗和分頁」，瀏覽器會自動恢復舊分頁導致功能失效或產生重複工作階段。請務必前往瀏覽器啟動設定，設置為「打開新分頁」。',
+    '若設為「繼續瀏覽上次開啟的網頁」，Chrome 每次啟動都會自動恢復舊分頁，導致功能失效或產生重複工作階段。請務必點擊下方按鈕，將 Chrome「啟動時」設定為「開啟新分頁」。',
+  startupSettingTipDescChrome:
+    '若設為「繼續瀏覽上次開啟的網頁」，Chrome 每次啟動都會自動恢復舊分頁，導致功能失效或產生重複工作階段。請務必點擊下方按鈕，將 Chrome「啟動時」設定為「開啟新分頁」。',
+  startupSettingTipDescFirefox:
+    '若勾選了「開啟先前的視窗和分頁」，Firefox 每次啟動都會自動恢復舊分頁，導致功能失效或產生重複工作階段。請務必點擊下方按鈕複製網址並在網址列開啟，在「首頁與啟動 -> 啟動」中取消勾選「開啟先前的視窗和分頁」。',
+  startupSettingTipDescEdge:
+    '若設為「開啟前一個工作階段的索引標籤」，Edge 每次啟動都會自動恢復舊分頁，導致功能失效或產生重複工作階段。請務必點擊下方按鈕，將 Edge「啟動時」設定為「開啟新分頁」。',
   openChromeStartupSettings: '前往 Chrome 啟動設定 (必設項)',
   openFirefoxStartupSettings: '複製設定網址並在網址列開啟 (Firefox)',
   openEdgeStartupSettings: '前往 Edge 啟動設定 (必設項)',

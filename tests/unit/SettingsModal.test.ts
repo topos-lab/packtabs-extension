@@ -157,6 +157,7 @@ describe('SettingsModal Component', () => {
 
     tipButton?.click();
     await nextTick();
+    expect(document.body.textContent).toContain('Open previous windows and tabs');
     expect(writeTextSpy).toHaveBeenCalledWith('about:preferences#home');
 
     // Restore userAgent

@@ -90,7 +90,13 @@ export const en = {
   closeWindowAfterSaveDesc: 'Close remaining window tabs after saving a group',
   startupSettingTipTitle: 'Required Prerequisite Setup',
   startupSettingTipDesc:
-    'If your browser is set to restore previous sessions, it will auto-restore tabs, causing duplicates and conflicts. Please set the browser startup setting to "Open the New Tab page".',
+    'If set to "Continue where you left off", Chrome will auto-restore old tabs on startup, causing duplicates and conflicts. Please click below to set Chrome "On startup" to "Open the New Tab page".',
+  startupSettingTipDescChrome:
+    'If set to "Continue where you left off", Chrome will auto-restore old tabs on startup, causing duplicates and conflicts. Please click below to set Chrome "On startup" to "Open the New Tab page".',
+  startupSettingTipDescFirefox:
+    'If "Open previous windows and tabs" is checked, Firefox will auto-restore old tabs on startup, causing duplicates and conflicts. Please click below to copy the URL, open it in the address bar, and under "Home and startup -> Startup", uncheck "Open previous windows and tabs".',
+  startupSettingTipDescEdge:
+    'If set to "Open tabs from the previous session", Edge will auto-restore old tabs on startup, causing duplicates and conflicts. Please click below to set Edge "Start, home, and new tabs" to "Open the new tab page".',
   openChromeStartupSettings: 'Open Chrome Startup Settings (Required)',
   openFirefoxStartupSettings: 'Copy Settings URL & Open in Firefox',
   openEdgeStartupSettings: 'Open Edge Startup Settings (Required)',

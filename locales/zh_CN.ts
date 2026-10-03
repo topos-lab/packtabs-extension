@@ -91,7 +91,13 @@ export const zh_CN: Record<MessageKey, string> = {
   closeWindowAfterSaveDesc: '保存分组后自动关闭窗口中的所有网页标签',
   startupSettingTipTitle: '必须完成的前置设置',
   startupSettingTipDesc:
-    '若浏览器设为「从上次停下的地方继续」或「打开之前的窗口和标签页」，浏览器会自动恢复旧标签页导致功能失效或产生重复会话。请务必前往浏览器启动设置，设置为「打开新标签页」。',
+    '若设为「从上次停下的地方继续」，Chrome 每次启动都会自动恢复旧标签页，导致功能失效或产生重复会话。请务必点击下方按钮，将 Chrome「启动时」设置为「打开新标签页」。',
+  startupSettingTipDescChrome:
+    '若设为「从上次停下的地方继续」，Chrome 每次启动都会自动恢复旧标签页，导致功能失效或产生重复会话。请务必点击下方按钮，将 Chrome「启动时」设置为「打开新标签页」。',
+  startupSettingTipDescFirefox:
+    '若勾选了「打开先前的窗口和标签页」，Firefox 每次启动都会自动恢复旧标签页，导致功能失效或产生重复会话。请务必点击下方按钮复制地址并在地址栏打开，在「主页与启动 -> 启动」中取消勾选「打开先前的窗口和标签页」。',
+  startupSettingTipDescEdge:
+    '若设为「打开上一会话中的标签页」，Edge 每次启动都会自动恢复旧标签页，导致功能失效或产生重复会话。请务必点击下方按钮，将 Edge「启动时」设置为「打开新标签页」。',
   openChromeStartupSettings: '前往 Chrome 启动设置 (必设项)',
   openFirefoxStartupSettings: '复制设置地址并在地址栏打开 (Firefox)',
   openEdgeStartupSettings: '前往 Edge 启动设置 (必设项)',
