@@ -56,14 +56,18 @@ packtabs-extension/
 6. **Shortcut & Dashboard Activation Protocol**:
    - Use dedicated command names in `manifest.commands` (e.g. `open_dashboard`) with default shortcuts (`Alt+Shift+K` / `Command+Shift+K`).
    - Background service worker must handle `browser.commands.onCommand` and implement idempotent tab focus (switch to existing dashboard tab rather than opening duplicates).
-7. **Safe Date Sorting & Test Rigor**:
+7. **Firefox Dev Profile Persistence & Cold Start Protocol**:
+   - Configure `firefoxProfile: './.wxt/firefox-data'` and `keepProfileChanges: true` in `wxt.config.ts`, ensuring directory existence prior to launch.
+   - In Firefox temporary add-ons (`web-ext`), `browser.runtime.onStartup` never fires. Always use `browser.storage.session` to detect cold browser launches.
+   - Guard active tab sync with `isStartupComplete` to prevent blank initial tabs (`about:blank`, `about:newtab`, `about:home`) from wiping unpersisted previous session tabs.
+8. **Safe Date Sorting & Test Rigor**:
    - Tab groups must be sorted descending by `createdAt` (`sortGroupsByDateDesc`) across storage, store, and view layers.
    - Always sanitize timestamps with `getTimeSafe` to guarantee zero `NaN` comparator comparisons.
    - Property tests must verify entities by unique ID, never relying on fragile array index assumptions across hash map persistence.
-8. **Value-Driven Copywriting**:
+9. **Value-Driven Copywriting**:
    - Prioritize user productivity and task-based context switching in documentation, UI text, and README.
    - Highlight the core pain point: avoiding tedious one-by-one bookmarking and bookmark bar clutter.
-9. **Automated Quality & Lint Enforcement Protocol**:
+10. **Automated Quality & Lint Enforcement Protocol**:
    - Every AI agent modifying code in this codebase MUST automatically execute `bun run check` (or `bun run lint:fix`) before completing turn/task.
    - All TypeScript compilation errors, ESLint rules, and Vitest assertions must be proactively resolved to guarantee 0 errors. Never deliver code with unresolved lint warnings or failures.
 
