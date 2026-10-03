@@ -155,7 +155,7 @@ packtabs-extension/
 
 ## License
 
-MIT © [Topos Lab](https://github.com/topos-lab) & [Wesley Chen](https://github.com/wesley-chen)
+Released under the [MIT License](LICENSE).
 
 ## Privacy Policy
 
