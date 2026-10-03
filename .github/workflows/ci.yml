@@ -36,5 +36,5 @@ jobs:
       - name: Build Chrome MV3 extension
         run: bun run build
 
-      - name: Build Firefox MV2 extension
+      - name: Build Firefox MV3 extension
         run: bun run build:firefox

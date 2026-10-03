@@ -78,7 +78,7 @@ bun run dev
 # Production build for Chrome MV3
 bun run build
 
-# Production build for Firefox MV2/MV3
+# Production build for Firefox MV3
 bun run build:firefox
 
 # Run full test suite (180+ tests)
