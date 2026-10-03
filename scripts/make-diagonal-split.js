@@ -1,7 +1,7 @@
-const fs = require('fs');
-const { execSync } = require('child_process');
+import { execSync } from 'node:child_process';
+import fs from 'node:fs';
 
-function makeDiagonalSplit(lightPath, darkPath, outPath) {
+function makeDiagonalSplit(lightPath: string, darkPath: string, outPath: string) {
   execSync(`ffmpeg -i "${lightPath}" -f rawvideo -pix_fmt rgba light.raw -y`);
   execSync(`ffmpeg -i "${darkPath}" -f rawvideo -pix_fmt rgba dark.raw -y`);
 
@@ -9,17 +9,8 @@ function makeDiagonalSplit(lightPath, darkPath, outPath) {
   const dark = fs.readFileSync('dark.raw');
   const out = Buffer.alloc(1280 * 800 * 4);
 
-  // Diagonal line from top-right towards bottom-left:
-  // (x1=860, y=0) to (x2=440, y=800)
-  const x1 = 860;
-  const y1 = 0;
-  const x2 = 440;
-  const y2 = 800;
-
-  // Vector along line: (x2-x1, y2-y1) = (-420, 800)
-  // A = y2 - y1 = 800
-  // B = -(x2 - x1) = 420
-  // C = x2*y1 - y2*x1 = -800 * 860 = -688000
+  // Line equation: Ax + By + C = 0
+  // Passes through (x=860, y=0) and (x=440, y=800)
   const A = 800;
   const B = 420;
   const C = -688000;
@@ -61,9 +52,11 @@ function makeDiagonalSplit(lightPath, darkPath, outPath) {
     fs.unlinkSync('light.raw');
     fs.unlinkSync('dark.raw');
     fs.unlinkSync('out.raw');
-  } catch {}
+  } catch (err) {
+    console.warn('Temporary file cleanup warning:', err);
+  }
 }
 
-makeDiagonalSplit('docs/screenshots/saved-group-light-zh.png', 'docs/screenshots/saved-group-dark-zh.png', 'docs/screenshots/theme-diagonal-zh.png');
-makeDiagonalSplit('docs/screenshots/saved-group-light-en.png', 'docs/screenshots/saved-group-dark-en.png', 'docs/screenshots/theme-diagonal-en.png');
-console.log('Successfully generated theme-diagonal-zh.png and theme-diagonal-en.png');
+makeDiagonalSplit('docs/screenshots/saved-group-light-zh.png', 'docs/screenshots/saved-group-dark-zh.png', 'docs/screenshots/theme-comparison-zh.png');
+makeDiagonalSplit('docs/screenshots/saved-group-light-en.png', 'docs/screenshots/saved-group-dark-en.png', 'docs/screenshots/theme-comparison-en.png');
+console.log('Successfully generated theme-comparison-zh.png and theme-comparison-en.png');

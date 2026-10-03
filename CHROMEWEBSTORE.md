@@ -131,11 +131,13 @@ PackTabs 是一款面向任务与专注力设计的标签页与工作区会话�
 ## 4. Graphics & Asset Requirements (图形资产规范)
 
 | Asset (资产类别) | Dimensions (分辨率) | Status (状态) | Path / Notes (文件路径与要求) |
-| :--- | :--- | :---: | :--- |
+| :--- | :--- | :--- | :--- |
 | **Store Icon** [REQUIRED] | 128×128 PNG | ✅ **Ready** | `public/icon/128.png` (矢量导出高精图标) |
-| **Screenshot 1** [REQUIRED] | 1280×800 (或 640×400) | ⬜ **待截取** | 主界面：展示已保存的标签页任务卡片、拖拽归类、浅色/深色主题 |
-| **Screenshot 2** [RECOMMENDED] | 1280×800 (或 640×400) | ⬜ **待截取** | 当前窗口标签页检视：展示一键保存、排除单个标签、标签数量预览 |
-| **Screenshot 3** [RECOMMENDED] | 1280×800 (或 640×400) | ⬜ **待截取** | 历史快照与启动恢复器：展示关闭窗口自动保存与启动恢复 |
+| **Screenshot 1** [REQUIRED] | 1280×800 PNG | ✅ **Ready** | `docs/screenshots/current-tabs-light-en.png` (当前窗口检视与一键打包) |
+| **Screenshot 2** [RECOMMENDED] | 1280×800 PNG | ✅ **Ready** | `docs/screenshots/saved-group-light-en.png` (工作区一键复原与静默打开) |
+| **Screenshot 3** [RECOMMENDED] | 1280×800 PNG | ✅ **Ready** | `docs/screenshots/history-group-light-en.png` (自动历史快照防丢失) |
+| **Screenshot 4** [RECOMMENDED] | 1280×800 PNG | ✅ **Ready** | `docs/screenshots/startup-page-light-en.png` (开机/启动恢复器) |
+| **Screenshot 5** [RECOMMENDED] | 1280×800 PNG | ✅ **Ready** | `docs/screenshots/theme-comparison-en.png` (深浅色对角切分对比与隐私) |
 | **Small Promo Tile** | 440×280 PNG/JPEG | ⬜ 可选推荐 | 用于 Chrome Web Store 搜索列表与推荐位展示 |
 | **Marquee Promo Tile** | 1400×560 PNG/JPEG | ⬜ 可选推荐 | 商店大图轮播展示 |
 
