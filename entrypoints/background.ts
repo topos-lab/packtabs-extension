@@ -283,6 +283,7 @@ export default defineBackground(() => {
           (!windowTabs[0].url ||
             windowTabs[0].url === 'chrome://newtab/' ||
             windowTabs[0].url === 'about:blank' ||
+            windowTabs[0].url === 'about:newtab' ||
             windowTabs[0].url.startsWith('chrome://new-tab-page') ||
             windowTabs[0].url.startsWith('edge://newtab'))
             ? windowTabs[0]
@@ -312,13 +313,23 @@ export default defineBackground(() => {
   }
 
   // Handle extension action icon click -> open or focus dashboard
-  browser.action.onClicked.addListener(() => {
-    void openOrFocusDashboard();
-  });
+  // Cross-browser compatibility: browser.action (Chrome / MV3) vs browser.browserAction (Firefox / MV2)
+  const actionApi =
+    (browser.action as typeof browser.action | undefined) ??
+    (browser.browserAction as unknown as typeof browser.action | undefined);
+  if (actionApi?.onClicked) {
+    actionApi.onClicked.addListener(() => {
+      void openOrFocusDashboard();
+    });
+  }
 
   // Handle keyboard shortcut command -> open or focus dashboard
   browser.commands.onCommand.addListener((command) => {
-    if (command === 'open_dashboard' || command === '_execute_action') {
+    if (
+      command === 'open_dashboard' ||
+      command === '_execute_action' ||
+      command === '_execute_browser_action'
+    ) {
       void openOrFocusDashboard();
     }
   });
