@@ -31,9 +31,7 @@ A **task-oriented** tab and workspace manager. When you finish a work session or
 
 ---
 
-## 3. Core Feature Walkthrough & Store Screenshot Blueprint
-
-> 💡 **Store Listing Guidance**: The Chrome Web Store and Firefox AMO require 1–5 screenshots. The four core setups below serve as both feature documentation and your exact **1280×800 pixel screenshot blueprint** for store submission.
+## 3. Core Feature Walkthrough (Core Features)
 
 ---
 
@@ -43,12 +41,11 @@ A **task-oriented** tab and workspace manager. When you finish a work session or
 When you open PackTabs, you're greeted with the **Current Window Tabs** view:
 - **Live Preview**: Inspect every open tab in your active window with crisp Favicons, page titles, and clean domain names.
 - **Selective Exclusion**: Hover over any irrelevant tab (e.g., a search engine homepage) and click `✕` to exclude it before saving.
-- **Custom Naming**: Type a task or project name (e.g., `Q4 Competitive Analysis`, `Vite 8 Migration Notes`). If left blank, PackTabs will automatically assign a timestamp (e.g., `2026-10-03 14:30`).
+- **Custom Naming**: Type a task or project name (e.g., `LLM learning`, `RTX spark research`). If left blank, PackTabs will automatically assign a timestamp (e.g., `2026-10-03 14:30`).
 - **Save & Auto-Close**: Keep "Close window after save" checked and click **Save as Tab Group** to instantly store all tabs and close the window, freeing memory.
 
-#### 📸 Recommended Screenshot 1 (Store Hero Image / Primary Screenshot)
-- **Visual Setup**: Showcase the Current Tabs staging view. Top input field filled with a clear task name (`Feature Release Research`), 5–8 recognizable cards neatly aligned, and the primary "Save as Tab Group" button clearly visible.
-- **Caption / Value Prop**: `Capture All Task Tabs in One Click · Free Memory Instantly`
+![Current Window Tabs Staging & One-Click Packing](screenshots/current-tabs-light-en.png)
+*Figure 1: Capture all task tabs in one click · Free memory instantly*
 
 ---
 
@@ -61,9 +58,8 @@ Switch to the **Saved Groups** view in the sidebar:
 - **Silent Background Opening (Power User Tip)**: Hold `Ctrl` (or `Cmd` / `Shift` on Mac) while clicking a tab item to load it quietly in the background without stealing your current window focus.
 - **Inline Editing & Deletion**: Double-click or click the edit icon to rename groups; click the trash icon to clean up finished projects.
 
-#### 📸 Recommended Screenshot 2 (Store Screenshot 2)
-- **Visual Setup**: A 2-column or 3-column responsive grid of saved task groups with subtle hover effects, active badges, and the "Open All" action button.
-- **Caption / Value Prop**: `Restore Entire Workspaces in Seconds · Open Tabs in Background`
+![Saved Groups Workspace Restore](screenshots/saved-group-light-en.png)
+*Figure 2: Restore entire workspaces in seconds · Open tabs in background with live preview*
 
 ---
 
@@ -75,9 +71,8 @@ Ever accidentally clicked the browser's top-right `✕` and lost crucial referen
 - **Chronological Archive**: Access the **History Snapshots** view in the sidebar, neatly organized by Today, Yesterday, and Previous 7 Days.
 - **Promote to Permanent Group**: Click "Save" on any snapshot card to name it and convert it into a permanent Saved Group.
 
-#### 📸 Recommended Screenshot 3 (Store Screenshot 3)
-- **Visual Setup**: The History Snapshots timeline view highlighting the "Last Closed Session" badge and timestamped entries.
-- **Caption / Value Prop**: `Accidentally Closed a Window? Recover Sessions with Automatic Snapshots`
+![Automatic History Snapshots Failsafe](screenshots/history-group-light-en.png)
+*Figure 3: Accidentally closed a window? Recover sessions with automatic snapshots*
 
 ---
 
@@ -87,19 +82,19 @@ Ever accidentally clicked the browser's top-right `✕` and lost crucial referen
 Pick up right where you left off every morning:
 - Enable "Open Startup Restorer on browser launch" in Settings.
 - When opening a fresh browser instance, PackTabs displays a clean, focused startup screen highlighting your last closed session and frequent collections.
-- Jump straight back into your work without searching through your browser history.
+- Click **Restore Session** or **Open All** to jump straight back into your work without searching through browser history.
 
-#### 📸 Recommended Screenshot 4 (Store Screenshot 4)
-- **Visual Setup**: The Startup Restorer full-screen card displaying the "Resume Previous Session" button alongside task previews.
-- **Caption / Value Prop**: `Start Every Day in Context · Seamless Multi-Day Project Resumption`
+![Browser Startup Restorer](screenshots/startup-page-light-en.png)
+*Figure 4: Start every day in context · Seamless multi-day project resumption*
 
 ---
 
 ### Feature 5: Drag-and-Drop Organization
 
 #### 📖 How It Works
-- **Categorize on the Fly**: Drag any tab from your current window staging view directly onto a saved group target on the sidebar.
-- **Reorder Priorities**: Drag tabs up and down within a group card to adjust priority or reading sequence.
+- **Categorize on the Fly**: Hover over the drag handle (`⋮⋮`) on the left of any tab row, click and drag the tab directly onto an existing group target on the sidebar.
+- **Visual Feedback**: The target group dynamically displays an active highlight border with actionable tooltip prompts.
+- **Reorder Priorities**: Drag tabs up and down within any group card to adjust priority or reading sequence.
 
 ---
 
@@ -109,19 +104,22 @@ Pick up right where you left off every morning:
 - **Eye-Friendly Palettes**: Seamlessly switch between Light, Dark, and System modes with the header toggle. Styled with modern zinc neutral colors for zero eye strain.
 - **100% Local & Private**: All URLs and titles are persisted exclusively in your browser's private local storage sandbox. No tracking, zero third-party telemetry, and no remote servers.
 
+![Adaptive Dark and Light Theme Comparison](screenshots/theme-comparison-en.png)
+*Figure 5: Seamless Light and Eye-Care Dark modes · Smooth transition and distraction-free design*
+
 ---
 
 ## 4. How to Capture Pixel-Perfect 1280×800 Screenshots
 
-The Chrome Web Store strictly rejects screenshots that deviate from **1280×800** or **640×400** pixels.
+The Chrome Web Store and Firefox AMO strictly reject screenshots that deviate from **1280×800** or **640×400** pixels.
 
-### Quick Step-by-Step Guide (No Extra Software Required):
-1. Open the PackTabs dashboard in Chrome (`Alt + Shift + K`).
-2. Press `F12` to open Chrome DevTools, then press `Ctrl + Shift + M` (`Cmd + Shift + M` on Mac) to toggle the **Device Toolbar**.
+### Quick Step-by-Step Guide (Using Chrome DevTools for Maximum Clarity):
+1. Open the PackTabs dashboard in Chrome (`Alt + Shift + K` or Mac `Cmd + Shift + K`).
+2. Press `F12` (Mac `Cmd + Option + I`) to open Chrome DevTools, then press `Ctrl + Shift + M` (`Cmd + Shift + M` on Mac) to toggle the **Device Toolbar**.
 3. In the top dimension inputs, set: **Width: `1280`**, **Height: `800`**.
-4. Set zoom to 100% so the interface displays clean, authentic sample groups.
-5. Click the three dots menu `⋮` in the top right of DevTools -> Select **Capture screenshot**.
-6. Chrome will immediately download an exact **1280×800** PNG file ready for direct store upload!
+4. **Set Device Pixel Ratio (DPR)**: Click the three dots menu `⋮` in the device toolbar -> Check **Add device pixel ratio**. Set DPR to **`1`** (for exact 1:1 pixel capture) or **`2`** (and downscale to 1280×800 for supersampled retina sharpness).
+5. Press `Ctrl + Shift + P` (Mac `Cmd + Shift + P`), type **Capture screenshot**, and hit Enter.
+6. Chrome will immediately download an exact **1280×800** PNG file ready for direct store upload and documentation!
 
 ---
 
