@@ -1,4 +1,9 @@
+import fs from 'node:fs';
+
 import { defineConfig } from 'wxt';
+
+const firefoxWindowsBinary = 'C:\\Program Files\\Mozilla Firefox\\firefox.exe';
+const hasFirefoxBinary = process.platform === 'win32' && fs.existsSync(firefoxWindowsBinary);
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -8,6 +13,13 @@ export default defineConfig({
   },
   webExt: {
     chromiumArgs: ['--user-data-dir=./.wxt/chrome-data'],
+    ...(hasFirefoxBinary
+      ? {
+          binaries: {
+            firefox: firefoxWindowsBinary,
+          },
+        }
+      : {}),
   },
   manifest: ({ browser: targetBrowser }) => {
     const isFirefox = targetBrowser === 'firefox';
