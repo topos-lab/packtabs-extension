@@ -316,11 +316,16 @@
       if (btn) btn.classList.add('active');
     }
 
-    // Auto-detect browser language on load
+    // Default to English for all visitors (supporting ?lang=zh or #zh override)
     (function init() {
-      const userLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
-      if (userLang.startsWith('zh')) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const langParam = urlParams.get('lang');
+      const hash = window.location.hash.toLowerCase();
+
+      if (langParam === 'zh' || hash === '#zh' || hash === '#chinese') {
         switchLang('zh');
+      } else {
+        switchLang('en');
       }
     })();
   </script>
