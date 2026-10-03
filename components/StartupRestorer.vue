@@ -228,7 +228,7 @@
 
     <!-- Main Content: Pure 2-Column Restorer View -->
     <main class="flex-1 max-w-6xl w-full mx-auto px-6 py-3">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start pb-12">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start pb-12">
         <!-- ================= LEFT COLUMN: Saved Groups ================= -->
         <section class="space-y-3.5">
           <!-- Column Header -->
@@ -308,7 +308,7 @@
                         {{ tab.title || t('untitled') }}
                       </span>
                     </div>
-                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 shrink-0 hidden sm:inline">
+                    <span class="text-[10px] text-zinc-500 dark:text-zinc-400 shrink-0 hidden sm:inline">
                       {{ getDomain(tab.url) }}
                     </span>
                   </div>
@@ -430,7 +430,7 @@
                         {{ tab.title || t('untitled') }}
                       </span>
                     </div>
-                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 shrink-0 hidden sm:inline">
+                    <span class="text-[10px] text-zinc-500 dark:text-zinc-400 shrink-0 hidden sm:inline">
                       {{ getDomain(tab.url) }}
                     </span>
                   </div>

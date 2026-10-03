@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
-import { tabGroupsStorage } from '~/types/Storage';
+import { activeSessionTabsStorage, tabGroupsStorage } from '~/types/Storage';
 import type { TabGroup, TabItem } from '~/types/TabGroup';
 import { sortGroupsByDateDesc } from '~/utils/date';
 import {
@@ -10,6 +10,7 @@ import {
   deleteTabGroup as deleteTabGroupFromStorage,
   deserializeTabGroup,
   getTabGroups,
+  getTabsSignature,
   moveTabBetweenGroups as moveTabBetweenGroupsInStorage,
   normalizeTabs,
   saveTabGroup as saveTabGroupToStorage,
@@ -191,6 +192,28 @@ export const useTabStore = defineStore('tabs', () => {
 
       if (selectedGroupId.value === id) {
         selectedGroupId.value = null;
+      }
+
+      // Clean up any pending active session tabs matching the deleted group
+      const deletedGroup = previousGroups.find((g) => g.id === id);
+      if (deletedGroup?.isHistory && deletedGroup.tabs) {
+        const deletedSig = getTabsSignature(deletedGroup.tabs);
+        try {
+          const sessionMap = await activeSessionTabsStorage.getValue();
+          let modified = false;
+          const updated = { ...sessionMap };
+          for (const [winId, tabs] of Object.entries(sessionMap)) {
+            if (getTabsSignature(tabs) === deletedSig) {
+              delete updated[winId];
+              modified = true;
+            }
+          }
+          if (modified) {
+            await activeSessionTabsStorage.setValue(updated);
+          }
+        } catch {
+          // Non-critical session cleanup
+        }
       }
     } catch (error) {
       tabGroups.value = previousGroups;

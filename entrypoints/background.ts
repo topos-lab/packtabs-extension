@@ -1,6 +1,11 @@
 import { activeSessionTabsStorage, settingsStorage } from '~/types/Storage';
 import type { TabGroup, TabItem } from '~/types/TabGroup';
-import { saveTabGroup } from '~/utils/storage';
+import {
+  getTabGroups,
+  getTabsSignature,
+  isDeletedHistorySignature,
+  saveTabGroup,
+} from '~/utils/storage';
 import {
   captureCurrentWindow,
   closeCurrentTabs,
@@ -58,12 +63,16 @@ export default defineBackground(() => {
     }
   }
 
+  let isRecovering = false;
+
   /**
    * Recovers any tabs from previous sessions that were not converted to history snapshots.
    * This is critical when the user closes the entire browser (where Chrome exits before
    * window close handlers can finish writing) or after a restart.
    */
   async function recoverPendingHistoryGroups() {
+    if (isRecovering) {return;}
+    isRecovering = true;
     try {
       const sessionMap = await activeSessionTabsStorage.getValue();
       const windowIds = Object.keys(sessionMap);
@@ -76,8 +85,24 @@ export default defineBackground(() => {
       const currentWindows = await browser.windows.getAll();
       const currentWindowIds = new Set(currentWindows.map((w) => String(w.id)));
 
+      // Query currently open tabs across all active windows
+      let openUrlSet = new Set<string>();
+      try {
+        const allTabs = await browser.tabs.query({});
+        openUrlSet = new Set(
+          allTabs
+            .map((t) => t.url?.trim().toLowerCase())
+            .filter((u): u is string => Boolean(u && validateUrl(u)))
+        );
+      } catch {
+        // Fallback if tabs query is restricted
+      }
+
+      // Query existing saved groups to prevent duplicate captures
+      const existingGroups = await getTabGroups();
+      const existingSignatures = new Set(existingGroups.map((g) => getTabsSignature(g.tabs)));
+
       const remainingMap = { ...sessionMap };
-      let hasRecovered = false;
 
       for (const winId of windowIds) {
         // If the window is not currently open, it belonged to a closed/previous session
@@ -85,29 +110,45 @@ export default defineBackground(() => {
           const tabs = sessionMap[winId];
           if (tabs && tabs.length > 0) {
             const cleanTabs = deduplicateTabsByUrl(tabs);
-            const historyGroup: TabGroup = {
-              id: crypto.randomUUID(),
-              name: null,
-              createdAt: new Date(),
-              tabs: cleanTabs,
-              isHistory: true,
-            };
+            const sig = getTabsSignature(cleanTabs);
 
-            await saveTabGroup(historyGroup);
-            hasRecovered = true;
+            // 1. Never resurrect user-deleted history snapshots
+            const isDeleted = await isDeletedHistorySignature(cleanTabs);
+
+            // 2. Never duplicate existing tab groups
+            const alreadyExists = existingSignatures.has(sig);
+
+            // 3. If all tabs in this closed window are currently open in the active browser,
+            // then Chrome restored the session upon startup. Do not create a redundant history snapshot!
+            const allTabsCurrentlyOpen =
+              openUrlSet.size > 0 &&
+              cleanTabs.every((t) => openUrlSet.has(t.url.trim().toLowerCase()));
+
+            if (!isDeleted && !alreadyExists && !allTabsCurrentlyOpen) {
+              const historyGroup: TabGroup = {
+                id: crypto.randomUUID(),
+                name: null,
+                createdAt: new Date(),
+                tabs: cleanTabs,
+                isHistory: true,
+              };
+
+              await saveTabGroup(historyGroup);
+              existingSignatures.add(sig);
+            }
           }
           delete remainingMap[winId];
         }
       }
 
-      if (hasRecovered) {
-        await activeSessionTabsStorage.setValue(remainingMap);
-      }
+      await activeSessionTabsStorage.setValue(remainingMap);
 
       // Re-sync with current open windows
       await syncCurrentSessionTabs();
     } catch (error) {
       console.error('Failed to recover pending history groups:', error);
+    } finally {
+      isRecovering = false;
     }
   }
 
@@ -143,15 +184,24 @@ export default defineBackground(() => {
 
         if (closedTabs && closedTabs.length > 0) {
           const cleanTabs = deduplicateTabsByUrl(closedTabs);
-          const historyGroup: TabGroup = {
-            id: crypto.randomUUID(),
-            name: null,
-            createdAt: new Date(),
-            tabs: cleanTabs,
-            isHistory: true,
-          };
+          const sig = getTabsSignature(cleanTabs);
 
-          await saveTabGroup(historyGroup);
+          const isDeleted = await isDeletedHistorySignature(cleanTabs);
+          if (!isDeleted) {
+            const existingGroups = await getTabGroups();
+            const existingSignatures = new Set(existingGroups.map((g) => getTabsSignature(g.tabs)));
+            if (!existingSignatures.has(sig)) {
+              const historyGroup: TabGroup = {
+                id: crypto.randomUUID(),
+                name: null,
+                createdAt: new Date(),
+                tabs: cleanTabs,
+                isHistory: true,
+              };
+
+              await saveTabGroup(historyGroup);
+            }
+          }
 
           const updatedMap = { ...sessionMap };
           delete updatedMap[String(windowId)];

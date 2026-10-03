@@ -1,5 +1,5 @@
 import type { StoredTabGroup } from '../types/Storage';
-import { tabGroupsStorage } from '../types/Storage';
+import { deletedHistorySignaturesStorage, tabGroupsStorage } from '../types/Storage';
 import type { TabGroup, TabItem } from '../types/TabGroup';
 import { sortGroupsByDateDesc } from './date';
 
@@ -221,6 +221,54 @@ export async function updateTabGroup(id: string, updates: Partial<TabGroup>): Pr
 }
 
 /**
+ * Generates a normalized signature of a tab set based on sorted URLs.
+ * Used for deduplication and tombstone matching.
+ */
+export function getTabsSignature(tabs?: TabItem[]): string {
+  if (!tabs || tabs.length === 0) {
+    return '';
+  }
+  return tabs
+    .map((t) => t.url?.trim().toLowerCase())
+    .filter(Boolean)
+    .sort()
+    .join('|');
+}
+
+/**
+ * Records a deleted history group's signature so it will not be resurrected.
+ */
+export async function recordDeletedHistorySignature(tabs?: TabItem[]): Promise<void> {
+  const sig = getTabsSignature(tabs);
+  if (!sig) {
+    return;
+  }
+  try {
+    const list = await deletedHistorySignaturesStorage.getValue();
+    const updated = [sig, ...list.filter((s) => s !== sig)].slice(0, 100);
+    await deletedHistorySignaturesStorage.setValue(updated);
+  } catch {
+    // Non-critical fallback
+  }
+}
+
+/**
+ * Checks if a tab set matches a user-deleted history group signature.
+ */
+export async function isDeletedHistorySignature(tabs?: TabItem[]): Promise<boolean> {
+  const sig = getTabsSignature(tabs);
+  if (!sig) {
+    return false;
+  }
+  try {
+    const list = await deletedHistorySignaturesStorage.getValue();
+    return list.includes(sig);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Deletes a tab group from storage
  */
 export async function deleteTabGroup(id: string): Promise<void> {
@@ -230,6 +278,11 @@ export async function deleteTabGroup(id: string): Promise<void> {
 
       if (!(id in rawGroups)) {
         throw new StorageNotFoundError(`Tab group with id ${id} not found`);
+      }
+
+      const targetGroup = rawGroups[id];
+      if (targetGroup?.isHistory && targetGroup.tabs) {
+        await recordDeletedHistorySignature(targetGroup.tabs);
       }
 
       const { [id]: _removed, ...remainingGroups } = rawGroups;

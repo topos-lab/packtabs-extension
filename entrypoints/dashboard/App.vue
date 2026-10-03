@@ -462,7 +462,7 @@
           <!-- Settings Button -->
           <button
             type="button"
-            class="h-7 w-7 flex items-center justify-center rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            class="h-7 w-7 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
             :title="t('settings')"
             @click="showSettingsModal = true">
             <Settings class="h-4 w-4" />
@@ -471,7 +471,7 @@
           <!-- Theme Toggle Button (Tri-state: Auto (System) -> Light -> Dark -> Auto) -->
           <button
             type="button"
-            class="h-7 w-7 flex items-center justify-center rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            class="h-7 w-7 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
             :title="themeTooltip"
             @click="cycleTheme">
             <Sun v-if="theme === 'light'" class="h-4 w-4 text-amber-500" />
@@ -492,13 +492,13 @@
             :class="
               tabStore.selectedGroupId === 'current'
                 ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold'
-                : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 hover:text-zinc-900 dark:hover:text-zinc-200'
+                : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 hover:text-zinc-900 dark:hover:text-zinc-100'
             "
             @click="tabStore.selectedGroupId = 'current'">
             <Layers class="h-4 w-4 shrink-0" />
             <span class="flex-1 text-left truncate">{{ t('currentTabs') }}</span>
             <span
-              class="text-[10px] bg-zinc-200/60 dark:bg-zinc-700/60 px-1.5 py-0.5 rounded-full text-zinc-600 dark:text-zinc-300 font-normal">
+              class="text-[10px] bg-zinc-200/80 dark:bg-zinc-800 px-1.5 py-0.5 rounded-full text-zinc-700 dark:text-zinc-300 font-medium">
               {{ currentTabs.length }}
             </span>
           </button>
@@ -510,13 +510,13 @@
             :class="
               tabStore.selectedGroupId === 'history'
                 ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold'
-                : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 hover:text-zinc-900 dark:hover:text-zinc-200'
+                : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 hover:text-zinc-900 dark:hover:text-zinc-100'
             "
             @click="tabStore.selectedGroupId = 'history'">
             <Clock class="h-4 w-4 shrink-0" />
             <span class="flex-1 text-left truncate">{{ t('historySnapshots') }}</span>
             <span
-              class="text-[10px] bg-zinc-200/60 dark:bg-zinc-700/60 px-1.5 py-0.5 rounded-full text-zinc-600 dark:text-zinc-300 font-normal">
+              class="text-[10px] bg-zinc-200/80 dark:bg-zinc-800 px-1.5 py-0.5 rounded-full text-zinc-700 dark:text-zinc-300 font-medium">
               {{ tabStore.historyGroups.length }}
             </span>
           </button>
@@ -527,7 +527,7 @@
           <div
             class="px-2.5 text-[10px] font-semibold uppercase tracking-wider mb-1.5 flex items-center justify-between transition-colors"
             :class="
-              tabStore.isDraggingTab ? 'text-indigo-600 dark:text-indigo-400' : 'text-zinc-400 dark:text-zinc-500'
+              tabStore.isDraggingTab ? 'text-indigo-600 dark:text-indigo-400' : 'text-zinc-500 dark:text-zinc-400'
             ">
             <div class="flex items-center gap-1.5">
               <span>{{ t('savedGroups') }}</span>
@@ -542,7 +542,7 @@
               :class="
                 tabStore.isDraggingTab
                   ? 'text-indigo-600 dark:text-indigo-400 font-semibold'
-                  : 'text-zinc-400 dark:text-zinc-500 font-normal'
+                  : 'text-zinc-500 dark:text-zinc-400 font-medium'
               ">
               {{ tabStore.namedGroups.length }}
             </span>
@@ -561,7 +561,7 @@
                     ? 'border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/60 dark:bg-zinc-800/40 text-zinc-700 dark:text-zinc-300 hover:border-indigo-300 dark:hover:border-zinc-600 hover:bg-indigo-50/40'
                     : tabStore.selectedGroupId === group.id
                       ? 'border-transparent bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold'
-                      : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 hover:text-zinc-900 dark:hover:text-zinc-200',
+                      : 'border-transparent text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 hover:text-zinc-900 dark:hover:text-zinc-100',
               ]"
               @click="tabStore.selectedGroupId = group.id"
               @dragover.prevent="handleDragOver($event, group.id)"
@@ -631,7 +631,7 @@
                       <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 leading-tight">
                         {{ t('currentWindowTabs') }}
                       </h2>
-                      <p class="text-[11px] text-zinc-400 dark:text-zinc-500 font-normal leading-tight">
+                      <p class="text-[11px] text-zinc-500 dark:text-zinc-400 font-normal leading-tight">
                         {{ t('currentTabsSubtitle') }}
                       </p>
                     </div>
@@ -657,7 +657,7 @@
               <!-- Actions Toolbar / Group Name Input -->
               <div
                 class="p-3.5 bg-white dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                <div class="flex-1 max-w-sm">
+                <div class="flex-1 min-w-[220px] max-w-md">
                   <Input
                     v-model="newGroupName"
                     :placeholder="t('groupNamePlaceholder')"
@@ -719,7 +719,7 @@
                       <div class="flex items-center gap-2 min-w-0 flex-1 mr-3 pointer-events-none">
                         <!-- Drag Handle with hover hint -->
                         <div
-                          class="p-1 -ml-1 rounded text-zinc-300 dark:text-zinc-600 group-hover/tab:text-zinc-500 dark:group-hover/tab:text-zinc-400 transition-colors shrink-0 cursor-move active:cursor-move pointer-events-auto">
+                          class="p-1 -ml-1 rounded text-zinc-400 dark:text-zinc-500 group-hover/tab:text-zinc-600 dark:group-hover/tab:text-zinc-300 transition-colors shrink-0 cursor-move active:cursor-move pointer-events-auto">
                           <GripVertical class="h-3.5 w-3.5" />
                         </div>
 
@@ -740,7 +740,7 @@
 
                         <span
                           v-if="getDomain(tab.url)"
-                          class="text-[11px] text-zinc-400 dark:text-zinc-500 font-normal shrink-0 ml-auto pr-2 hidden sm:inline">
+                          class="text-[11px] text-zinc-500 dark:text-zinc-400 font-normal shrink-0 ml-auto pr-2 hidden sm:inline">
                           {{ getDomain(tab.url) }}
                         </span>
                       </div>
@@ -749,7 +749,7 @@
                       <div class="flex items-center shrink-0 pointer-events-auto">
                         <button
                           type="button"
-                          class="p-1 text-zinc-300 dark:text-zinc-600 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded transition-colors shrink-0 cursor-pointer"
+                          class="p-1 text-zinc-400 dark:text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded transition-colors shrink-0 cursor-pointer"
                           :title="t('excludeTab')"
                           :aria-label="t('excludeTabAria')"
                           @click.stop="removeCurrentTab(tab.id)">
@@ -778,7 +778,7 @@
                 <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
                   {{ t('historySnapshots') }}
                 </h2>
-                <p class="text-[11px] text-zinc-400 dark:text-zinc-500 font-normal">
+                <p class="text-[11px] text-zinc-500 dark:text-zinc-400 font-normal">
                   {{ t('historySnapshotsSubtitle') }}
                 </p>
               </div>
@@ -818,15 +818,15 @@
 
         <div class="text-xs text-zinc-600 dark:text-zinc-300 space-y-2.5">
           <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
-            <span class="text-zinc-400 dark:text-zinc-500">{{ t('versionLabel') }}</span>
+            <span class="text-zinc-500 dark:text-zinc-400">{{ t('versionLabel') }}</span>
             <span class="font-medium text-zinc-700 dark:text-zinc-200">1.0.0</span>
           </div>
           <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
-            <span class="text-zinc-400 dark:text-zinc-500">{{ t('authorLabel') }}</span>
+            <span class="text-zinc-500 dark:text-zinc-400">{{ t('authorLabel') }}</span>
             <span class="font-medium text-zinc-700 dark:text-zinc-200">Wesley Chen</span>
           </div>
           <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
-            <span class="text-zinc-400 dark:text-zinc-500">GitHub</span>
+            <span class="text-zinc-500 dark:text-zinc-400">GitHub</span>
             <a
               href="https://github.com/topos-lab/packtabs-extension"
               target="_blank"

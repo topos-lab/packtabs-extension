@@ -329,7 +329,7 @@ async function confirmDeleteGroup() {
           <Button
             size="sm"
             variant="ghost"
-            class="h-7 px-2 text-xs text-zinc-400 dark:text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-medium"
+            class="h-7 px-2 text-xs text-zinc-500 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-medium cursor-pointer"
             :title="t('deleteTabGroup')"
             :aria-label="t('deleteTabGroup')"
             @click="handleDeleteGroup"
@@ -362,7 +362,7 @@ async function confirmDeleteGroup() {
             <div class="flex items-center gap-2 min-w-0 flex-1 mr-3 pointer-events-none">
               <!-- Drag Handle with hover hint -->
               <div
-                class="p-1 -ml-1 rounded text-zinc-300 dark:text-zinc-600 group-hover/tab:text-zinc-500 dark:group-hover/tab:text-zinc-400 transition-colors shrink-0 cursor-move active:cursor-move pointer-events-auto"
+                class="p-1 -ml-1 rounded text-zinc-400 dark:text-zinc-500 group-hover/tab:text-zinc-600 dark:group-hover/tab:text-zinc-300 transition-colors shrink-0 cursor-move active:cursor-move pointer-events-auto"
               >
                 <GripVertical class="h-3.5 w-3.5" />
               </div>
@@ -388,7 +388,7 @@ async function confirmDeleteGroup() {
               <!-- Domain name -->
               <span
                 v-if="getDomain(tab.url)"
-                class="text-[11px] text-zinc-400 dark:text-zinc-500 font-normal shrink-0 ml-auto pr-2 hidden sm:inline"
+                class="text-[11px] text-zinc-500 dark:text-zinc-400 font-normal shrink-0 ml-auto pr-2 hidden sm:inline"
               >
                 {{ getDomain(tab.url) }}
               </span>
@@ -398,7 +398,7 @@ async function confirmDeleteGroup() {
             <div class="flex items-center shrink-0 pointer-events-auto">
               <button
                 type="button"
-                class="p-1 text-zinc-300 dark:text-zinc-600 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded transition-colors shrink-0 cursor-pointer"
+                class="p-1 text-zinc-400 dark:text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded transition-colors shrink-0 cursor-pointer"
                 :title="t('removeTabFromGroup')"
                 :aria-label="t('deleteTabAria')"
                 @click.stop="handleDeleteTab(tab.id)"

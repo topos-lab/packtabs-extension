@@ -64,3 +64,12 @@ export const settingsStorage = storage.defineItem<StorageSchema['settings']>('sy
 export const activeSessionTabsStorage = storage.defineItem<Record<string, TabItem[]>>('local:activeSessionTabs', {
   defaultValue: {},
 });
+
+/**
+ * WXT storage item for recording deleted history group signatures.
+ * Prevents deleted history snapshots from being resurrected by background session recovery or window close events.
+ */
+export const deletedHistorySignaturesStorage = storage.defineItem<string[]>('local:deletedHistorySignatures', {
+  defaultValue: [],
+});
+

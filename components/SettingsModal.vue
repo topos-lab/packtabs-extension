@@ -123,7 +123,7 @@
       <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
         <div>
           <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('themeLabel') }}</span>
-          <p class="text-[10px] text-zinc-400 dark:text-zinc-500">
+          <p class="text-[10px] text-zinc-500 dark:text-zinc-400">
             {{ t('themeDesc') }}
           </p>
         </div>
@@ -172,7 +172,7 @@
       <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
         <div>
           <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('languageLabel') }}</span>
-          <p class="text-[10px] text-zinc-400 dark:text-zinc-500">
+          <p class="text-[10px] text-zinc-500 dark:text-zinc-400">
             {{ t('languageDesc') }}
           </p>
         </div>
@@ -230,7 +230,7 @@
         <div class="flex items-center justify-between">
           <div>
             <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('startupSettingLabel') }}</span>
-            <p class="text-[10px] text-zinc-400 dark:text-zinc-500">
+            <p class="text-[10px] text-zinc-500 dark:text-zinc-400">
               {{ t('startupSettingDesc') }}
             </p>
           </div>
@@ -268,7 +268,7 @@
       <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
         <div>
           <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('closeWindowAfterSave') }}</span>
-          <p class="text-[10px] text-zinc-400 dark:text-zinc-500">
+          <p class="text-[10px] text-zinc-500 dark:text-zinc-400">
             {{ t('closeWindowAfterSaveDesc') }}
           </p>
         </div>
@@ -283,7 +283,7 @@
       <div class="flex items-center justify-between py-1.5">
         <div>
           <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('shortcutLabel') }}</span>
-          <p class="text-[10px] text-zinc-400 dark:text-zinc-500">
+          <p class="text-[10px] text-zinc-500 dark:text-zinc-400">
             {{ t('shortcutDesc') }}
           </p>
         </div>
