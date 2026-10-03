@@ -45,7 +45,7 @@ HOW TO USE
 2. Review open tabs in the current window and click "Save as Tab Group".
 3. Whenever you are ready to resume work, open PackTabs and click "Open All" to bring back your workspace.
 
-Support & Feedback: https://github.com/wesley-chen/packtabs-extension/issues
+Support & Feedback: https://github.com/topos-lab/packtabs-extension/issues
 ```
 
 #### 简体中文版 (Simplified Chinese):
@@ -72,7 +72,7 @@ PackTabs 是一款面向任务与专注力设计的标签页与工作区会话�
 2. 在当前窗口标签列表中确认内容，点击“保存为标签组”。
 3. 当需要恢复工作任务时，打开管理器点击“全部打开”即可瞬间还原整个工作区。
 
-问题反馈与开源支持：https://github.com/wesley-chen/packtabs-extension/issues
+问题反馈与开源支持：https://github.com/topos-lab/packtabs-extension/issues
 ```
 
 ---
@@ -154,6 +154,6 @@ PackTabs 是一款面向任务与专注力设计的标签页与工作区会话�
 
 - **Visibility**: Public (公开)
 - **Pricing**: Free (免费开源)
-- **Privacy Policy URL**: `https://wesley-chen.github.io/packtabs-extension/`
-- **Support / Issue Tracker**: `https://github.com/wesley-chen/packtabs-extension/issues`
-- **Source Code Repository**: `https://github.com/wesley-chen/packtabs-extension`
+- **Privacy Policy URL**: `https://topos-lab.github.io/packtabs-extension/`
+- **Support / Issue Tracker**: `https://github.com/topos-lab/packtabs-extension/issues`
+- **Source Code Repository**: `https://github.com/topos-lab/packtabs-extension`

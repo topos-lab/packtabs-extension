@@ -2,10 +2,10 @@
 
 > **Save open tabs for unfinished tasks in one click, banish bookmark clutter, and restore your workspace instantly.**
 
-[![CI](https://github.com/wesley-chen/packtabs-extension/actions/workflows/ci.yml/badge.svg)](https://github.com/wesley-chen/packtabs-extension/actions/workflows/ci.yml)
-[![GitHub Release](https://img.shields.io/github/v/release/wesley-chen/packtabs-extension?logo=github&color=blue)](https://github.com/wesley-chen/packtabs-extension/releases)
-[![Dependabot Status](https://img.shields.io/badge/Dependabot-active-02569B?logo=dependabot&logoColor=white)](https://github.com/wesley-chen/packtabs-extension/security/dependabot)
-[![Dependencies](https://img.shields.io/librariesio/github/wesley-chen/packtabs-extension)](https://libraries.io/github/wesley-chen/packtabs-extension)
+[![CI](https://github.com/topos-lab/packtabs-extension/actions/workflows/ci.yml/badge.svg)](https://github.com/topos-lab/packtabs-extension/actions/workflows/ci.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/topos-lab/packtabs-extension?logo=github&color=blue)](https://github.com/topos-lab/packtabs-extension/releases)
+[![Dependabot Status](https://img.shields.io/badge/Dependabot-active-02569B?logo=dependabot&logoColor=white)](https://github.com/topos-lab/packtabs-extension/security/dependabot)
+[![Dependencies](https://img.shields.io/librariesio/github/topos-lab/packtabs-extension)](https://libraries.io/github/topos-lab/packtabs-extension)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-success?logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 [![Built with WXT](https://img.shields.io/badge/Built%20with-WXT-6C5CE7?logo=wxt&logoColor=white)](https://wxt.dev/)
@@ -158,9 +158,9 @@ packtabs-extension/
 
 ## License
 
-MIT © [Wesley Chen](https://github.com/wesley-chen)
+MIT © [Topos Lab](https://github.com/topos-lab) & [Wesley Chen](https://github.com/wesley-chen)
 
 ## Privacy Policy
 
 PackTabs operates with a 100% offline, privacy-by-default architecture. All saved tab groups and configurations stay strictly inside your local browser storage.  
-Read the full [Privacy Policy](PRIVACY_POLICY.md) or visit the hosted version at [https://wesley-chen.github.io/packtabs-extension/](https://wesley-chen.github.io/packtabs-extension/).
+Read the full [Privacy Policy](PRIVACY_POLICY.md) or visit the hosted version at [https://topos-lab.github.io/packtabs-extension/](https://topos-lab.github.io/packtabs-extension/).

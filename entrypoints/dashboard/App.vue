@@ -828,11 +828,11 @@
           <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
             <span class="text-zinc-400 dark:text-zinc-500">GitHub</span>
             <a
-              href="https://github.com/wesley-chen/packtabs-extension"
+              href="https://github.com/topos-lab/packtabs-extension"
               target="_blank"
               rel="noopener noreferrer"
               class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline flex items-center gap-1 font-medium">
-              <span>packtabs-extension</span>
+              <span>topos-lab/packtabs-extension</span>
               <ExternalLink class="h-3 w-3" />
             </a>
           </div>

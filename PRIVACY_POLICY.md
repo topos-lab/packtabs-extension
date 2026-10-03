@@ -70,8 +70,8 @@ If we make changes to this privacy policy, we will update the "Last Updated" dat
 
 ### 9. Contact Us
 If you have any questions, feedback, or concerns regarding this Privacy Policy, please open an issue on our public repository:
-- **GitHub Repository**: [https://github.com/wesley-chen/packtabs-extension](https://github.com/wesley-chen/packtabs-extension)
-- **Issue Tracker**: [https://github.com/wesley-chen/packtabs-extension/issues](https://github.com/wesley-chen/packtabs-extension/issues)
+- **GitHub Repository**: [https://github.com/topos-lab/packtabs-extension](https://github.com/topos-lab/packtabs-extension)
+- **Issue Tracker**: [https://github.com/topos-lab/packtabs-extension/issues](https://github.com/topos-lab/packtabs-extension/issues)
 
 ---
 
@@ -140,5 +140,5 @@ PackTabs 仅申请实现必要功能所必需的权限：
 
 ### 9. 联系方式与问题反馈
 如果您对本隐私政策有任何疑问或改进建议，欢迎通过我们的开源社区进行反馈：
-- **开源代码仓库**：[https://github.com/wesley-chen/packtabs-extension](https://github.com/wesley-chen/packtabs-extension)
-- **Issue 讨论区**：[https://github.com/wesley-chen/packtabs-extension/issues](https://github.com/wesley-chen/packtabs-extension/issues)
+- **开源代码仓库**：[https://github.com/topos-lab/packtabs-extension](https://github.com/topos-lab/packtabs-extension)
+- **Issue 讨论区**：[https://github.com/topos-lab/packtabs-extension/issues](https://github.com/topos-lab/packtabs-extension/issues)
