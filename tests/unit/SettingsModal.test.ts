@@ -122,7 +122,7 @@ describe('SettingsModal Component', () => {
     });
   });
 
-  it('copies about:preferences#general to clipboard when on Firefox', async () => {
+  it('copies about:preferences#home to clipboard when on Firefox', async () => {
     const originalUserAgent = navigator.userAgent;
     Object.defineProperty(navigator, 'userAgent', {
       value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0',
@@ -157,7 +157,7 @@ describe('SettingsModal Component', () => {
 
     tipButton?.click();
     await nextTick();
-    expect(writeTextSpy).toHaveBeenCalledWith('about:preferences#general');
+    expect(writeTextSpy).toHaveBeenCalledWith('about:preferences#home');
 
     // Restore userAgent
     Object.defineProperty(navigator, 'userAgent', {

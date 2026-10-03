@@ -97,9 +97,9 @@ export const zh_CN: Record<MessageKey, string> = {
   openEdgeStartupSettings: '前往 Edge 启动设置 (必设项)',
   firefoxSettingsCopiedTitle: '设置地址已复制',
   firefoxStartupSettingsCopiedDesc:
-    '已复制「about:preferences#general」到剪贴板。因 Firefox 安全限制，请在地址栏粘贴打开，取消勾选「打开之前的窗口和标签页」。',
+    '已复制「about:preferences#home」到剪贴板。因 Firefox 安全限制，请在地址栏粘贴并回车打开，在「主页与启动 -> 启动」中取消勾选「打开先前的窗口和标签页」。',
   firefoxStartupSettingsManualDesc:
-    '请在 Firefox 地址栏输入「about:preferences#general」打开，取消勾选「打开之前的窗口和标签页」。',
+    '请在 Firefox 地址栏输入「about:preferences#home」打开，在「主页与启动 -> 启动」中取消勾选「打开先前的窗口和标签页」。',
   firefoxShortcutSettingsCopiedDesc:
     '已复制「about:addons」到剪贴板。请在 Firefox 地址栏粘贴打开，点击右上角齿轮⚙️选择「管理扩展快捷键」。',
   firefoxShortcutSettingsManualDesc:

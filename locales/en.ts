@@ -96,9 +96,9 @@ export const en = {
   openEdgeStartupSettings: 'Open Edge Startup Settings (Required)',
   firefoxSettingsCopiedTitle: 'Settings URL Copied',
   firefoxStartupSettingsCopiedDesc:
-    'Copied "about:preferences#general" to clipboard. Due to Firefox security restrictions, paste it into the address bar and uncheck "Open previous windows and tabs".',
+    'Copied "about:preferences#home" to clipboard. Due to Firefox security restrictions, paste it into the address bar and under "Home and startup -> Startup", uncheck "Open previous windows and tabs".',
   firefoxStartupSettingsManualDesc:
-    'Please enter "about:preferences#general" in the Firefox address bar, then uncheck "Open previous windows and tabs".',
+    'Please enter "about:preferences#home" in the Firefox address bar, then under "Home and startup -> Startup", uncheck "Open previous windows and tabs".',
   firefoxShortcutSettingsCopiedDesc:
     'Copied "about:addons" to clipboard. Paste it into the Firefox address bar, click the gear icon ⚙️, and select "Manage Extension Shortcuts".',
   firefoxShortcutSettingsManualDesc:

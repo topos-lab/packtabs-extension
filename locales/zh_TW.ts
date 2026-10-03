@@ -97,9 +97,9 @@ export const zh_TW: Record<MessageKey, string> = {
   openEdgeStartupSettings: '前往 Edge 啟動設定 (必設項)',
   firefoxSettingsCopiedTitle: '設定網址已複製',
   firefoxStartupSettingsCopiedDesc:
-    '已複製「about:preferences#general」至剪貼簿。因 Firefox 安全限制，請在網址列貼上開啟，取消勾選「打開之前的視窗和分頁」。',
+    '已複製「about:preferences#home」至剪貼簿。因 Firefox 安全限制，請在網址列貼上並按 Enter 開啟，在「首頁與啟動 -> 啟動」中取消勾選「開啟先前的視窗和分頁」。',
   firefoxStartupSettingsManualDesc:
-    '請在 Firefox 網址列輸入「about:preferences#general」開啟，取消勾選「打開之前的視窗和分頁」。',
+    '請在 Firefox 網址列輸入「about:preferences#home」開啟，在「首頁與啟動 -> 啟動」中取消勾選「開啟先前的視窗和分頁」。',
   firefoxShortcutSettingsCopiedDesc:
     '已複製「about:addons」至剪貼簿。請在 Firefox 網址列貼上開啟，點擊右上角齒輪⚙️選擇「管理擴充功能快速鍵」。',
   firefoxShortcutSettingsManualDesc:

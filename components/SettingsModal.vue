@@ -99,7 +99,7 @@
   async function openOnStartupSettings() {
     if (browserType.value === 'firefox') {
       try {
-        await navigator.clipboard.writeText('about:preferences#general');
+        await navigator.clipboard.writeText('about:preferences#home');
         toast.add({
           severity: 'info',
           summary: t('firefoxSettingsCopiedTitle'),
