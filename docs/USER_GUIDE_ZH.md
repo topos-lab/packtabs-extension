@@ -1,4 +1,4 @@
-# <img src="../public/icon/48.png" alt="PackTabs Logo" width="28" height="28" align="center" /> PackTabs 用户使用指南与功能图解 (User Guide)
+# <img src="../public/icon/128.png" alt="PackTabs Logo" width="28" height="28" style="vertical-align: -4px;" /> PackTabs 用户使用指南与功能图解 (User Guide)
 
 🌐 **语言 / Language**: [English](USER_GUIDE.md) | 简体中文
 
@@ -24,7 +24,7 @@
 
 ### 1. 唤出 PackTabs
 
-- **点击图标**：点击浏览器右上角工具栏的 **PackTabs** 图标（<img src="../public/icon/16.png" alt="PackTabs 图标" width="16" height="16" align="center" />）。若未显示，可点击浏览器工具栏的“拼图”🧩图标将 PackTabs 固定（Pin）到工具栏。
+- **点击图标**：点击浏览器右上角工具栏的 **PackTabs** 图标（<img src="../public/icon/32.png" alt="PackTabs 图标" width="16" height="16" style="vertical-align: -2px;" />）。若未显示，可点击浏览器工具栏的“拼图”🧩图标将 PackTabs 固定（Pin）到工具栏。
 - **全局快捷键**：
   - Windows / Linux：`Alt + Shift + K`
   - macOS：`Command + Shift + K`

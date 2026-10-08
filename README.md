@@ -1,4 +1,4 @@
-# <img src="public/icon/48.png" alt="PackTabs Logo" width="32" height="32" align="center" /> PackTabs Extension
+# PackTabs Extension <img src="public/icon/128.png" alt="PackTabs Logo" width="36" height="36" style="vertical-align: -6px; margin-left: 6px;" />
 
 > **Save open tabs for unfinished tasks in one click, banish bookmark clutter, and restore your workspace instantly.**
 
@@ -27,7 +27,7 @@ Install directly from your preferred browser extension store:
 | **Mozilla Firefox** | [Firefox Add-ons (AMO)](https://addons.mozilla.org/zh-CN/firefox/addon/packtabs-task-tab-manager/) | ✅ Available |
 | **Microsoft Edge** | Available via Chrome Web Store | ✅ Compatible |
 
-> 💡 **Tip**: After installation, click the puzzle piece icon (🧩) in your browser toolbar and pin **PackTabs** (<img src="public/icon/16.png" alt="PackTabs" width="16" height="16" align="center" />) for instant one-click access!
+> 💡 **Tip**: After installation, click the puzzle piece icon (🧩) in your browser toolbar and pin **PackTabs** (<img src="public/icon/32.png" alt="PackTabs" width="16" height="16" style="vertical-align: -2px;" />) for instant one-click access!
 
 > 📘 **User Guides**: [English User Guide](docs/USER_GUIDE.md) | [中文使用指南](docs/USER_GUIDE_ZH.md)
 
