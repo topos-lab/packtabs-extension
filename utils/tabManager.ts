@@ -235,3 +235,32 @@ export async function closeCurrentTabs(): Promise<void> {
 export function generateDefaultGroupName(date: Date = new Date(), prefix?: string): string {
   return formatDefaultGroupName(date, prefix);
 }
+
+/**
+ * Detects whether the initial tabs in a browser window indicate that the browser
+ * was launched specifically to view a local document (e.g. double-clicking a PDF or HTML file in OS).
+ *
+ * Rules:
+ * 1. Checks both `url` and `pendingUrl` to guard against startup navigation race conditions.
+ * 2. Returns true if there is at least one local file tab (`file://`) and NO regular remote web pages (`http://` or `https://`).
+ * 3. Returns false if the window only has blank/new tab pages or normal web browsing sessions.
+ */
+export function isLocalFileStartup(
+  tabs: { url?: string; pendingUrl?: string }[]
+): boolean {
+  if (!tabs || tabs.length === 0) {
+    return false;
+  }
+
+  const hasLocalFile = tabs.some((tab) => {
+    const u = tab.url || tab.pendingUrl || '';
+    return u.startsWith('file://');
+  });
+
+  const hasRemoteWebPage = tabs.some((tab) => {
+    const u = tab.url || tab.pendingUrl || '';
+    return u.startsWith('http://') || u.startsWith('https://');
+  });
+
+  return hasLocalFile && !hasRemoteWebPage;
+}

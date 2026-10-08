@@ -38,7 +38,7 @@ export default defineConfig({
       default_locale: 'en',
       name: '__MSG_extName__',
       description: '__MSG_extDescription__',
-      version: '1.0.0',
+      version: '1.1.0',
       permissions: [
         'tabs', // Required for capturing, querying, and restoring tabs
         'storage', // Required for persisting tab groups to local storage

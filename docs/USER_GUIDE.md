@@ -2,8 +2,9 @@
 
 🌐 **Language / 语言**: English | [简体中文](USER_GUIDE_ZH.md)
 
-> **Version**: v1.0.0  
-> **Supported Browsers**: Google Chrome / Mozilla Firefox / Microsoft Edge and Chromium-based browsers
+> **Version**: v1.1.0 (dev)  
+> **Supported Browsers**: Google Chrome / Mozilla Firefox / Microsoft Edge and Chromium-based browsers  
+> **Extension Stores**: [Chrome Web Store](https://chromewebstore.google.com/detail/packtabs/mpjjbfgjjbphemiklfoojlogcmjdkjjp) | [Firefox Add-ons](https://addons.mozilla.org/zh-CN/firefox/addon/packtabs-task-tab-manager/)
 
 ---
 

@@ -10,6 +10,7 @@ import {
   captureCurrentWindow,
   closeCurrentTabs,
   deduplicateTabsByUrl,
+  isLocalFileStartup,
   openSingleTab,
   openTabs,
   validateUrl,
@@ -327,9 +328,30 @@ export default defineBackground(() => {
 
     try {
       if (targetWindowId !== undefined) {
+        let windowTabs = await browser.tabs.query({ windowId: targetWindowId });
+
+        // Guard against startup navigation race conditions: if tab is still in early loading
+        // without URL populated, briefly wait for pendingUrl to settle
+        if (
+          queryString.includes('mode=startup') &&
+          windowTabs.length === 1 &&
+          windowTabs[0].status === 'loading' &&
+          (!windowTabs[0].url || windowTabs[0].url === 'about:blank') &&
+          !(windowTabs[0] as { pendingUrl?: string }).pendingUrl
+        ) {
+          await new Promise((resolve) => setTimeout(resolve, 150));
+          windowTabs = await browser.tabs.query({ windowId: targetWindowId });
+        }
+
+        // If the browser was launched specifically to view local files (e.g. PDF/HTML),
+        // skip opening the Startup Restorer to avoid interrupting the user's reading flow!
+        if (queryString.includes('mode=startup') && isLocalFileStartup(windowTabs)) {
+          console.log('PackTabs: Skipping startup restorer because browser was launched for local file viewing.');
+          return;
+        }
+
         // If the window only has an initial blank/new tab on startup, replace it in-place
         // to avoid leaving an awkward empty tab next to the startup restorer!
-        const windowTabs = await browser.tabs.query({ windowId: targetWindowId });
         const blankTab =
           windowTabs.length === 1 &&
           windowTabs[0].id !== undefined &&

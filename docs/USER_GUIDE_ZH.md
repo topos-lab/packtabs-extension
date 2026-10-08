@@ -2,8 +2,9 @@
 
 🌐 **语言 / Language**: [English](USER_GUIDE.md) | 简体中文
 
-> **版本**：v1.0.0  
-> **适用平台**：Google Chrome / Mozilla Firefox / Microsoft Edge 及其他 Chromium 内核浏览器
+> **版本**：v1.1.0 (开发版)  
+> **适用平台**：Google Chrome / Mozilla Firefox / Microsoft Edge 及其他 Chromium 内核浏览器  
+> **商店直达**：[Chrome 应用商店](https://chromewebstore.google.com/detail/packtabs/mpjjbfgjjbphemiklfoojlogcmjdkjjp) | [Firefox 附加组件商店](https://addons.mozilla.org/zh-CN/firefox/addon/packtabs-task-tab-manager/)
 
 ---
 

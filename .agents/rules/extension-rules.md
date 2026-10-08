@@ -54,3 +54,13 @@ trigger: always_on
    - Always run `bun run check` (or `bun run lint:fix`) before completing any modification.
    - Ensure 0 errors on TypeScript compile (`vue-tsc --noEmit`), ESLint (`eslint .`), and Vitest test suite (`vitest --run`).
 
+11. **Even/Odd Versioning & Extension Store Release Strategy**:
+   - **Odd Minors for Active Development**: Odd minor versions (`1.1.0`, `1.3.0`) represent active work-in-progress development cycles. Never submit odd-minor packages to public extension stores.
+   - **Even Minors for Stable Store Releases**: Even minor versions (`1.0.0`, `1.2.0`, `1.4.0`) designate milestone production releases verified for Chrome Web Store and Firefox AMO submission. Hotfix patches use `MAJOR.EVEN_MINOR.PATCH` (e.g. `1.2.1`).
+   - **Store Numerical Format Rule**: Manifest V3 and AMO reject non-numeric version suffixes (e.g. `-dev`, `-beta`). Versions across `package.json`, `wxt.config.ts`, and manifest must strictly use dot-separated integers (`X.Y.Z`).
+
+12. **Continuous Changelog & Store Submission Tracking**:
+   - Maintain `CHANGELOG.md` adhering to Keep a Changelog (`Added`, `Fixed`, `Changed`).
+   - Any new feature or bugfix must be immediately recorded under the active development version header.
+   - When graduating to an even release, provide curated bilingual (English & Simplified Chinese) release notes in `CHANGELOG.md` ready for store review forms.
+

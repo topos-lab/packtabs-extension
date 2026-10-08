@@ -2,7 +2,7 @@
   "name": "packtabs-extension",
   "description": "manifest.json description",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "packageManager": "bun@1.4.2",
   "type": "module",
   "scripts": {
@@ -12,6 +12,8 @@
     "build:firefox": "wxt build -b firefox --mv3",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox --mv3",
+    "release": "bun scripts/release.ts",
+    "release:dry": "bun scripts/release.ts --dry-run",
     "generate:icons": "node scripts/generate-icons.js",
     "compile": "vue-tsc --noEmit",
     "check": "bun run compile && bun run lint && bun run test",

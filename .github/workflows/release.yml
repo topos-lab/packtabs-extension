@@ -1,10 +1,13 @@
 name: Release Extension
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Release Tag (例如 v1.0.0；留空则自动根据 package.json 的 version 生成)'
+        description: 'Release Tag (例如 v1.2.0；留空则根据 git tag 或 package.json 自动推导)'
         required: false
         default: ''
         type: string
@@ -24,7 +27,7 @@ on:
         default: false
         type: boolean
       generate_release_notes:
-        description: '是否自动生成变更日志 (Auto-generate release notes)'
+        description: '未找到 CHANGELOG 条目时是否自动生成 GitHub 默认日志'
         required: false
         default: true
         type: boolean
@@ -67,12 +70,16 @@ jobs:
         id: meta
         shell: bash
         run: |
-          PKG_VERSION=$(bun -e "console.log(require('./package.json').version)")
-          if [ -n "${{ inputs.tag_name }}" ]; then
+          if [ -n "${GITHUB_REF_NAME}" ] && [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF_NAME}"
+          elif [ -n "${{ inputs.tag_name }}" ]; then
             TAG="${{ inputs.tag_name }}"
           else
+            PKG_VERSION=$(bun -e "console.log(require('./package.json').version)")
             TAG="v${PKG_VERSION}"
           fi
+
+          CLEAN_VER="${TAG#v}"
 
           if [ -n "${{ inputs.release_title }}" ]; then
             TITLE="${{ inputs.release_title }}"
@@ -81,17 +88,50 @@ jobs:
           fi
 
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${CLEAN_VER}" >> "$GITHUB_OUTPUT"
           echo "title=${TITLE}" >> "$GITHUB_OUTPUT"
           echo "Selected Tag: ${TAG}"
+          echo "Clean Version: ${CLEAN_VER}"
           echo "Selected Title: ${TITLE}"
+
+      - name: Extract Release Notes from CHANGELOG.md
+        id: notes
+        shell: bash
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+          CLEAN_VERSION="${TAG#v}"
+          bun -e "
+            const fs = require('fs');
+            const target = process.env.CLEAN_VERSION;
+            if (!fs.existsSync('CHANGELOG.md')) {
+              process.exit(0);
+            }
+            const content = fs.readFileSync('CHANGELOG.md', 'utf-8');
+            const regex = new RegExp('## \\\\[v?' + target + '\\\\][^\\n]*\\n([\\s\\S]*?)(?=\\n## \\\\[|$)', 'i');
+            const match = content.match(regex);
+            if (match && match[1].trim()) {
+              fs.writeFileSync('RELEASE_BODY.md', match[1].trim());
+              console.log('Successfully extracted CHANGELOG for ' + target);
+            } else {
+              console.log('No specific CHANGELOG entry found for ' + target);
+            }
+          "
+          if [ -s RELEASE_BODY.md ]; then
+            echo "has_notes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_notes=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          CLEAN_VERSION: ${{ steps.meta.outputs.version }}
 
       - name: Upload artifacts to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.meta.outputs.tag }}
           name: ${{ steps.meta.outputs.title }}
-          draft: ${{ inputs.is_draft }}
-          prerelease: ${{ inputs.is_prerelease }}
-          generate_release_notes: ${{ inputs.generate_release_notes }}
+          body_path: ${{ steps.notes.outputs.has_notes == 'true' && 'RELEASE_BODY.md' || '' }}
+          draft: ${{ inputs.is_draft || false }}
+          prerelease: ${{ inputs.is_prerelease || false }}
+          generate_release_notes: ${{ steps.notes.outputs.has_notes != 'true' && (inputs.generate_release_notes || true) || false }}
           files: |
             .output/*.zip

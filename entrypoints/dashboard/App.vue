@@ -64,6 +64,7 @@
   const currentShortcut = ref('Alt + Shift + K');
   const isStartupMode = ref(false);
   const openOnStartup = ref(false);
+  const appVersion = browser.runtime.getManifest()?.version || '1.1.0';
 
   /**
    * Queries active browser commands in real-time.
@@ -819,7 +820,7 @@
         <div class="text-xs text-zinc-600 dark:text-zinc-300 space-y-2.5">
           <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
             <span class="text-zinc-500 dark:text-zinc-400">{{ t('versionLabel') }}</span>
-            <span class="font-medium text-zinc-700 dark:text-zinc-200">1.0.0</span>
+            <span class="font-medium text-zinc-700 dark:text-zinc-200">{{ appVersion }}</span>
           </div>
           <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
             <span class="text-zinc-500 dark:text-zinc-400">{{ t('authorLabel') }}</span>

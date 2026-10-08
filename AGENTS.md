@@ -70,6 +70,14 @@ packtabs-extension/
 10. **Automated Quality & Lint Enforcement Protocol**:
    - Every AI agent modifying code in this codebase MUST automatically execute `bun run check` (or `bun run lint:fix`) before completing turn/task.
    - All TypeScript compilation errors, ESLint rules, and Vitest assertions must be proactively resolved to guarantee 0 errors. Never deliver code with unresolved lint warnings or failures.
+11. **Even/Odd Versioning & Extension Store Release Strategy**:
+   - **Odd Minors for Active Development**: Odd minor versions (e.g. `1.1.0`, `1.3.0`) represent active work-in-progress development cycles. Never submit odd-minor packages to public extension stores.
+   - **Even Minors for Stable Store Releases**: Even minor versions (e.g. `1.0.0`, `1.2.0`, `1.4.0`) designate milestone production releases verified for Chrome Web Store and Firefox AMO submission. Hotfix patches use `MAJOR.EVEN_MINOR.PATCH` (e.g. `1.2.1`).
+   - **Store Numerical Format Rule**: Manifest V3 and AMO reject non-numeric version suffixes (e.g. `-dev`, `-beta`). Versions in `package.json` and `wxt.config.ts` must strictly use dot-separated integers (`X.Y.Z`).
+12. **Continuous Changelog & Store Submission Tracking**:
+   - Maintain `CHANGELOG.md` adhering to Keep a Changelog (`Added`, `Fixed`, `Changed`).
+   - Any new feature or bugfix must be immediately recorded under the active development version header.
+   - When graduating to an even release, provide curated bilingual (English & Simplified Chinese) release notes in `CHANGELOG.md` ready for store review forms.
 
 ## 5. Standard CLI Commands
 ```powershell
@@ -90,4 +98,10 @@ bun run test
 
 # TypeScript type check (no emit)
 bun run compile
+
+# Automated release promotion & next dev cycle advancement (Even/Odd flow)
+bun run release
+
+# Dry-run release simulation (no file or git modification)
+bun run release:dry
 ```
