@@ -1,13 +1,10 @@
-# PackTabs Extension
+# <img src="public/icon/48.png" alt="PackTabs Logo" width="32" height="32" align="center" /> PackTabs Extension
 
 > **Save open tabs for unfinished tasks in one click, banish bookmark clutter, and restore your workspace instantly.**
 
-[![Chrome Web Store](https://img.shields.io/badge/Chrome_Web_Store-Install-4285F4?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/packtabs/mpjjbfgjjbphemiklfoojlogcmjdkjjp)
-[![Firefox Add-ons](https://img.shields.io/badge/Firefox_Add--ons-Install-FF7139?logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/zh-CN/firefox/addon/packtabs-task-tab-manager/)
 [![CI](https://github.com/topos-lab/packtabs-extension/actions/workflows/ci.yml/badge.svg)](https://github.com/topos-lab/packtabs-extension/actions/workflows/ci.yml)
 [![GitHub Release](https://img.shields.io/github/v/release/topos-lab/packtabs-extension?logo=github&color=blue)](https://github.com/topos-lab/packtabs-extension/releases)
 [![Dependabot Status](https://img.shields.io/badge/Dependabot-active-02569B?logo=dependabot&logoColor=white)](https://github.com/topos-lab/packtabs-extension/security/dependabot)
-[![Dependencies](https://img.shields.io/librariesio/github/topos-lab/packtabs-extension)](https://libraries.io/github/topos-lab/packtabs-extension)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-success?logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 [![Built with WXT](https://img.shields.io/badge/Built%20with-WXT-6C5CE7?logo=wxt&logoColor=white)](https://wxt.dev/)
@@ -15,7 +12,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Bun](https://img.shields.io/badge/Bun-1.x-f472b6?logo=bun&logoColor=white)](https://bun.sh/)
-[![Tests](https://img.shields.io/badge/tests-243%20passed-brightgreen?logo=vitest&logoColor=white)](https://vitest.dev/)
+[![Tests](https://img.shields.io/badge/tests-249%20passed-brightgreen?logo=vitest&logoColor=white)](https://vitest.dev/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
 
 PackTabs is a productivity-first Chrome Manifest V3 browser extension built with the WXT Framework, Vue 3, and Tailwind CSS v4.
@@ -29,6 +26,8 @@ Install directly from your preferred browser extension store:
 | **Google Chrome / Chromium** | [Chrome Web Store](https://chromewebstore.google.com/detail/packtabs/mpjjbfgjjbphemiklfoojlogcmjdkjjp) | ✅ Available |
 | **Mozilla Firefox** | [Firefox Add-ons (AMO)](https://addons.mozilla.org/zh-CN/firefox/addon/packtabs-task-tab-manager/) | ✅ Available |
 | **Microsoft Edge** | Available via Chrome Web Store | ✅ Compatible |
+
+> 💡 **Tip**: After installation, click the puzzle piece icon (🧩) in your browser toolbar and pin **PackTabs** (<img src="public/icon/16.png" alt="PackTabs" width="16" height="16" align="center" />) for instant one-click access!
 
 > 📘 **User Guides**: [English User Guide](docs/USER_GUIDE.md) | [中文使用指南](docs/USER_GUIDE_ZH.md)
 

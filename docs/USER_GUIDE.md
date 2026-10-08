@@ -1,4 +1,4 @@
-# PackTabs User Guide (User Guide)
+# <img src="../public/icon/48.png" alt="PackTabs Logo" width="28" height="28" align="center" /> PackTabs User Guide (User Guide)
 
 🌐 **Language / 语言**: English | [简体中文](USER_GUIDE_ZH.md)
 
@@ -24,7 +24,7 @@ A **task-oriented** tab and workspace manager. When you finish a work session or
 
 ### 1. Launching PackTabs
 
-- **Click the Icon**: Click the **PackTabs** icon in your browser's extension toolbar.
+- **Click the Icon**: Click the **PackTabs** icon (<img src="../public/icon/16.png" alt="PackTabs icon" width="16" height="16" align="center" />) in your browser's extension toolbar (make sure to pin 📌 it from the extension puzzle menu 🧩 if hidden).
 - **Global Keyboard Shortcut**:
   - Windows / Linux: `Alt + Shift + K`
   - macOS: `Command + Shift + K`
