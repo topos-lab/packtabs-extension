@@ -98,16 +98,64 @@ bun run build:firefox
 # TypeScript type check (no emit)
 bun run compile
 
-# Run full test suite (234 unit and property tests)
+# Run full test suite (249 unit and property tests)
 bun run test
+
+# Run complete quality gate (type check + lint + test)
+bun run check
 
 # Package extensions into release zips (.output/*.zip)
 bun run zip
 bun run zip:firefox
 
+# Automated release promotion & next dev cycle advancement
+bun run release
+
+# Dry-run release simulation (no file or git modification)
+bun run release:dry
+
 # Code style linting
 bun run lint
 ```
+
+## 🚀 Release Process & Versioning Strategy
+
+PackTabs follows the **Even/Odd Versioning Scheme** alongside a fully automated release pipeline:
+
+- **Odd Minor Versions** (`1.1.0`, `1.3.0`): Active in-progress development cycles on `main` (never published to public extension stores).
+- **Even Minor Versions** (`1.0.0`, `1.2.0`, `1.4.0`): Stable milestone production releases verified and submitted to Chrome Web Store and Firefox AMO. Hotfix patches use `MAJOR.EVEN_MINOR.PATCH` (`1.2.1`).
+
+### 1. One-Command Automated Release
+
+When you are ready to promote the current development version to a production release:
+
+```bash
+# Step A: Simulate release flow (Dry-Run mode: no file or git modifications)
+bun run release:dry
+
+# Step B: Execute the automated release
+bun run release
+```
+
+**What the release script does automatically:**
+1. **Version Promotion**: Promotes active dev version (e.g. `1.1.0`) to the next stable release version (e.g. `1.2.0`).
+2. **File Synchronization**: Synchronizes version across `package.json` and `wxt.config.ts`.
+3. **CHANGELOG Archival**: Formats and dates the release section in `CHANGELOG.md`.
+4. **Automated Quality Gate**: Runs `bun run check` (TypeScript compilation + ESLint + 249 Vitest tests).
+5. **Git Tagging**: Creates a release commit (`chore(release): v1.2.0`) and an annotated Git tag (`v1.2.0`).
+6. **Cycle Advancement**: Automatically advances codebase to the next development cycle (e.g. `1.3.0`), injects a fresh `CHANGELOG.md` template, and commits.
+
+### 2. Publishing to GitHub & Extension Stores
+
+Push the release commits and tag to GitHub:
+
+```bash
+git push origin main --follow-tags
+```
+
+Once pushed:
+- **GitHub Actions (`release.yml`)**: Automatically triggers upon new tag push (`v*`), packages both Chrome MV3 and Firefox MV3 extension ZIPs, extracts curated release notes from `CHANGELOG.md`, and creates a GitHub Release with attached assets.
+- **Store Submission**: Copy the bilingual release notes from `CHANGELOG.md` and upload the zipped packages to the [Chrome Developer Dashboard](https://chrome.google.com/webstore/devconsole) and [Firefox Developer Hub (AMO)](https://addons.mozilla.org/developers/).
 
 ## CI/CD & Automation
 
@@ -116,11 +164,11 @@ This project uses **GitHub Actions** for continuous integration, automated testi
 - **Continuous Integration (`ci.yml`)**:
   - Automatically triggered whenever code is pushed to `main` or upon creating a Pull Request.
   - Installs Bun environment and frozen dependencies.
-  - Runs strict TypeScript compilation (`vue-tsc --noEmit`), the complete test suite (234 unit & property-based tests via `vitest`), and builds both Chrome MV3 and Firefox extensions to prevent regressions.
-- **Manual Release Pipeline (`release.yml`)**:
-  - Manually triggered via GitHub's **Actions** tab (`Run workflow`).
+  - Runs strict TypeScript compilation (`vue-tsc --noEmit`), the complete test suite (249 unit & property-based tests via `vitest`), and builds both Chrome MV3 and Firefox extensions to prevent regressions.
+- **Release Pipeline (`release.yml`)**:
+  - Automatically triggered on release tag push (`v*`) or manually via GitHub's **Actions** tab (`Run workflow`).
   - Packages production builds for Chrome and Firefox into `.zip` archives.
-  - Automatically reads the version from `package.json` (or accepts a custom tag input), creates a GitHub Release, and uploads extension ZIP files directly to the Release page.
+  - Automatically extracts release notes from `CHANGELOG.md`, creates a GitHub Release, and uploads extension ZIP files directly to the Release page.
 - **Dependency Management & Security (`dependabot.yml`)**:
   - Automatically scans npm/bun dependencies weekly and GitHub Actions monthly.
   - Opens automated Pull Requests for security patches and library upgrades.
