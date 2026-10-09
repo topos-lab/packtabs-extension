@@ -16,10 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Local File Startup Intelligence**: Added unit tests in `tests/unit/localFileStartup.test.ts` covering race condition handling (`pendingUrl`), standalone local documents (`file://`), and multi-file launches.
 
 ### Fixed
-- **Local File Viewing Interruption**: Fixed an issue where double-clicking a local PDF (`.pdf`) or HTML (`.html`) file in the operating system file manager caused the PackTabs Startup Restorer (`/dashboard.html?mode=startup`) to automatically open and steal foreground focus.
-  - Introduced `isLocalFileStartup` guard in `utils/tabManager.ts` to inspect initial window tabs.
-  - Automatically skips launching the Startup Restorer tab when the browser is launched specifically to view local files.
-  - Preserves silent background history snapshots (`recoverPendingHistoryGroups`) so previous unclosed sessions remain 100% safe.
+- **External App & Local File Launch Interruption**: Fixed an issue where launching the browser from external desktop applications (e.g. Blizzard Battle.net, chat/email apps) or opening local files (PDF/HTML) inadvertently triggered the Startup Restorer (`/dashboard.html?mode=startup`) and stole foreground focus.
+  - Introduced `isBlankStartupTab` in `utils/tabManager.ts` with navigation race condition protection (`pendingUrl`).
+  - Restricts the Startup Restorer to only replace genuinely empty initial tabs in-place, silently skipping targeted navigation launches.
+  - Preserves silent background history snapshots (`recoverPendingHistoryGroups`) so unclosed sessions remain 100% safe.
 
 ---
 
@@ -30,13 +30,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### English (en-US):
 ```text
 What's new in PackTabs:
-- Fixed an issue where opening a local PDF or HTML file from your desktop/file manager inadvertently triggered the Startup Restorer, streamlining cold start detection for a distraction-free reading experience.
+- Fixed an issue where launching the browser from external desktop apps (e.g. Blizzard Battle.net) or opening local files (PDF/HTML) inadvertently triggered the Startup Restorer, streamlining cold start detection for distraction-free browsing.
 ```
 
 #### 简体中文 (zh-CN):
 ```text
 PackTabs 本次更新：
-- 修复了在系统文件管理器中打开本地 PDF 或 HTML 文件时意外弹出启动恢复页的问题；优化冷启动意图检测，带来更纯净无干扰的本地文档阅读体验。
+- 修复了从外部桌面应用（如暴雪战网等）点击链接唤起浏览器或打开本地文件时意外弹出启动恢复页的问题；优化冷启动检测，带来纯净无干扰的浏览体验。
 ```
 
 ---

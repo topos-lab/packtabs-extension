@@ -264,3 +264,37 @@ export function isLocalFileStartup(
 
   return hasLocalFile && !hasRemoteWebPage;
 }
+
+/**
+ * Evaluates whether a given URL represents an internal empty/blank startup page.
+ */
+export function isBlankUrl(url?: string): boolean {
+  if (!url || url === '' || url === 'about:blank' || url === 'about:newtab' || url === 'about:home') {
+    return true;
+  }
+  if (url === 'chrome://newtab/' || url.startsWith('chrome://new-tab-page') || url.startsWith('edge://newtab')) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Checks whether an initial startup tab is truly a blank/new-tab page ready for in-place replacement.
+ *
+ * Guards against startup navigation race conditions:
+ * If the tab's `url` is temporarily 'about:blank' but its `pendingUrl` is already pointing
+ * to an external destination (e.g. Blizzard Battle.net, chat app link, local file), it is NOT considered blank.
+ */
+export function isBlankStartupTab(tab?: { url?: string; pendingUrl?: string }): boolean {
+  if (!tab) {
+    return false;
+  }
+
+  // If pendingUrl exists and points to an external destination, it is actively navigating
+  if (tab.pendingUrl && !isBlankUrl(tab.pendingUrl)) {
+    return false;
+  }
+
+  return isBlankUrl(tab.url);
+}
+

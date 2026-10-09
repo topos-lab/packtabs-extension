@@ -10,7 +10,7 @@ import {
   captureCurrentWindow,
   closeCurrentTabs,
   deduplicateTabsByUrl,
-  isLocalFileStartup,
+  isBlankStartupTab,
   openSingleTab,
   openTabs,
   validateUrl,
@@ -329,11 +329,12 @@ export default defineBackground(() => {
     try {
       if (targetWindowId !== undefined) {
         let windowTabs = await browser.tabs.query({ windowId: targetWindowId });
+        const isStartupMode = queryString.includes('mode=startup');
 
         // Guard against startup navigation race conditions: if tab is still in early loading
         // without URL populated, briefly wait for pendingUrl to settle
         if (
-          queryString.includes('mode=startup') &&
+          isStartupMode &&
           windowTabs.length === 1 &&
           windowTabs[0].status === 'loading' &&
           (!windowTabs[0].url || windowTabs[0].url === 'about:blank') &&
@@ -343,34 +344,27 @@ export default defineBackground(() => {
           windowTabs = await browser.tabs.query({ windowId: targetWindowId });
         }
 
-        // If the browser was launched specifically to view local files (e.g. PDF/HTML),
-        // skip opening the Startup Restorer to avoid interrupting the user's reading flow!
-        if (queryString.includes('mode=startup') && isLocalFileStartup(windowTabs)) {
-          console.log('PackTabs: Skipping startup restorer because browser was launched for local file viewing.');
-          return;
-        }
-
-        // If the window only has an initial blank/new tab on startup, replace it in-place
-        // to avoid leaving an awkward empty tab next to the startup restorer!
+        // Check if the window only has an initial blank/new tab on startup
         const blankTab =
           windowTabs.length === 1 &&
           windowTabs[0].id !== undefined &&
-          (!windowTabs[0].url ||
-            windowTabs[0].url === 'chrome://newtab/' ||
-            windowTabs[0].url === 'about:blank' ||
-            windowTabs[0].url === 'about:newtab' ||
-            windowTabs[0].url === 'about:home' ||
-            windowTabs[0].url.startsWith('chrome://new-tab-page') ||
-            windowTabs[0].url.startsWith('edge://newtab'))
+          isBlankStartupTab(windowTabs[0])
             ? windowTabs[0]
             : null;
 
         if (blankTab?.id !== undefined) {
+          // Normal browser startup: smoothly replace the empty initial tab in-place
           await browser.tabs.update(blankTab.id, {
             url: targetUrl,
             active: true,
           });
+        } else if (isStartupMode) {
+          // The browser was launched for a targeted destination (e.g. Blizzard Battle.net link, chat app link, local PDF/HTML).
+          // Do NOT create a disruptive tab that steals foreground focus from the user's intended target!
+          console.log('PackTabs: Skipping startup restorer because browser was launched for a targeted webpage or document.');
+          return;
         } else {
+          // User explicitly clicked the extension action icon or pressed shortcut: create new tab normally
           await browser.tabs.create({
             windowId: targetWindowId,
             url: targetUrl,
