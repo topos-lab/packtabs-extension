@@ -104,4 +104,10 @@ bun run release
 
 # Dry-run release simulation (no file or git modification)
 bun run release:dry
+
+# Submit release packages to Chrome Web Store & Firefox AMO
+bun run submit
+
+# Dry-run store submission verification
+bun run submit:dry
 ```

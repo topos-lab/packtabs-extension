@@ -226,9 +226,12 @@ export function runRelease(options: ReleaseOptions = parseCliArgs()) {
 
   console.log('\n=======================================');
   console.log(`🎉 Release v${targetReleaseVersion} prepared successfully!`);
-  console.log(`📌 Active codebase is now set to development version v${nextDevVersion}.`);
-  console.log('\n👉 Next steps to publish to GitHub:');
-  console.log('   git push origin main --follow-tags');
+  console.log('\n👉 Next steps to publish:');
+  console.log('   1. Push to GitHub to trigger automated release & store deployment:');
+  console.log('      git push origin main --follow-tags');
+  console.log('   2. Or submit directly from local terminal:');
+  console.log('      bun run submit:dry   # Verify store credentials');
+  console.log('      bun run submit       # Submit to Chrome Web Store & Firefox AMO');
   console.log('=======================================\n');
 }
 

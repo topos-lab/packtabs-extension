@@ -154,8 +154,46 @@ git push origin main --follow-tags
 ```
 
 Once pushed:
-- **GitHub Actions (`release.yml`)**: Automatically triggers upon new tag push (`v*`), packages both Chrome MV3 and Firefox MV3 extension ZIPs, extracts curated release notes from `CHANGELOG.md`, and creates a GitHub Release with attached assets.
-- **Store Submission**: Copy the bilingual release notes from `CHANGELOG.md` and upload the zipped packages to the [Chrome Developer Dashboard](https://chrome.google.com/webstore/devconsole) and [Firefox Developer Hub (AMO)](https://addons.mozilla.org/developers/).
+- **GitHub Actions (`release.yml`)**: Automatically triggers upon new tag push (`v*`), compiles packages for Chrome MV3, Firefox MV3, and source zip archives, extracts release notes from `CHANGELOG.md`, creates a GitHub Release, and **automatically submits packages to Chrome Web Store & Firefox AMO** if secrets are configured.
+- **Local Submission Script**: You can also verify or submit directly from your local terminal:
+  ```bash
+  # Step A: Dry-run check (verifies credentials and packages without uploading)
+  bun run submit:dry
+
+  # Step B: Publish and submit to Chrome Web Store & Firefox AMO
+  bun run submit
+  ```
+
+#### Configuring Store API Credentials
+
+##### Option A: GitHub Actions Secrets (Recommended for Full CI/CD Automation)
+Configure the following Repository Secrets in **GitHub Settings -> Secrets and variables -> Actions**:
+
+| Secret Name | Description | Source |
+|---|---|---|
+| `CHROME_PUBLISHER_ID` | Your Chrome Web Store Publisher ID | Chrome Web Store Developer Console -> Account |
+| `CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL` | Google Cloud Service Account Email | Google Cloud Console (IAM & Admin -> Service Accounts) |
+| `CHROME_SERVICE_ACCOUNT_PRIVATE_KEY` | Google Cloud Service Account Private Key | JSON key downloaded from Google Cloud Service Account |
+| `FIREFOX_JWT_ISSUER` | Mozilla AMO API JWT Issuer | [AMO API Keys](https://addons.mozilla.org/developers/addon/api/key/) |
+| `FIREFOX_JWT_SECRET` | Mozilla AMO API JWT Secret | [AMO API Keys](https://addons.mozilla.org/developers/addon/api/key/) |
+
+##### Option B: Local `.env.submit` Configuration
+Create `.env.submit` in the project root (ignored by `.gitignore`):
+```env
+# Chrome Web Store (API v2)
+CHROME_API_VERSION=v2
+CHROME_EXTENSION_ID=mpjjbfgjjbphemiklfoojlogcmjdkjjp
+CHROME_PUBLISHER_ID=your_publisher_id
+CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL=your_service_account@project.iam.gserviceaccount.com
+CHROME_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+
+# Firefox Add-ons (AMO)
+FIREFOX_EXTENSION_ID=packtabs@topos-lab.github.io
+FIREFOX_JWT_ISSUER=your_jwt_issuer
+FIREFOX_JWT_SECRET=your_jwt_secret
+FIREFOX_CHANNEL=listed
+```
+*Tip: Run `bunx wxt submit init` to launch the interactive configuration wizard.*
 
 ## CI/CD & Automation
 
@@ -164,11 +202,11 @@ This project uses **GitHub Actions** for continuous integration, automated testi
 - **Continuous Integration (`ci.yml`)**:
   - Automatically triggered whenever code is pushed to `main` or upon creating a Pull Request.
   - Installs Bun environment and frozen dependencies.
-  - Runs strict TypeScript compilation (`vue-tsc --noEmit`), the complete test suite (249 unit & property-based tests via `vitest`), and builds both Chrome MV3 and Firefox extensions to prevent regressions.
+  - Runs strict TypeScript compilation (`vue-tsc --noEmit`), the complete test suite (268 unit & property-based tests via `vitest`), and builds both Chrome MV3 and Firefox extensions to prevent regressions.
 - **Release Pipeline (`release.yml`)**:
   - Automatically triggered on release tag push (`v*`) or manually via GitHub's **Actions** tab (`Run workflow`).
-  - Packages production builds for Chrome and Firefox into `.zip` archives.
-  - Automatically extracts release notes from `CHANGELOG.md`, creates a GitHub Release, and uploads extension ZIP files directly to the Release page.
+  - Packages production builds for Chrome MV3, Firefox MV3, and source zip archives.
+  - Automatically extracts release notes from `CHANGELOG.md`, creates a GitHub Release, and submits updates directly to Chrome Web Store and Firefox AMO.
 - **Dependency Management & Security (`dependabot.yml`)**:
   - Automatically scans npm/bun dependencies weekly and GitHub Actions monthly.
   - Opens automated Pull Requests for security patches and library upgrades.

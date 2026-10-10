@@ -135,3 +135,21 @@ jobs:
           generate_release_notes: ${{ steps.notes.outputs.has_notes != 'true' && (inputs.generate_release_notes || true) || false }}
           files: |
             .output/*.zip
+
+      - name: Publish to Extension Stores (Chrome Web Store & Firefox AMO)
+        if: ${{ !(inputs.is_draft || false) }}
+        run: |
+          bun run submit
+        env:
+          CI: 'true'
+          # Chrome Web Store (API v2)
+          CHROME_API_VERSION: v2
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID || 'mpjjbfgjjbphemiklfoojlogcmjdkjjp' }}
+          CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+          CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ secrets.CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL }}
+          CHROME_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.CHROME_SERVICE_ACCOUNT_PRIVATE_KEY }}
+          # Firefox Add-ons (AMO)
+          FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID || 'packtabs@topos-lab.github.io' }}
+          FIREFOX_JWT_ISSUER: ${{ secrets.FIREFOX_JWT_ISSUER }}
+          FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}
+          FIREFOX_CHANNEL: 'listed'
