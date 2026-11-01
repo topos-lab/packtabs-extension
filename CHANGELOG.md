@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.1.0] - In Development
+## [1.2.0] - 2026-11-01
 
 ### Added
 - **Automated Extension Store Submission**: Added `scripts/submit.ts`, `.env.submit.example`, and comprehensive documentation in `docs/STORE_API_KEY_GUIDE.md` for zero-friction publishing to Chrome Web Store (API v2 Service Accounts) and Firefox AMO.
