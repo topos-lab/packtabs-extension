@@ -1,8 +1,13 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import {
   buildSubmitCliArgs,
   detectStoreTargets,
+  extractAmoMetadataFromChangelog,
+  generateAmoMetadataFile,
   getArtifactPaths,
   parseEnvContent,
   parseSubmitArgs,
@@ -169,19 +174,72 @@ line3"
       expect(args).toContain('/path/firefox.zip');
     });
 
-    it('omits chrome arguments when submitChrome is false', () => {
-      const options = { dryRun: false, chromeOnly: false, firefoxOnly: true, skipZip: false };
+    it('includes --firefox-amo-metadata-file when valid metadata path is passed and file exists', () => {
+      const options = { dryRun: false, chromeOnly: false, firefoxOnly: false, skipZip: false };
       const targets = { submitChrome: false, submitFirefox: true };
       const artifacts = {
         chromeZip: '/path/chrome.zip',
         firefoxZip: '/path/firefox.zip',
         firefoxSourcesZip: '/path/sources.zip',
       };
+      // Use existing package.json as dummy existing file for path check
+      const dummyPath = path.resolve(__dirname, '../../package.json');
+      const args = buildSubmitCliArgs(options, targets, artifacts, dummyPath);
+      expect(args).toContain('--firefox-amo-metadata-file');
+      expect(args).toContain(dummyPath);
+    });
+  });
 
-      const args = buildSubmitCliArgs(options, targets, artifacts);
-      expect(args).not.toContain('--chrome-zip');
-      expect(args).toContain('--firefox-zip');
-      expect(args).toContain('/path/firefox.zip');
+  describe('extractAmoMetadataFromChangelog', () => {
+    it('extracts English and Chinese release notes from changelog section', () => {
+      const mockChangelog = `
+# Changelog
+
+## [1.2.0] - 2026-11-01
+
+### 📦 Chrome Web Store & Firefox AMO Release Notes (For Store Submission)
+
+#### English (en-US):
+\`\`\`text
+What's new in PackTabs:
+- Added fast release script.
+\`\`\`
+
+#### 简体中文 (zh-CN):
+\`\`\`text
+PackTabs 本次更新：
+- 增加了快速发版脚本。
+\`\`\`
+
+---
+`;
+      const result = extractAmoMetadataFromChangelog(mockChangelog);
+      expect(result).not.toBeNull();
+      expect(result?.release_notes?.['en-US']).toContain("What's new in PackTabs:");
+      expect(result?.release_notes?.['zh-CN']).toContain('PackTabs 本次更新：');
+    });
+
+    it('returns null if release notes section is missing', () => {
+      const mockChangelog = `
+# Changelog
+## [1.0.0] - 2026-10-06
+### Added
+- First release
+`;
+      expect(extractAmoMetadataFromChangelog(mockChangelog)).toBeNull();
+    });
+  });
+
+  describe('generateAmoMetadataFile', () => {
+    it('generates amo-metadata.json from actual CHANGELOG.md', () => {
+      const generatedPath = generateAmoMetadataFile();
+      expect(generatedPath).not.toBeNull();
+      if (generatedPath) {
+        expect(fs.existsSync(generatedPath)).toBe(true);
+        const parsed = JSON.parse(fs.readFileSync(generatedPath, 'utf-8'));
+        expect(parsed.release_notes).toBeDefined();
+        expect(parsed.release_notes['en-US']).toBeDefined();
+      }
     });
   });
 });

@@ -20,6 +20,7 @@ import path from 'node:path';
 
 const rootDir = path.resolve(import.meta.dirname ?? '.', '..');
 const envSubmitPath = path.join(rootDir, '.env.submit');
+const changelogPath = path.join(rootDir, 'CHANGELOG.md');
 
 export interface SubmitOptions {
   dryRun: boolean;
@@ -181,10 +182,70 @@ export function getArtifactPaths(rootDirPath: string = rootDir, targetVersion?: 
   };
 }
 
+export interface AmoMetadata {
+  release_notes?: Record<string, string>;
+  approval_notes?: string;
+}
+
+export function extractAmoMetadataFromChangelog(changelogContent: string): AmoMetadata | null {
+  const sectionPattern = /### 📦 Chrome Web Store & Firefox AMO Release Notes[\s\S]*?(?=\n## \[|$)/i;
+  const notesSectionMatch = sectionPattern.exec(changelogContent);
+  if (!notesSectionMatch) {
+    return null;
+  }
+
+  const section = notesSectionMatch[0];
+  const releaseNotes: Record<string, string> = {};
+
+  // Extract English release notes
+  const enPattern = /#### English \(([^)]+)\):[\s\S]*?```(?:text)?\s*([\s\S]*?)\s*```/i;
+  const enMatch = enPattern.exec(section);
+  if (enMatch?.[2]?.trim()) {
+    const locale = enMatch[1].trim();
+    releaseNotes[locale] = enMatch[2].trim();
+  }
+
+  // Extract Chinese release notes
+  const zhPattern = /#### (?:简体中文|中文) \(([^)]+)\):[\s\S]*?```(?:text)?\s*([\s\S]*?)\s*```/i;
+  const zhMatch = zhPattern.exec(section);
+  if (zhMatch?.[2]?.trim()) {
+    const locale = zhMatch[1].trim();
+    releaseNotes[locale] = zhMatch[2].trim();
+  }
+
+  if (Object.keys(releaseNotes).length === 0) {
+    return null;
+  }
+  return { release_notes: releaseNotes };
+}
+
+export function generateAmoMetadataFile(
+  changelogFilePath: string = changelogPath,
+  outputDir: string = path.join(rootDir, '.output')
+): string | null {
+  if (!fs.existsSync(changelogFilePath)) {
+    return null;
+  }
+  const content = fs.readFileSync(changelogFilePath, 'utf-8');
+  const metadata = extractAmoMetadataFromChangelog(content);
+  if (!metadata) {
+    return null;
+  }
+
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
+  const metadataPath = path.join(outputDir, 'amo-metadata.json');
+  fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2), 'utf-8');
+  return metadataPath;
+}
+
 export function buildSubmitCliArgs(
   options: SubmitOptions,
   targets: StoreTargets,
-  artifacts: SubmitArtifacts
+  artifacts: SubmitArtifacts,
+  amoMetadataPath?: string | null
 ): string[] {
   const cliArgs: string[] = [];
 
@@ -200,6 +261,9 @@ export function buildSubmitCliArgs(
     cliArgs.push('--firefox-zip', artifacts.firefoxZip);
     if (fs.existsSync(artifacts.firefoxSourcesZip)) {
       cliArgs.push('--firefox-sources-zip', artifacts.firefoxSourcesZip);
+    }
+    if (amoMetadataPath && fs.existsSync(amoMetadataPath)) {
+      cliArgs.push('--firefox-amo-metadata-file', amoMetadataPath);
     }
   }
 
@@ -297,8 +361,17 @@ export function runSubmit(options: SubmitOptions = parseSubmitArgs()) {
     process.exit(1);
   }
 
-  // 4. Build command arguments and execute
-  const cliArgs = buildSubmitCliArgs(options, targets, artifacts);
+  // 4. Generate AMO release notes metadata for Firefox if applicable
+  let amoMetadataPath: string | null = null;
+  if (targets.submitFirefox) {
+    amoMetadataPath = generateAmoMetadataFile();
+    if (amoMetadataPath) {
+      console.log('  ✓ Extracted version release notes for Firefox AMO (.output/amo-metadata.json)');
+    }
+  }
+
+  // 5. Build command arguments and execute
+  const cliArgs = buildSubmitCliArgs(options, targets, artifacts, amoMetadataPath);
   const cmd = `bunx wxt submit ${cliArgs.join(' ')}`;
 
   console.log(`\n🚀 Step 2: Executing submission command...`);
