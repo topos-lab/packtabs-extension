@@ -215,6 +215,11 @@ export function runRelease(options: ReleaseOptions = parseCliArgs()) {
   runCommand(`git commit -am "chore(release): v${targetReleaseVersion}"`, options.dryRun);
   runCommand(`git tag -a "v${targetReleaseVersion}" -m "Release v${targetReleaseVersion}"`, options.dryRun);
 
+  // 6.5 Build production zip archives for the stable release version BEFORE bumping to dev
+  console.log(`\n📦 Step 3.5: Packaging production archives for v${targetReleaseVersion}...`);
+  runCommand('bun run zip', options.dryRun);
+  runCommand('bun run zip:firefox', options.dryRun);
+
   // 7. Bump to next development cycle
   if (!options.noBump) {
     console.log(`\n🌱 Step 4: Advancing to next development cycle (v${nextDevVersion})...`);

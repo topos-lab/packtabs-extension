@@ -26,15 +26,23 @@ export interface SubmitOptions {
   chromeOnly: boolean;
   firefoxOnly: boolean;
   skipZip: boolean;
+  targetVersion?: string;
 }
 
 export function parseSubmitArgs(args: string[] = process.argv.slice(2)): SubmitOptions {
-  return {
+  const options: SubmitOptions = {
     dryRun: args.includes('--dry-run'),
     chromeOnly: args.includes('--chrome-only'),
     firefoxOnly: args.includes('--firefox-only'),
     skipZip: args.includes('--skip-zip'),
   };
+
+  const versionIdx = args.findIndex((a) => a === '--version' || a === '-v');
+  if (versionIdx !== -1 && args[versionIdx + 1]) {
+    options.targetVersion = args[versionIdx + 1];
+  }
+
+  return options;
 }
 
 /**
@@ -142,13 +150,28 @@ export interface SubmitArtifacts {
   firefoxSourcesZip: string;
 }
 
-export function getArtifactPaths(rootDirPath: string = rootDir): SubmitArtifacts {
+export function getArtifactPaths(rootDirPath: string = rootDir, targetVersion?: string): SubmitArtifacts {
   const pkg = JSON.parse(fs.readFileSync(path.join(rootDirPath, 'package.json'), 'utf-8')) as {
     name?: string;
     version?: string;
   };
   const name = pkg.name ?? 'packtabs-extension';
-  const version = pkg.version ?? '1.0.0';
+  let version = targetVersion ?? pkg.version ?? '1.0.0';
+
+  // If no explicit targetVersion was given, and current package.json is an odd development version (e.g. 1.3.0),
+  // check if a stable release version (e.g. 1.2.0) exists in .output or git tags.
+  if (!targetVersion && pkg.version) {
+    const [major, minor] = pkg.version.split('.').map(Number);
+    if (!isNaN(minor) && minor % 2 !== 0 && minor > 0) {
+      const stableVersion = `${major}.${minor - 1}.0`;
+      const stableChromeZip = path.join(rootDirPath, '.output', `${name}-${stableVersion}-chrome.zip`);
+      if (fs.existsSync(stableChromeZip)) {
+        console.log(`ℹ️ Auto-detected stable release bundle v${stableVersion} in .output (prioritizing over active dev v${pkg.version})`);
+        version = stableVersion;
+      }
+    }
+  }
+
   const outputDir = path.join(rootDirPath, '.output');
 
   return {
@@ -248,7 +271,7 @@ export function runSubmit(options: SubmitOptions = parseSubmitArgs()) {
   console.log('--------------------------------------------');
 
   // 3. Ensure zip artifacts exist
-  const artifacts = getArtifactPaths();
+  const artifacts = getArtifactPaths(rootDir, options.targetVersion);
   const needChromeZip = targets.submitChrome && !fs.existsSync(artifacts.chromeZip);
   const needFirefoxZip = targets.submitFirefox && (!fs.existsSync(artifacts.firefoxZip) || !fs.existsSync(artifacts.firefoxSourcesZip));
 
