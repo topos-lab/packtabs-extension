@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - In Development
 
 ### Added
+- **Automated Extension Store Submission**: Added `scripts/submit.ts`, `.env.submit.example`, and comprehensive documentation in `docs/STORE_API_KEY_GUIDE.md` for zero-friction publishing to Chrome Web Store (API v2 Service Accounts) and Firefox AMO.
 - **Official Extension Store Links & Badges**: Added Chrome Web Store and Mozilla Firefox Add-ons install links and status badges to `README.md` and user guides.
 - **Dynamic Version Resolution in Dashboard**: Refactored the dashboard "About" dialog to dynamically query extension version from `browser.runtime.getManifest().version`, guaranteeing a single source of truth across all views.
 - **Local File Startup Intelligence**: Added unit tests in `tests/unit/localFileStartup.test.ts` covering race condition handling (`pendingUrl`), standalone local documents (`file://`), and multi-file launches.

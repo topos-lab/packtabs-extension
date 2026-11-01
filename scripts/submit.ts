@@ -227,9 +227,9 @@ export function runSubmit(options: SubmitOptions = parseSubmitArgs()) {
 
     console.error('❌ Error: No store credentials found in process environment or .env.submit.');
     console.error('\nTo configure your credentials:');
-    console.error('  1. Run interactive wizard:  bunx wxt submit init');
-    console.error('  2. Or create a .env.submit file in the root directory.');
-    console.error('     See README.md for the configuration template.\n');
+    console.error('  1. Copy template:           Copy-Item .env.submit.example .env.submit (or cp .env.submit.example .env.submit)');
+    console.error('  2. Or interactive wizard:   bunx wxt submit init');
+    console.error('  3. See docs/STORE_API_KEY_GUIDE.md for step-by-step application and filling instructions.\n');
     process.exit(1);
   }
 

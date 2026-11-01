@@ -166,6 +166,8 @@ Once pushed:
 
 #### Configuring Store API Credentials
 
+> 📖 **详细配置教程**：完整的申请、授权步骤与故障排查说明，请参阅 [**浏览器扩展商店 API 凭据申请指南**](docs/STORE_API_KEY_GUIDE.md)。
+
 ##### Option A: GitHub Actions Secrets (Recommended for Full CI/CD Automation)
 Configure the following Repository Secrets in **GitHub Settings -> Secrets and variables -> Actions**:
 
@@ -178,7 +180,17 @@ Configure the following Repository Secrets in **GitHub Settings -> Secrets and v
 | `FIREFOX_JWT_SECRET` | Mozilla AMO API JWT Secret | [AMO API Keys](https://addons.mozilla.org/developers/addon/api/key/) |
 
 ##### Option B: Local `.env.submit` Configuration
-Create `.env.submit` in the project root (ignored by `.gitignore`):
+Copy the template [`.env.submit.example`](.env.submit.example) to `.env.submit` in the project root:
+
+```bash
+# PowerShell
+Copy-Item .env.submit.example .env.submit
+
+# Bash / Zsh
+cp .env.submit.example .env.submit
+```
+
+Fill in your store credentials in `.env.submit` (ignored by `.gitignore`):
 ```env
 # Chrome Web Store (API v2)
 CHROME_API_VERSION=v2
