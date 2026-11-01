@@ -88,7 +88,11 @@
 4. 如果此前未关联项目，请点击 **“关联 Google Cloud 项目 (Associate a Google Cloud Project)”** 并选择步骤 1 中创建的项目。
 5. 关联成功后，页面下方的“服务账号”列表中会出现你在步骤 2 中创建的服务账号邮箱。
 6. 在该服务账号右侧，点击 **“授予权限 (Grant Access)”**，勾选具有权限发布扩展并确认保存。
-7. 返回“账号 (Account)”主页面，在页面上方记录你的 **发布者 ID (Publisher ID)**（通常为形如 `pub-xxxxxxxxxxxx` 或一串数字字母编号）。
+7. 获取你的 **发布者 ID (Publisher ID)**（**注意：你无需单独“创建”发布者，已有的开发者账号本身就是一个 Publisher**）：
+   - **最快捷方式（看浏览器地址栏）**：登录控制台后，直接查看浏览器 URL 路径：
+     `https://chrome.google.com/webstore/devconsole/<你的_PUBLISHER_ID>`
+     紧随 `devconsole/` 之后的一串 UUID 字符（形如 `f1e2d3c4-0000-4000-8000-a1b2c3d4e5f6`）即为你的 Publisher ID。
+   - **界面方式**：在左侧菜单底部的“账号 (Account)”主页面，上方也会直接显示“发布者 ID / Publisher ID”。
 
 ---
 
