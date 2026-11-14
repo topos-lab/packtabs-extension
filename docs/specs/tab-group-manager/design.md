@@ -45,7 +45,8 @@ packtabs-extension/
 │   ├── useTheme.ts                # Tri-state theme manager (light/dark/system)
 │   └── useToast.ts                # Floating toast notifications
 ├── utils/
-│   ├── storage.ts                 # Mutex-locked WXT storage service
+│   ├── dashboardLauncher.ts       # Target-window resolution & per-window dashboard launch
+│   ├── storage.ts                 # Mutex-locked WXT storage service & history deduplication
 │   ├── tabManager.ts              # Tab operations & MV3 favicon service
 │   └── init-app.ts                # Vue app bootstrap utility
 ├── types/
@@ -99,8 +100,16 @@ graph TD
   - Guarantees sequential write execution to prevent race conditions during rapid tab operations or background snapshot saves.
 - **Immutability**:
   - All write and update operations clone data using `structuredClone` to prevent memory reference leaks.
+- **Latest-Wins History Deduplication (`saveHistoryTabGroup`)**:
+  - Normalizes tab URLs (origin + pathname without trailing slashes + search + hash, lowercased) to compute order-independent set signatures (`getTabsSignature`).
+  - Atomically removes older duplicate history snapshots (`isHistory: true`) with matching signatures when saving a newer snapshot, while preserving named groups (`isHistory: false`) and respecting user-deleted tombstones (`deletedHistorySignaturesStorage`).
 
-### 4. Tab & Favicon Management Layer
+### 4. Tab, Window & Favicon Management Layer
+
+- **Per-Window Dashboard Scoping (`utils/dashboardLauncher.ts`)**:
+  - Action clicks (`action.onClicked`) and shortcuts (`commands.onCommand`) pass the active tab's `windowId`, falling back to the focused normal window via `resolveTargetWindowId`.
+  - Existing dashboard lookup is strictly scoped to the resolved target window so multi-window workflows maintain independent dashboards without cross-window focus hijacking.
+  - `getCurrentWindowId()` prefers `browser.tabs.getCurrent()?.windowId` with `browser.windows.getCurrent()` fallback so capture, restore, and close-window actions target the dashboard's containing window.
 
 - **MV3 Favicon Access**:
   - Uses the Manifest V3 compliant internal URL:

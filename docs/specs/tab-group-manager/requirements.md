@@ -22,7 +22,7 @@ PackTabs is a high-performance Chrome browser extension designed for efficiency-
 
 #### Acceptance Criteria
 
-1. WHEN a user navigates to the Current Tabs view, THE Tab_Group_Manager SHALL list all open web tabs from the active window with their title, URL, and favicon.
+1. WHEN a user navigates to the Current Tabs view or opens PackTabs from a browser window, THE Tab_Group_Manager SHALL open/focus the dashboard within that active window (never jumping to another window's dashboard) and list all open web tabs from that window with their title, URL, and favicon.
 2. WHEN reviewing current tabs, THE user SHALL be able to exclude individual tabs from being saved.
 3. WHEN saving tabs, THE user MAY provide a custom group name; IF no name is provided, THE Tab_Group_Manager SHALL automatically assign an intelligent timestamp name (e.g. `2026-10-02 20:30`).
 4. THE Tab_Group_Manager SHALL provide a "Close window after save" option, checked by default, and SHALL persist the user's choice across sessions in `sync:settings`.
@@ -36,7 +36,7 @@ PackTabs is a high-performance Chrome browser extension designed for efficiency-
 #### Acceptance Criteria
 
 1. WHEN a browser window closes, THE Tab_Group_Manager service worker SHALL automatically preserve the window's tabs as a History_Tab_Group.
-2. WHEN creating a History_Tab_Group, THE Tab_Group_Manager SHALL store it with `isHistory: true` and an accurate creation timestamp.
+2. WHEN creating a History_Tab_Group, THE Tab_Group_Manager SHALL store it with `isHistory: true` and an accurate creation timestamp, and SHALL deduplicate identical normalized tab sets using a latest-wins policy (removing older duplicate history snapshots while preserving named groups and deletion tombstones).
 3. WHEN displaying History_Tab_Groups, THE Tab_Group_Manager SHALL categorize them by relative time sections (Today, Yesterday, Previous 7 Days, This Month, Older).
 4. WHEN a user clicks the inline edit button on a History_Tab_Group and inputs a name, THE Tab_Group_Manager SHALL immediately convert the group to a Named_Tab_Group and save it permanently.
 

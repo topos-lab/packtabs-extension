@@ -1,15 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  openOrFocusDashboard,
+  resolveTargetWindowId,
+} from '../../utils/dashboardLauncher';
+import {
   captureCurrentWindow,
   getCurrentWindowId,
-  openOrFocusDashboard,
   openSingleTab,
   openTabs,
-  resolveTargetWindowId,
 } from '../../utils/tabManager';
 
 const DASHBOARD_URL = 'chrome-extension://test-ext-id/dashboard.html';
+
+function mockTwoNormalWindows(focusedWindowId = 2) {
+  return vi.spyOn(browser.windows, 'getAll').mockResolvedValue([
+    { id: 1, type: 'normal', focused: focusedWindowId === 1 },
+    { id: 2, type: 'normal', focused: focusedWindowId === 2 },
+  ] as any);
+}
 
 describe('Multi-window dashboard opening and current window resolution', () => {
   beforeEach(() => {
@@ -22,10 +31,7 @@ describe('Multi-window dashboard opening and current window resolution', () => {
 
   describe('resolveTargetWindowId', () => {
     it('selects preferredWindowId (Window 2) over Window 1 when both are normal windows', async () => {
-      vi.spyOn(browser.windows, 'getAll').mockResolvedValue([
-        { id: 1, type: 'normal', focused: false },
-        { id: 2, type: 'normal', focused: true },
-      ] as any);
+      mockTwoNormalWindows(2);
 
       const targetId = await resolveTargetWindowId(2);
       expect(targetId).toBe(2);
@@ -43,10 +49,7 @@ describe('Multi-window dashboard opening and current window resolution', () => {
     });
 
     it('selects the focused normal window when preferredWindowId is omitted', async () => {
-      vi.spyOn(browser.windows, 'getAll').mockResolvedValue([
-        { id: 1, type: 'normal', focused: false },
-        { id: 2, type: 'normal', focused: true },
-      ] as any);
+      mockTwoNormalWindows(2);
 
       const targetId = await resolveTargetWindowId();
       expect(targetId).toBe(2);
@@ -68,12 +71,11 @@ describe('Multi-window dashboard opening and current window resolution', () => {
   });
 
   describe('openOrFocusDashboard', () => {
-    it('opens dashboard in Window 2 even when Window 1 already has an open dashboard tab', async () => {
-      vi.spyOn(browser.windows, 'getAll').mockResolvedValue([
-        { id: 1, type: 'normal', focused: false },
-        { id: 2, type: 'normal', focused: true },
-      ] as any);
+    beforeEach(() => {
+      mockTwoNormalWindows(2);
+    });
 
+    it('opens dashboard in Window 2 even when Window 1 already has an open dashboard tab', async () => {
       const querySpy = vi.spyOn(browser.tabs, 'query').mockImplementation(async (queryInfo: any) => {
         if (queryInfo.windowId === 1) {
           return [{ id: 101, windowId: 1, url: DASHBOARD_URL }] as any;
@@ -103,11 +105,6 @@ describe('Multi-window dashboard opening and current window resolution', () => {
     });
 
     it('opens dashboard in Window 2 when no dashboard exists anywhere and user clicks icon in Window 2', async () => {
-      vi.spyOn(browser.windows, 'getAll').mockResolvedValue([
-        { id: 1, type: 'normal', focused: false },
-        { id: 2, type: 'normal', focused: true },
-      ] as any);
-
       vi.spyOn(browser.tabs, 'query').mockResolvedValue([
         { id: 201, windowId: 2, url: 'https://github.com' },
       ] as any);
@@ -124,11 +121,6 @@ describe('Multi-window dashboard opening and current window resolution', () => {
     });
 
     it('focuses the existing dashboard tab inside Window 2 without creating a duplicate', async () => {
-      vi.spyOn(browser.windows, 'getAll').mockResolvedValue([
-        { id: 1, type: 'normal', focused: false },
-        { id: 2, type: 'normal', focused: true },
-      ] as any);
-
       vi.spyOn(browser.tabs, 'query').mockResolvedValue([
         { id: 201, windowId: 2, url: 'https://github.com' },
         { id: 202, windowId: 2, url: DASHBOARD_URL },
@@ -146,11 +138,6 @@ describe('Multi-window dashboard opening and current window resolution', () => {
     });
 
     it('replaces a single blank tab in-place inside Window 2', async () => {
-      vi.spyOn(browser.windows, 'getAll').mockResolvedValue([
-        { id: 1, type: 'normal', focused: false },
-        { id: 2, type: 'normal', focused: true },
-      ] as any);
-
       vi.spyOn(browser.tabs, 'query').mockResolvedValue([
         { id: 201, windowId: 2, url: 'chrome://newtab/' },
       ] as any);
@@ -168,11 +155,6 @@ describe('Multi-window dashboard opening and current window resolution', () => {
     });
 
     it('opens in the focused window (Window 2) when invoked without preferredWindowId', async () => {
-      vi.spyOn(browser.windows, 'getAll').mockResolvedValue([
-        { id: 1, type: 'normal', focused: false },
-        { id: 2, type: 'normal', focused: true },
-      ] as any);
-
       vi.spyOn(browser.tabs, 'query').mockResolvedValue([
         { id: 201, windowId: 2, url: 'https://vuejs.org' },
       ] as any);
@@ -186,6 +168,29 @@ describe('Multi-window dashboard opening and current window resolution', () => {
         url: DASHBOARD_URL,
         active: true,
       });
+    });
+
+    it('creates a new normal window instead of running a global tab query when no normal window is available', async () => {
+      vi.useFakeTimers();
+      try {
+        vi.spyOn(browser.windows, 'getAll').mockResolvedValue([
+          { id: 9, type: 'popup', focused: true },
+        ] as any);
+        const querySpy = vi.spyOn(browser.tabs, 'query');
+        const createWindowSpy = vi.spyOn(browser.windows, 'create').mockResolvedValue({ id: 10 } as any);
+
+        const launchPromise = openOrFocusDashboard({ preferredWindowId: 9 });
+        await vi.runAllTimersAsync();
+        await launchPromise;
+
+        expect(querySpy).not.toHaveBeenCalled();
+        expect(createWindowSpy).toHaveBeenCalledWith({
+          url: DASHBOARD_URL,
+          type: 'normal',
+        });
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 

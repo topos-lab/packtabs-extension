@@ -84,15 +84,38 @@ describe('History Tab Group Deduplication', () => {
         ],
         isHistory: true,
       };
-      const removedIds = await saveHistoryTabGroup(newGroup);
-
-      expect(removedIds).toEqual(['history-old']);
+      await saveHistoryTabGroup(newGroup);
 
       const groups = await getTabGroups();
       expect(groups).toHaveLength(1);
       expect(groups[0].id).toBe('history-new');
       expect(groups[0].createdAt.toISOString()).toBe('2026-10-02T12:00:00.000Z');
       expect(groups[0].tabs[0].title).toBe('New Title 2');
+    });
+
+    it('preserves a newer existing history group when an older snapshot with the same tabs arrives', async () => {
+      const newerGroup: TabGroup = {
+        id: 'history-newer',
+        name: null,
+        createdAt: new Date('2026-10-03T12:00:00Z'),
+        tabs: [makeTab('https://example.com', 'Latest Title', 't-new')],
+        isHistory: true,
+      };
+      await saveTabGroup(newerGroup);
+
+      const staleGroup: TabGroup = {
+        id: 'history-stale',
+        name: null,
+        createdAt: new Date('2026-10-01T12:00:00Z'),
+        tabs: [makeTab('https://example.com/', 'Stale Title', 't-old')],
+        isHistory: true,
+      };
+      await saveHistoryTabGroup(staleGroup);
+
+      const groups = await getTabGroups();
+      expect(groups).toHaveLength(1);
+      expect(groups[0].id).toBe('history-newer');
+      expect(groups[0].tabs[0].title).toBe('Latest Title');
     });
 
     it('deletes multiple older duplicate history groups at once', async () => {
@@ -120,9 +143,8 @@ describe('History Tab Group Deduplication', () => {
         tabs: [makeTab('https://a.com'), makeTab('https://b.com')],
         isHistory: true,
       };
-      const removedIds = await saveHistoryTabGroup(latest);
+      await saveHistoryTabGroup(latest);
 
-      expect(removedIds.sort()).toEqual(['dup-1', 'dup-2']);
       const groups = await getTabGroups();
       expect(groups).toHaveLength(1);
       expect(groups[0].id).toBe('latest-3');
@@ -145,9 +167,8 @@ describe('History Tab Group Deduplication', () => {
         tabs: [makeTab('https://example.com'), makeTab('https://github.com')],
         isHistory: true,
       };
-      const removedIds = await saveHistoryTabGroup(supersetGroup);
+      await saveHistoryTabGroup(supersetGroup);
 
-      expect(removedIds).toEqual([]);
       const groups = await getTabGroups();
       expect(groups).toHaveLength(2);
     });
@@ -178,9 +199,8 @@ describe('History Tab Group Deduplication', () => {
         tabs: [makeTab('https://github.com'), makeTab('https://example.com')],
         isHistory: true,
       };
-      const removedIds = await saveHistoryTabGroup(newHistory);
+      await saveHistoryTabGroup(newHistory);
 
-      expect(removedIds).toEqual(['history-old']);
       const groups = await getTabGroups();
       expect(groups).toHaveLength(2);
       expect(groups.find((g) => g.id === 'named-1')).toBeDefined();

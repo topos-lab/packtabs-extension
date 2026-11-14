@@ -1,5 +1,6 @@
 import { activeSessionTabsStorage, settingsStorage } from '~/types/Storage';
 import type { TabGroup, TabItem } from '~/types/TabGroup';
+import { openOrFocusDashboard } from '~/utils/dashboardLauncher';
 import {
   isDeletedHistorySignature,
   saveHistoryTabGroup,
@@ -9,7 +10,6 @@ import {
   captureCurrentWindow,
   closeCurrentTabs,
   deduplicateTabsByUrl,
-  openOrFocusDashboard,
   openSingleTab,
   openTabs,
   validateUrl,

@@ -126,8 +126,7 @@
   async function refreshCurrentTabs() {
     currentTabsLoading.value = true;
     try {
-      const windowId = await getCurrentWindowId();
-      const raw = await captureCurrentWindow(windowId);
+      const raw = await captureCurrentWindow();
       currentTabs.value = deduplicateTabsByUrl(raw);
     } catch (error) {
       console.error('Failed to capture current window tabs:', error);
@@ -147,8 +146,7 @@
   async function handleTabItemRowClick(event: MouseEvent, tab: TabItem) {
     if (event.ctrlKey || event.metaKey || event.shiftKey) {
       try {
-        const windowId = await getCurrentWindowId();
-        await openSingleTab(tab, true, windowId);
+        await openSingleTab(tab, true);
         toast.add({
           severity: 'info',
           detail: t('openedBackgroundSuccess', { title: tab.title || t('untitled') }),

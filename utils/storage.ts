@@ -1,7 +1,7 @@
 import type { StoredTabGroup } from '../types/Storage';
 import { deletedHistorySignaturesStorage, tabGroupsStorage } from '../types/Storage';
 import type { TabGroup, TabItem } from '../types/TabGroup';
-import { sortGroupsByDateDesc } from './date';
+import { getTimeSafe, sortGroupsByDateDesc } from './date';
 
 /**
  * Storage service interface for tab group operations
@@ -180,35 +180,40 @@ export async function saveTabGroup(group: TabGroup): Promise<void> {
 }
 
 /**
- * Saves a history tab group atomically while removing any previous history groups
- * that have an identical tab list signature (keeping only the latest snapshot).
- * Named groups (`isHistory: false`) are never deleted, and replaced history groups
- * are not recorded as user-deleted tombstones.
+ * Saves a history tab group atomically using latest-wins deduplication for identical tab list signatures.
+ * Older duplicate history groups are removed; if an existing duplicate history group is strictly newer,
+ * it is preserved and the stale incoming snapshot is skipped. Named groups (`isHistory: false`) are never
+ * deleted, and replaced history groups are not recorded as user-deleted tombstones.
  */
-export async function saveHistoryTabGroup(group: TabGroup): Promise<string[]> {
-  return await withLock(async () => {
-    return await withRetry(async () => {
+export async function saveHistoryTabGroup(group: TabGroup): Promise<void> {
+  await withLock(async () => {
+    await withRetry(async () => {
       const rawGroups = await tabGroupsStorage.getValue();
       const allGroups: Record<string, StoredTabGroup> = { ...rawGroups };
       const targetSignature = getTabsSignature(group.tabs);
-      const removedIds: string[] = [];
+      const incomingTime = getTimeSafe(group.createdAt);
+      let supersededByNewer = false;
 
       if (targetSignature) {
         for (const [existingId, existingStored] of Object.entries(allGroups)) {
           if (existingStored?.isHistory && existingId !== group.id) {
             const existingSignature = getTabsSignature(normalizeTabs(existingStored.tabs));
             if (existingSignature === targetSignature) {
-              delete allGroups[existingId];
-              removedIds.push(existingId);
+              const existingTime = getTimeSafe(existingStored.createdAt);
+              if (existingTime > incomingTime) {
+                supersededByNewer = true;
+              } else {
+                delete allGroups[existingId];
+              }
             }
           }
         }
       }
 
-      upsertGroupInMap(allGroups, { ...group, isHistory: true });
+      if (!supersededByNewer) {
+        upsertGroupInMap(allGroups, { ...group, isHistory: true });
+      }
       await tabGroupsStorage.setValue(allGroups);
-
-      return removedIds;
     });
   });
 }
