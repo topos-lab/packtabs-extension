@@ -11,7 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.0] - In Development
 
 ### Added
-- 
+- **History Snapshot Deduplication (Latest-Wins)**: Automatically removes older history snapshots (`isHistory: true`) that have the exact same tab list as a newly saved closed-window snapshot, keeping only the latest entry without touching permanently saved named groups or polluting deletion tombstones.
+  - Added atomic `saveHistoryTabGroup` and `normalizeTabUrl` in `utils/storage.ts` and unified URL normalization in `utils/tabManager.ts`.
+  - Updated `entrypoints/background.ts` (`windows.onRemoved` and `recoverPendingHistoryGroups`) to deduplicate history snapshots via `saveHistoryTabGroup`.
 
 ### Fixed
 - **Multi-Window Dashboard Launch & Current Tabs Scope**: Fixed an issue where clicking the extension icon or triggering the shortcut in a second browser window opened/switched to the dashboard in the first browser window and displayed the first window's tabs.
@@ -30,10 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Local File Startup Intelligence**: Added unit tests in `tests/unit/localFileStartup.test.ts` covering race condition handling (`pendingUrl`), standalone local documents (`file://`), and multi-file launches.
 
 ### Fixed
-- **Multi-Window Dashboard Launch & Current Tabs Scope**: Fixed an issue where clicking the extension icon or triggering the shortcut in a second browser window opened/switched to the dashboard in the first browser window and displayed the first window's tabs.
-  - Updated `action.onClicked` and `commands.onCommand` handlers in `entrypoints/background.ts` to forward the active tab's `windowId` and resolve the focused normal window as fallback (`resolveTargetWindowId`).
-  - Scoped existing dashboard tab lookup inside `openOrFocusDashboard` to the target window so each browser window maintains its own dashboard tab without stealing focus across windows.
-  - Added `getCurrentWindowId` in `utils/tabManager.ts` (preferring `browser.tabs.getCurrent()?.windowId` with `browser.windows.getCurrent()` fallback) so current-tab capture, restoration, and close-window-after-save always operate on the dashboard's actual window.**External App & Local File Launch Interruption**: Fixed an issue where launching the browser from external desktop applications (e.g. Blizzard Battle.net, chat/email apps) or opening local files (PDF/HTML) inadvertently triggered the Startup Restorer (`/dashboard.html?mode=startup`) and stole foreground focus.
+- **External App & Local File Launch Interruption**: Fixed an issue where launching the browser from external desktop applications (e.g. Blizzard Battle.net, chat/email apps) or opening local files (PDF/HTML) inadvertently triggered the Startup Restorer (`/dashboard.html?mode=startup`) and stole foreground focus.
   - Introduced `isBlankStartupTab` in `utils/tabManager.ts` with navigation race condition protection (`pendingUrl`).
   - Restricts the Startup Restorer to only replace genuinely empty initial tabs in-place, silently skipping targeted navigation launches.
   - Preserves silent background history snapshots (`recoverPendingHistoryGroups`) so unclosed sessions remain 100% safe.

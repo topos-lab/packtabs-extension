@@ -1,5 +1,6 @@
 import type { TabItem } from '~/types/TabGroup';
 import { formatDefaultGroupName } from '~/utils/date';
+import { normalizeTabUrl } from '~/utils/storage';
 
 /**
  * Interface for tab management operations
@@ -68,14 +69,8 @@ export function deduplicateTabsByUrl(tabs: TabItem[]): TabItem[] {
   const seen = new Set<string>();
   return tabs.filter((tab) => {
     if (!tab.url) {return false;}
-    let key = tab.url.trim();
-    try {
-      const u = new URL(key);
-      key = (u.origin + u.pathname.replace(/\/+$/, '') + u.search + u.hash).toLowerCase();
-    } catch {
-      key = key.toLowerCase().replace(/\/+$/, '');
-    }
-    if (seen.has(key)) {
+    const key = normalizeTabUrl(tab.url);
+    if (!key || seen.has(key)) {
       return false;
     }
     seen.add(key);
@@ -157,14 +152,33 @@ export async function resolveTargetWindowId(preferredWindowId?: number): Promise
   return normalWindows[0]?.id;
 }
 
+export type DashboardOpenMode = 'default' | 'startup';
+
+export interface OpenDashboardOptions {
+  mode?: DashboardOpenMode;
+  preferredWindowId?: number;
+}
+
+/**
+ * Resolves the target window ID for tab operations.
+ * Uses the explicit windowId if provided, otherwise resolves the current execution window.
+ */
+async function resolveOperationWindowId(windowId?: number): Promise<number | undefined> {
+  return windowId ?? (await getCurrentWindowId());
+}
+
 /**
  * Opens or switches to the PackTabs Dashboard tab in the target window.
  * Existing dashboard lookup is scoped to the target window so clicking the extension icon
  * in a second browser window never jumps back to an earlier window's dashboard.
  */
-export async function openOrFocusDashboard(queryString = '', preferredWindowId?: number): Promise<void> {
+export async function openOrFocusDashboard({
+  mode = 'default',
+  preferredWindowId,
+}: OpenDashboardOptions = {}): Promise<void> {
   const dashboardBaseUrl = browser.runtime.getURL('/dashboard.html');
-  const targetUrl = queryString ? `${dashboardBaseUrl}${queryString}` : dashboardBaseUrl;
+  const isStartupMode = mode === 'startup';
+  const targetUrl = isStartupMode ? `${dashboardBaseUrl}?mode=startup` : dashboardBaseUrl;
 
   // 1. Wait up to 2 seconds for a normal browser window to be ready (critical during startup or session restore)
   let targetWindowId: number | undefined;
@@ -203,7 +217,6 @@ export async function openOrFocusDashboard(queryString = '', preferredWindowId?:
   try {
     if (targetWindowId !== undefined) {
       let windowTabs = await browser.tabs.query({ windowId: targetWindowId });
-      const isStartupMode = queryString.includes('mode=startup');
 
       // Guard against startup navigation race conditions: if tab is still in early loading
       // without URL populated, briefly wait for pendingUrl to settle
@@ -263,7 +276,7 @@ export async function openOrFocusDashboard(queryString = '', preferredWindowId?:
  */
 export async function captureCurrentWindow(windowId?: number): Promise<TabItem[]> {
   try {
-    const targetWindowId = windowId ?? (await browser.windows.getCurrent()).id;
+    const targetWindowId = await resolveOperationWindowId(windowId);
 
     // Query all tabs in the target window
     const tabs = await browser.tabs.query({ windowId: targetWindowId });
@@ -297,7 +310,7 @@ export async function captureCurrentWindow(windowId?: number): Promise<TabItem[]
  */
 export async function openTabs(tabs: TabItem[], windowId?: number): Promise<void> {
   try {
-    const targetWindowId = windowId ?? (await browser.windows.getCurrent()).id;
+    const targetWindowId = await resolveOperationWindowId(windowId);
 
     for (const tab of tabs) {
       if (!validateUrl(tab.url)) {
@@ -346,7 +359,7 @@ export async function openSingleTab(
   }
 
   try {
-    const targetWindowId = windowId ?? (await browser.windows.getCurrent()).id;
+    const targetWindowId = await resolveOperationWindowId(windowId);
 
     await browser.tabs.create({
       windowId: targetWindowId,
@@ -368,7 +381,7 @@ export async function openSingleTab(
  */
 export async function closeCurrentTabs(windowId?: number): Promise<void> {
   try {
-    const targetWindowId = windowId ?? (await browser.windows.getCurrent()).id;
+    const targetWindowId = await resolveOperationWindowId(windowId);
     const tabs = await browser.tabs.query({ windowId: targetWindowId });
 
     const tabIds = tabs.map((tab) => tab.id).filter((id): id is number => id !== undefined);

@@ -214,6 +214,7 @@ describe('Tab Manager Error Handling', () => {
 
   describe('Network Failure Handling', () => {
     it('should handle network errors when capturing tabs', async () => {
+      vi.spyOn(browser.tabs, 'getCurrent').mockResolvedValue(undefined);
       vi.spyOn(browser.windows, 'getCurrent').mockRejectedValue(new Error('Network request failed'));
 
       await expect(captureCurrentWindow()).rejects.toThrow('Network request failed');
@@ -222,6 +223,7 @@ describe('Tab Manager Error Handling', () => {
     it('should handle network errors when opening tabs', async () => {
       const tabs: TabItem[] = [{ id: '1', url: 'https://example.com', title: 'Example' }];
 
+      vi.spyOn(browser.tabs, 'getCurrent').mockResolvedValue(undefined);
       vi.spyOn(browser.windows, 'getCurrent').mockRejectedValue(new Error('Network request failed'));
 
       await expect(openTabs(tabs)).rejects.toThrow('Network request failed');

@@ -158,6 +158,12 @@ export function resolveSyncConflict(localGroup: TabGroup, remoteGroup: StoredTab
   return localTimestamp >= remoteTimestamp ? serializeTabGroup(localGroup) : remoteGroup;
 }
 
+function upsertGroupInMap(allGroups: Record<string, StoredTabGroup>, group: TabGroup): void {
+  const serialized = serializeTabGroup(group);
+  const existing = allGroups[group.id];
+  allGroups[group.id] = existing ? resolveSyncConflict(group, existing) : serialized;
+}
+
 /**
  * Saves a tab group to storage
  */
@@ -166,16 +172,43 @@ export async function saveTabGroup(group: TabGroup): Promise<void> {
     await withRetry(async () => {
       const rawGroups = await tabGroupsStorage.getValue();
       const allGroups: Record<string, StoredTabGroup> = { ...rawGroups };
-      const serialized = serializeTabGroup(group);
-
-      const existing = allGroups[group.id];
-      if (existing) {
-        allGroups[group.id] = resolveSyncConflict(group, existing);
-      } else {
-        allGroups[group.id] = serialized;
-      }
+      upsertGroupInMap(allGroups, group);
 
       await tabGroupsStorage.setValue(allGroups);
+    });
+  });
+}
+
+/**
+ * Saves a history tab group atomically while removing any previous history groups
+ * that have an identical tab list signature (keeping only the latest snapshot).
+ * Named groups (`isHistory: false`) are never deleted, and replaced history groups
+ * are not recorded as user-deleted tombstones.
+ */
+export async function saveHistoryTabGroup(group: TabGroup): Promise<string[]> {
+  return await withLock(async () => {
+    return await withRetry(async () => {
+      const rawGroups = await tabGroupsStorage.getValue();
+      const allGroups: Record<string, StoredTabGroup> = { ...rawGroups };
+      const targetSignature = getTabsSignature(group.tabs);
+      const removedIds: string[] = [];
+
+      if (targetSignature) {
+        for (const [existingId, existingStored] of Object.entries(allGroups)) {
+          if (existingStored?.isHistory && existingId !== group.id) {
+            const existingSignature = getTabsSignature(normalizeTabs(existingStored.tabs));
+            if (existingSignature === targetSignature) {
+              delete allGroups[existingId];
+              removedIds.push(existingId);
+            }
+          }
+        }
+      }
+
+      upsertGroupInMap(allGroups, { ...group, isHistory: true });
+      await tabGroupsStorage.setValue(allGroups);
+
+      return removedIds;
     });
   });
 }
@@ -221,16 +254,36 @@ export async function updateTabGroup(id: string, updates: Partial<TabGroup>): Pr
 }
 
 /**
- * Generates a normalized signature of a tab set based on sorted URLs.
+ * Normalizes a tab URL for deduplication and signature matching.
+ */
+export function normalizeTabUrl(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return '';
+  }
+  try {
+    const u = new URL(trimmed);
+    return (u.origin + u.pathname.replace(/\/+$/, '') + u.search + u.hash).toLowerCase();
+  } catch {
+    return trimmed.toLowerCase().replace(/\/+$/, '');
+  }
+}
+
+/**
+ * Generates a normalized signature of a tab set based on sorted unique URLs.
  * Used for deduplication and tombstone matching.
  */
 export function getTabsSignature(tabs?: TabItem[]): string {
   if (!tabs || tabs.length === 0) {
     return '';
   }
-  return tabs
-    .map((t) => t.url?.trim().toLowerCase())
-    .filter(Boolean)
+  return Array.from(
+    new Set(
+      tabs
+        .map((t) => (t.url ? normalizeTabUrl(t.url) : ''))
+        .filter(Boolean)
+    )
+  )
     .sort()
     .join('|');
 }

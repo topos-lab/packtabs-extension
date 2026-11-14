@@ -4,6 +4,8 @@ import {
   captureCurrentWindow,
   getCurrentWindowId,
   openOrFocusDashboard,
+  openSingleTab,
+  openTabs,
   resolveTargetWindowId,
 } from '../../utils/tabManager';
 
@@ -88,7 +90,7 @@ describe('Multi-window dashboard opening and current window resolution', () => {
       const createSpy = vi.spyOn(browser.tabs, 'create').mockResolvedValue({ id: 203, windowId: 2 } as any);
       const windowsUpdateSpy = vi.spyOn(browser.windows, 'update').mockResolvedValue({} as any);
 
-      await openOrFocusDashboard('', 2);
+      await openOrFocusDashboard({ preferredWindowId: 2 });
 
       // Should query only Window 2, never focus Window 1's dashboard tab
       expect(querySpy).toHaveBeenCalledWith({ windowId: 2 });
@@ -112,7 +114,7 @@ describe('Multi-window dashboard opening and current window resolution', () => {
 
       const createSpy = vi.spyOn(browser.tabs, 'create').mockResolvedValue({ id: 202, windowId: 2 } as any);
 
-      await openOrFocusDashboard('', 2);
+      await openOrFocusDashboard({ preferredWindowId: 2 });
 
       expect(createSpy).toHaveBeenCalledWith({
         windowId: 2,
@@ -136,7 +138,7 @@ describe('Multi-window dashboard opening and current window resolution', () => {
       const updateWindowSpy = vi.spyOn(browser.windows, 'update').mockResolvedValue({} as any);
       const createSpy = vi.spyOn(browser.tabs, 'create').mockResolvedValue({} as any);
 
-      await openOrFocusDashboard('', 2);
+      await openOrFocusDashboard({ preferredWindowId: 2 });
 
       expect(updateTabSpy).toHaveBeenCalledWith(202, { active: true });
       expect(updateWindowSpy).toHaveBeenCalledWith(2, { focused: true });
@@ -156,7 +158,7 @@ describe('Multi-window dashboard opening and current window resolution', () => {
       const updateTabSpy = vi.spyOn(browser.tabs, 'update').mockResolvedValue({} as any);
       const createSpy = vi.spyOn(browser.tabs, 'create').mockResolvedValue({} as any);
 
-      await openOrFocusDashboard('', 2);
+      await openOrFocusDashboard({ preferredWindowId: 2 });
 
       expect(updateTabSpy).toHaveBeenCalledWith(201, {
         url: DASHBOARD_URL,
@@ -210,6 +212,33 @@ describe('Multi-window dashboard opening and current window resolution', () => {
 
       const winId = await getCurrentWindowId();
       expect(winId).toBe(1);
+    });
+
+    it('defaults captureCurrentWindow, openTabs, and openSingleTab to tabs.getCurrent().windowId when windowId is omitted', async () => {
+      browser.tabs.getCurrent = vi.fn().mockResolvedValue({ id: 205, windowId: 2 } as any);
+      vi.spyOn(browser.windows, 'getCurrent').mockResolvedValue({ id: 1 } as any);
+      const querySpy = vi.spyOn(browser.tabs, 'query').mockResolvedValue([
+        { id: 201, windowId: 2, url: 'https://window2.example.com', title: 'Window 2 Tab' },
+      ] as any);
+      const createSpy = vi.spyOn(browser.tabs, 'create').mockResolvedValue({ id: 206, windowId: 2 } as any);
+
+      const captured = await captureCurrentWindow();
+      expect(querySpy).toHaveBeenCalledWith({ windowId: 2 });
+      expect(captured).toHaveLength(1);
+
+      await openTabs(captured);
+      expect(createSpy).toHaveBeenCalledWith({
+        windowId: 2,
+        url: 'https://window2.example.com',
+        active: false,
+      });
+
+      await openSingleTab(captured[0], true);
+      expect(createSpy).toHaveBeenLastCalledWith({
+        windowId: 2,
+        url: 'https://window2.example.com',
+        active: false,
+      });
     });
   });
 });
