@@ -40,6 +40,7 @@
     captureCurrentWindow,
     deduplicateTabsByUrl,
     generateDefaultGroupName,
+    getCurrentWindowId,
     getFaviconUrl,
     InvalidUrlError,
     openSingleTab,
@@ -125,7 +126,8 @@
   async function refreshCurrentTabs() {
     currentTabsLoading.value = true;
     try {
-      const raw = await captureCurrentWindow();
+      const windowId = await getCurrentWindowId();
+      const raw = await captureCurrentWindow(windowId);
       currentTabs.value = deduplicateTabsByUrl(raw);
     } catch (error) {
       console.error('Failed to capture current window tabs:', error);
@@ -145,7 +147,8 @@
   async function handleTabItemRowClick(event: MouseEvent, tab: TabItem) {
     if (event.ctrlKey || event.metaKey || event.shiftKey) {
       try {
-        await openSingleTab(tab, true);
+        const windowId = await getCurrentWindowId();
+        await openSingleTab(tab, true, windowId);
         toast.add({
           severity: 'info',
           detail: t('openedBackgroundSuccess', { title: tab.title || t('untitled') }),
@@ -283,9 +286,9 @@
 
       if (closeWindowAfterSave.value) {
         try {
-          const currentWindow = await browser.windows.getCurrent();
-          if (currentWindow.id !== undefined) {
-            await browser.windows.remove(currentWindow.id);
+          const currentWindowId = await getCurrentWindowId();
+          if (currentWindowId !== undefined) {
+            await browser.windows.remove(currentWindowId);
             return;
           }
         } catch (err) {

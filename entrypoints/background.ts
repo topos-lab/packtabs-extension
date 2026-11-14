@@ -10,7 +10,7 @@ import {
   captureCurrentWindow,
   closeCurrentTabs,
   deduplicateTabsByUrl,
-  isBlankStartupTab,
+  openOrFocusDashboard,
   openSingleTab,
   openTabs,
   validateUrl,
@@ -283,124 +283,25 @@ export default defineBackground(() => {
   // Also initialize and recover when service worker / background script wakes up
   void handleStartup('coldInit');
 
-  /**
-   * Opens or switches to the PackTabs Dashboard tab.
-   * If a dashboard tab is already open, activates it and focuses its window;
-   * otherwise creates a new tab. Resilient against startup window initialization latency.
-   */
-  async function openOrFocusDashboard(queryString = '') {
-    const dashboardBaseUrl = browser.runtime.getURL('/dashboard.html');
-    const targetUrl = queryString ? `${dashboardBaseUrl}${queryString}` : dashboardBaseUrl;
-
-    // 1. Wait up to 2 seconds for a normal browser window to be ready (critical during startup or session restore)
-    let targetWindowId: number | undefined;
-    for (let attempt = 0; attempt < 8; attempt++) {
-      try {
-        const windows = await browser.windows.getAll();
-        const normalWin = windows.find((w) => !w.type || w.type === 'normal');
-        if (normalWin?.id !== undefined) {
-          targetWindowId = normalWin.id;
-          break;
-        }
-      } catch {
-        // Windows API may not be ready during early startup phase
-      }
-      await new Promise((resolve) => setTimeout(resolve, 250));
-    }
-
-    try {
-      const tabs = await browser.tabs.query({});
-      const existingTab = tabs.find((t) => t.url?.startsWith(dashboardBaseUrl));
-      if (existingTab?.id !== undefined) {
-        if (existingTab.url !== targetUrl) {
-          await browser.tabs.update(existingTab.id, { url: targetUrl, active: true });
-        } else {
-          await browser.tabs.update(existingTab.id, { active: true });
-        }
-        if (existingTab.windowId !== undefined) {
-          await browser.windows.update(existingTab.windowId, { focused: true });
-        }
-        return;
-      }
-    } catch (err) {
-      console.error('Error finding existing dashboard tab:', err);
-    }
-
-    try {
-      if (targetWindowId !== undefined) {
-        let windowTabs = await browser.tabs.query({ windowId: targetWindowId });
-        const isStartupMode = queryString.includes('mode=startup');
-
-        // Guard against startup navigation race conditions: if tab is still in early loading
-        // without URL populated, briefly wait for pendingUrl to settle
-        if (
-          isStartupMode &&
-          windowTabs.length === 1 &&
-          windowTabs[0].status === 'loading' &&
-          (!windowTabs[0].url || windowTabs[0].url === 'about:blank') &&
-          !(windowTabs[0] as { pendingUrl?: string }).pendingUrl
-        ) {
-          await new Promise((resolve) => setTimeout(resolve, 150));
-          windowTabs = await browser.tabs.query({ windowId: targetWindowId });
-        }
-
-        // Check if the window only has an initial blank/new tab on startup
-        const blankTab =
-          windowTabs.length === 1 &&
-          windowTabs[0].id !== undefined &&
-          isBlankStartupTab(windowTabs[0])
-            ? windowTabs[0]
-            : null;
-
-        if (blankTab?.id !== undefined) {
-          // Normal browser startup: smoothly replace the empty initial tab in-place
-          await browser.tabs.update(blankTab.id, {
-            url: targetUrl,
-            active: true,
-          });
-        } else if (isStartupMode) {
-          // The browser was launched for a targeted destination (e.g. Blizzard Battle.net link, chat app link, local PDF/HTML).
-          // Do NOT create a disruptive tab that steals foreground focus from the user's intended target!
-          console.log('PackTabs: Skipping startup restorer because browser was launched for a targeted webpage or document.');
-          return;
-        } else {
-          // User explicitly clicked the extension action icon or pressed shortcut: create new tab normally
-          await browser.tabs.create({
-            windowId: targetWindowId,
-            url: targetUrl,
-            active: true,
-          });
-        }
-      } else {
-        await browser.windows.create({
-          url: targetUrl,
-          type: 'normal',
-        });
-      }
-    } catch (err) {
-      console.error('Failed to create or update dashboard tab or window:', err);
-    }
-  }
-
-  // Handle extension action icon click -> open or focus dashboard
+  // Handle extension action icon click -> open or focus dashboard in the clicked window
   // Cross-browser compatibility: browser.action (Chrome / MV3) vs browser.browserAction (Firefox / MV2)
   const actionApi =
     (browser.action as typeof browser.action | undefined) ??
     (browser.browserAction as unknown as typeof browser.action | undefined);
   if (actionApi?.onClicked) {
-    actionApi.onClicked.addListener(() => {
-      void openOrFocusDashboard();
+    actionApi.onClicked.addListener((tab) => {
+      void openOrFocusDashboard('', tab?.windowId);
     });
   }
 
-  // Handle keyboard shortcut command -> open or focus dashboard
-  browser.commands.onCommand.addListener((command) => {
+  // Handle keyboard shortcut command -> open or focus dashboard in the active window
+  browser.commands.onCommand.addListener((command, tab) => {
     if (
       command === 'open_dashboard' ||
       command === '_execute_action' ||
       command === '_execute_browser_action'
     ) {
-      void openOrFocusDashboard();
+      void openOrFocusDashboard('', tab?.windowId);
     }
   });
 
@@ -414,12 +315,13 @@ export default defineBackground(() => {
         tabs?: TabItem[];
         tab?: TabItem;
       },
-      _sender
+      sender
     ) => {
       try {
+        const senderWindowId = sender?.tab?.windowId;
         switch (message.type) {
           case 'CAPTURE_TABS': {
-            const tabs = await captureCurrentWindow();
+            const tabs = await captureCurrentWindow(senderWindowId);
             const cleanTabs = deduplicateTabsByUrl(tabs);
 
             const newGroup: TabGroup = {
@@ -434,7 +336,7 @@ export default defineBackground(() => {
 
             const settings = await settingsStorage.getValue();
             if (settings.autoCloseAfterSave) {
-              await closeCurrentTabs();
+              await closeCurrentTabs(senderWindowId);
             }
 
             return { success: true, group: newGroup };
@@ -442,20 +344,20 @@ export default defineBackground(() => {
 
           case 'OPEN_TABS': {
             if (message.tabs) {
-              await openTabs(message.tabs);
+              await openTabs(message.tabs, senderWindowId);
             }
             return { success: true };
           }
 
           case 'OPEN_SINGLE_TAB': {
             if (message.tab) {
-              await openSingleTab(message.tab);
+              await openSingleTab(message.tab, false, senderWindowId);
             }
             return { success: true };
           }
 
           case 'CLOSE_CURRENT_TABS': {
-            await closeCurrentTabs();
+            await closeCurrentTabs(senderWindowId);
             return { success: true };
           }
 

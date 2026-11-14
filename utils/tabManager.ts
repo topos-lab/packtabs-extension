@@ -5,10 +5,10 @@ import { formatDefaultGroupName } from '~/utils/date';
  * Interface for tab management operations
  */
 export interface TabManager {
-  captureCurrentWindow(): Promise<TabItem[]>;
-  openTabs(tabs: TabItem[]): Promise<void>;
-  openSingleTab(tab: TabItem): Promise<void>;
-  closeCurrentTabs(): Promise<void>;
+  captureCurrentWindow(windowId?: number): Promise<TabItem[]>;
+  openTabs(tabs: TabItem[], windowId?: number): Promise<void>;
+  openSingleTab(tab: TabItem, inBackground?: boolean, windowId?: number): Promise<void>;
+  closeCurrentTabs(windowId?: number): Promise<void>;
 }
 
 /**
@@ -100,16 +100,173 @@ export function getFaviconUrl(pageUrl: string): string {
 }
 
 /**
- * Captures all tabs from the current browser window
+ * Resolves the window ID for the current execution context.
+ * Prefers the containing tab's windowId (when invoked from an extension tab such as the dashboard)
+ * to ensure multi-window isolation regardless of window focus changes, falling back to windows.getCurrent().
+ */
+export async function getCurrentWindowId(): Promise<number | undefined> {
+  if (typeof browser.tabs?.getCurrent === 'function') {
+    try {
+      const currentTab = await browser.tabs.getCurrent();
+      if (currentTab?.windowId !== undefined) {
+        return currentTab.windowId;
+      }
+    } catch {
+      // Ignore when called outside a tab context (e.g., background service worker or unit tests)
+    }
+  }
+
+  const currentWindow = await browser.windows.getCurrent();
+  return currentWindow.id;
+}
+
+/**
+ * Resolves the target normal browser window ID for launching or focusing the dashboard.
+ * Priority: explicit preferredWindowId (if normal) -> focused normal window -> last focused normal window -> first normal window.
+ */
+export async function resolveTargetWindowId(preferredWindowId?: number): Promise<number | undefined> {
+  const windows = await browser.windows.getAll();
+  const normalWindows = windows.filter((w) => !w.type || w.type === 'normal');
+  if (normalWindows.length === 0) {
+    return undefined;
+  }
+
+  if (preferredWindowId !== undefined) {
+    const preferredWin = normalWindows.find((w) => w.id === preferredWindowId);
+    if (preferredWin?.id !== undefined) {
+      return preferredWin.id;
+    }
+  }
+
+  const focusedWin = normalWindows.find((w) => w.focused);
+  if (focusedWin?.id !== undefined) {
+    return focusedWin.id;
+  }
+
+  if (typeof browser.windows?.getLastFocused === 'function') {
+    try {
+      const lastFocused = await browser.windows.getLastFocused();
+      if (lastFocused?.id !== undefined && normalWindows.some((w) => w.id === lastFocused.id)) {
+        return lastFocused.id;
+      }
+    } catch {
+      // Ignore if getLastFocused is unavailable or fails
+    }
+  }
+
+  return normalWindows[0]?.id;
+}
+
+/**
+ * Opens or switches to the PackTabs Dashboard tab in the target window.
+ * Existing dashboard lookup is scoped to the target window so clicking the extension icon
+ * in a second browser window never jumps back to an earlier window's dashboard.
+ */
+export async function openOrFocusDashboard(queryString = '', preferredWindowId?: number): Promise<void> {
+  const dashboardBaseUrl = browser.runtime.getURL('/dashboard.html');
+  const targetUrl = queryString ? `${dashboardBaseUrl}${queryString}` : dashboardBaseUrl;
+
+  // 1. Wait up to 2 seconds for a normal browser window to be ready (critical during startup or session restore)
+  let targetWindowId: number | undefined;
+  for (let attempt = 0; attempt < 8; attempt++) {
+    try {
+      targetWindowId = await resolveTargetWindowId(preferredWindowId);
+      if (targetWindowId !== undefined) {
+        break;
+      }
+    } catch {
+      // Windows API may not be ready during early startup phase
+    }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+
+  try {
+    const tabs = await browser.tabs.query(
+      targetWindowId !== undefined ? { windowId: targetWindowId } : {}
+    );
+    const existingTab = tabs.find((t) => t.url?.startsWith(dashboardBaseUrl));
+    if (existingTab?.id !== undefined) {
+      if (existingTab.url !== targetUrl) {
+        await browser.tabs.update(existingTab.id, { url: targetUrl, active: true });
+      } else {
+        await browser.tabs.update(existingTab.id, { active: true });
+      }
+      if (existingTab.windowId !== undefined) {
+        await browser.windows.update(existingTab.windowId, { focused: true });
+      }
+      return;
+    }
+  } catch (err) {
+    console.error('Error finding existing dashboard tab:', err);
+  }
+
+  try {
+    if (targetWindowId !== undefined) {
+      let windowTabs = await browser.tabs.query({ windowId: targetWindowId });
+      const isStartupMode = queryString.includes('mode=startup');
+
+      // Guard against startup navigation race conditions: if tab is still in early loading
+      // without URL populated, briefly wait for pendingUrl to settle
+      if (
+        isStartupMode &&
+        windowTabs.length === 1 &&
+        windowTabs[0].status === 'loading' &&
+        (!windowTabs[0].url || windowTabs[0].url === 'about:blank') &&
+        !(windowTabs[0] as { pendingUrl?: string }).pendingUrl
+      ) {
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        windowTabs = await browser.tabs.query({ windowId: targetWindowId });
+      }
+
+      // Check if the window only has an initial blank/new tab on startup
+      const blankTab =
+        windowTabs.length === 1 &&
+        windowTabs[0].id !== undefined &&
+        isBlankStartupTab(windowTabs[0])
+          ? windowTabs[0]
+          : null;
+
+      if (blankTab?.id !== undefined) {
+        // Normal browser startup: smoothly replace the empty initial tab in-place
+        await browser.tabs.update(blankTab.id, {
+          url: targetUrl,
+          active: true,
+        });
+      } else if (isStartupMode) {
+        // The browser was launched for a targeted destination (e.g. Blizzard Battle.net link, chat app link, local PDF/HTML).
+        // Do NOT create a disruptive tab that steals foreground focus from the user's intended target!
+        console.log('PackTabs: Skipping startup restorer because browser was launched for a targeted webpage or document.');
+        return;
+      } else {
+        // User explicitly clicked the extension action icon or pressed shortcut: create new tab in target window
+        await browser.tabs.create({
+          windowId: targetWindowId,
+          url: targetUrl,
+          active: true,
+        });
+      }
+    } else {
+      await browser.windows.create({
+        url: targetUrl,
+        type: 'normal',
+      });
+    }
+  } catch (err) {
+    console.error('Failed to create or update dashboard tab or window:', err);
+  }
+}
+
+/**
+ * Captures all tabs from the current (or specified) browser window
+ * @param windowId Optional explicit target window ID
  * @returns Array of TabItem objects representing the captured tabs
  */
-export async function captureCurrentWindow(): Promise<TabItem[]> {
+export async function captureCurrentWindow(windowId?: number): Promise<TabItem[]> {
   try {
-    // Get the current window
-    const currentWindow = await browser.windows.getCurrent();
+    const targetWindowId = windowId ?? (await browser.windows.getCurrent()).id;
 
-    // Query all tabs in the current window
-    const tabs = await browser.tabs.query({ windowId: currentWindow.id });
+    // Query all tabs in the target window
+    const tabs = await browser.tabs.query({ windowId: targetWindowId });
 
     // Map browser tabs to TabItem format, filtering out restricted URLs
     const tabItems: TabItem[] = tabs
@@ -134,12 +291,13 @@ export async function captureCurrentWindow(): Promise<TabItem[]> {
 }
 
 /**
- * Opens all tabs from a tab group in the current window
+ * Opens all tabs from a tab group in the current (or specified) window
  * @param tabs Array of TabItem objects to open
+ * @param windowId Optional explicit target window ID
  */
-export async function openTabs(tabs: TabItem[]): Promise<void> {
+export async function openTabs(tabs: TabItem[], windowId?: number): Promise<void> {
   try {
-    const currentWindow = await browser.windows.getCurrent();
+    const targetWindowId = windowId ?? (await browser.windows.getCurrent()).id;
 
     for (const tab of tabs) {
       if (!validateUrl(tab.url)) {
@@ -149,7 +307,7 @@ export async function openTabs(tabs: TabItem[]): Promise<void> {
 
       try {
         await browser.tabs.create({
-          windowId: currentWindow.id,
+          windowId: targetWindowId,
           url: tab.url,
           active: false,
         });
@@ -173,20 +331,25 @@ export async function openTabs(tabs: TabItem[]): Promise<void> {
 }
 
 /**
- * Opens a single tab in the current window
+ * Opens a single tab in the current (or specified) window
  * @param tab TabItem object to open
  * @param inBackground Whether to open in background without switching focus
+ * @param windowId Optional explicit target window ID
  */
-export async function openSingleTab(tab: TabItem, inBackground = false): Promise<void> {
+export async function openSingleTab(
+  tab: TabItem,
+  inBackground = false,
+  windowId?: number
+): Promise<void> {
   if (!validateUrl(tab.url)) {
     throw new InvalidUrlError(tab.url);
   }
 
   try {
-    const currentWindow = await browser.windows.getCurrent();
+    const targetWindowId = windowId ?? (await browser.windows.getCurrent()).id;
 
     await browser.tabs.create({
-      windowId: currentWindow.id,
+      windowId: targetWindowId,
       url: tab.url,
       active: !inBackground,
     });
@@ -199,20 +362,21 @@ export async function openSingleTab(tab: TabItem, inBackground = false): Promise
 }
 
 /**
- * Closes all tabs in the current window safely, creating a new empty tab first
+ * Closes all tabs in the current (or specified) window safely, creating a new empty tab first
  * to prevent the entire browser window from closing inadvertently.
+ * @param windowId Optional explicit target window ID
  */
-export async function closeCurrentTabs(): Promise<void> {
+export async function closeCurrentTabs(windowId?: number): Promise<void> {
   try {
-    const currentWindow = await browser.windows.getCurrent();
-    const tabs = await browser.tabs.query({ windowId: currentWindow.id });
+    const targetWindowId = windowId ?? (await browser.windows.getCurrent()).id;
+    const tabs = await browser.tabs.query({ windowId: targetWindowId });
 
     const tabIds = tabs.map((tab) => tab.id).filter((id): id is number => id !== undefined);
 
     if (tabIds.length > 0) {
       // Create a new blank tab first so the window does not close
       try {
-        await browser.tabs.create({ url: 'chrome://newtab/', windowId: currentWindow.id, active: true });
+        await browser.tabs.create({ url: 'chrome://newtab/', windowId: targetWindowId, active: true });
       } catch {
         // Ignore if tabs.create fails in headless test environment
       }
