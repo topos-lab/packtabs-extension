@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { tabGroupsStorage } from '../../types/Storage';
 import type { TabGroup } from '../../types/TabGroup';
-import { addTabToGroup, deleteTabFromGroup, deleteTabGroup, getTabGroups, moveTabBetweenGroups, saveTabGroup, updateTabGroup } from '../../utils/storage';
+import { addTabToGroup, clearWindowSessionTabs, deleteTabFromGroup, deleteTabGroup, getTabGroups, moveTabBetweenGroups, saveTabGroup, updateTabGroup } from '../../utils/storage';
 
 describe('Storage Service', () => {
   beforeEach(async () => {
@@ -284,6 +284,69 @@ describe('Storage Service', () => {
       const groups = await getTabGroups();
       expect(groups[0].tabs).toHaveLength(2);
       expect(groups[0].tabs[1].id).toBe('tab-new');
+    });
+
+    it('should return false and skip duplicate normalized URLs', async () => {
+      const group1: TabGroup = {
+        id: 'group-dup',
+        name: 'Group Dup',
+        createdAt: new Date(),
+        tabs: [{ id: 'tab-1', url: 'https://example.com/docs', title: 'Docs' }],
+        isHistory: false,
+      };
+
+      await saveTabGroup(group1);
+
+      const added = await addTabToGroup('group-dup', {
+        id: 'tab-dup',
+        url: 'https://EXAMPLE.com/docs/',
+        title: 'Docs Duplicate',
+      });
+
+      expect(added).toBe(false);
+      const groups = await getTabGroups();
+      expect(groups[0].tabs).toHaveLength(1);
+    });
+  });
+
+  describe('moveTabBetweenGroups deduplication', () => {
+    it('removes from source without duplicating identical URL in target', async () => {
+      await saveTabGroup({
+        id: 'src',
+        name: 'Source',
+        createdAt: new Date(),
+        tabs: [{ id: 't-src', url: 'https://example.com/', title: 'Example' }],
+        isHistory: false,
+      });
+      await saveTabGroup({
+        id: 'dst',
+        name: 'Dest',
+        createdAt: new Date(),
+        tabs: [{ id: 't-dst', url: 'https://example.com', title: 'Example Existing' }],
+        isHistory: false,
+      });
+
+      await moveTabBetweenGroups('src', 'dst', 't-src');
+
+      const groups = await getTabGroups();
+      expect(groups.find((g) => g.id === 'src')?.tabs).toHaveLength(0);
+      expect(groups.find((g) => g.id === 'dst')?.tabs).toHaveLength(1);
+    });
+  });
+
+  describe('clearWindowSessionTabs', () => {
+    it('removes only the specified window session entry', async () => {
+      const { activeSessionTabsStorage } = await import('../../types/Storage');
+      await activeSessionTabsStorage.setValue({
+        '10': [{ id: 't-1', url: 'https://one.com', title: 'One' }],
+        '20': [{ id: 't-2', url: 'https://two.com', title: 'Two' }],
+      });
+
+      await clearWindowSessionTabs(10);
+
+      const remaining = await activeSessionTabsStorage.getValue();
+      expect(remaining['10']).toBeUndefined();
+      expect(remaining['20']).toHaveLength(1);
     });
   });
 

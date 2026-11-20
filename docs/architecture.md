@@ -14,7 +14,7 @@ PackTabs is a high-performance, minimalist Chrome browser extension built with t
 - **Persistence Layer**:
   - `local:tabGroups`: Sharded tab groups stored in Chrome Local Storage (10MB capacity, eliminating Chrome Sync's 8KB per-item quota)
   - `sync:settings`: User preferences (e.g. `theme`, `autoCloseAfterSave`) synced across browser profiles via Chrome Sync Storage
-- **Testing**: Vitest 5.x, @vue/test-utils, fast-check 4.x (190+ unit and property tests)
+- **Testing**: Vitest 5.x, @vue/test-utils, fast-check 4.x (300+ unit and property tests)
 
 ## 3. Storage & Concurrency Architecture
 
@@ -24,7 +24,7 @@ In Chrome MV3, `chrome.storage.sync` enforces a strict 8,192-byte limit per stor
 
 ### 3.2 Concurrency & Mutex Queue
 
-All write operations (`saveTabGroup`, `updateTabGroup`, `deleteTabGroup`, `deleteTabFromGroup`) in `utils/storage.ts` are serialized through an in-memory mutex (`withLock`). This guarantees that concurrent modifications (e.g. rapid saving or asynchronous events) execute deterministically without race conditions or overwriting data.
+All write operations in `utils/storage.ts` (`saveTabGroup`, `saveHistoryTabGroup`, `updateTabGroup`, `deleteTabGroup`, `deleteTabFromGroup`, `moveTabBetweenGroups`, `addTabToGroup`), session tab updates (`withSessionLock`), and settings writes (`withSettingsLock`) are serialized through named mutexes backed by `navigator.locks` (with in-memory promise queue fallback in test environments), preventing race conditions across the service worker and multiple extension tabs.
 
 ### 3.3 Immutability & Deep Cloning
 
@@ -61,41 +61,37 @@ When concurrent operations or quota errors occur, `resolveSyncConflict` provides
 - Overrides `text/plain` with non-URL text to prevent Chrome from opening Split View or side-by-side tabs.
 - Cross-platform cursor: uses standard `cursor-move` (✥) across tab item rows on both Windows and macOS.
 
-### 4.4 Theme-Aware Multi-Line Tooltips (`Tooltip.vue`)
+### 4.4 Theme-Aware Overflow Tooltips (`Tooltip.vue`)
 
-- Replaces native un-styleable browser `title` attributes that render as solid black bubbles on Windows 11 Chrome.
-- Built with Radix Vue (`TooltipRoot`, `TooltipTrigger`, `TooltipPortal`, `TooltipContent`).
-- Supports multi-line rendering via newline characters `\n`, string arrays `string[]`, and custom `#content` template slots.
+- Replaces native un-styleable browser `title` attributes where needed with Radix Vue (`TooltipRoot`, `TooltipTrigger`, `TooltipPortal`, `TooltipContent`).
+- On tab rows (`TabItemRow.vue` and `StartupRestorer.vue`), tooltips appear only when the title overflows, showing the full title and URL without obscuring neighboring rows; operational hints live concisely at the card footer/empty state.
 - Adapts instantly to Light mode (pure white card with subtle gray border) and Dark mode (dark card with dark border).
 
 ### 4.5 Keyboard Shortcuts & MV3 Commands
 
-- Manifest V3 command: `_execute_action` mapped to `Alt+Shift+K` (macOS: `Command+Shift+K`), avoiding conflicts with Chrome internal shortcuts.
-- About modal queries real-time status with `browser.commands.getAll()`.
-- Automatically refreshes shortcut binding state on window focus (`window.addEventListener('focus', loadShortcut)`).
+- Manifest V3 command: `open_dashboard` mapped to `Alt+Shift+K` (macOS: `Command+Shift+K`), avoiding conflicts with Chrome internal shortcuts.
+- Settings modal queries real-time status with `browser.commands.getAll()` and refreshes when opened.
 
 ### 4.6 Date Formatting & Performance Singleton (`utils/date.ts`)
 
 - Replaces repeated instantiations of `Intl.DateTimeFormat` across list and card components with cached singleton formatters (`formatFullDateTime` and `formatDefaultGroupName`).
-- Automatically tracks `navigator.language` updates and falls back to ISO-like YYYY-MM-DD HH:mm on legacy or error conditions.
+- Automatically tracks active locale changes and falls back to ISO-like YYYY-MM-DD HH:mm on legacy or error conditions.
 
 ### 4.7 Startup Session Restorer (`components/StartupRestorer.vue`)
 
 - **Dedicated 2-Column Restorer View**:
-  - Automatically opened on browser cold start (`browser.runtime.onStartup`) when enabled via `openOnStartup` in `sync:settings`.
+  - Automatically opened on browser cold start (`browser.runtime.onStartup` / `browser.storage.session`) when enabled via `openOnStartup` in `sync:settings`.
   - **Left Column**: Saved Groups (Workspaces) with tab count, instant "Open All" action, and individual tab click launchers.
-  - **Right Column**: History Snapshots with prominent highlight on the **Last Closed Session** ("⭐ 上次关闭的会话") for 1-click resumption.
+  - **Right Column**: History Snapshots with prominent highlight on the **Last Closed Session** ("上次关闭的会话" / "Last Closed Session") for 1-click resumption.
 - **Pure "Click & Go" Mental Model**:
-  - Intentionally strips away CRUD/editing/reorganizing controls to minimize cognitive friction during browser startup.
+  - Intentionally strips away CRUD/editing/reorganizing controls and dashboard navigation links to minimize cognitive friction during browser startup.
   - Includes unified search filtering across both saved groups and history snapshots simultaneously.
-  - Provides a clean "Open Full Dashboard" button to transition to management view on demand.
 
 ## 5. Service Worker & Messaging Architecture
 
-- **Stateless Service Worker**: Follows Chrome MV3 lifecycle guidelines without persistent global variables across worker sleep cycles.
-- **Session Tabs Disk Sync**: Synchronizes active tab snapshots to disk on tab modifications with a 400ms debounce to prevent high-frequency write churn.
-- **Cold Start Restoration (`browser.runtime.onStartup`)**:
+- **Stateless Service Worker**: Follows Chrome MV3 lifecycle guidelines without relying on persistent global variables across worker sleep cycles.
+- **Session Tabs Disk Sync**: Synchronizes active tab snapshots to disk on tab modifications with a 150ms debounce to prevent high-frequency write churn, cancelling pending syncs when a window closes.
+- **Cold Start Restoration (`browser.runtime.onStartup` & `browser.storage.session`)**:
   - Automatically recovers uncommitted session tabs on browser startup.
   - Inspects `sync:settings.openOnStartup` to conditionally launch the Startup Restorer tab (`/dashboard.html?mode=startup`).
-- **Polyfill-Compliant Messaging**: Background message listeners use async functions directly returning Promise resolutions, strictly adhering to WXT and `webextension-polyfill` patterns.
-- **Optimistic State Rollback**: Pinia store actions take proxy-safe immutable snapshots (`cloneTabGroups`) before mutating state, automatically restoring memory state if persistent writes reject.
+- **Atomic State Persistence**: Pinia store actions persist through storage mutexes before updating reactive state, keeping background and multi-window extension pages synchronized via storage watchers.

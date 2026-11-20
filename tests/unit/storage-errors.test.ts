@@ -153,12 +153,11 @@ describe('Storage Error Handling', () => {
         },
       });
 
-      // Storage returns the corrupted data as-is
-      // In a real implementation, we might want validation
+      // Storage normalizes corrupted/null tabs to an empty array
       const groups = await getTabGroups();
 
       expect(groups).toHaveLength(1);
-      expect(groups[0].tabs).toBeNull();
+      expect(groups[0].tabs).toEqual([]);
     });
 
     it('should handle empty storage object', async () => {

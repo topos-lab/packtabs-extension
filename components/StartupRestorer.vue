@@ -18,14 +18,20 @@
   import { Button } from '~/components/ui/button';
   import { Card, CardContent, CardHeader } from '~/components/ui/card';
   import { Input } from '~/components/ui/input';
-  import { useI18n } from '~/composables/useI18n';
+  import { Tooltip } from '~/components/ui/tooltip';
+  import { formatTabsCount, useI18n } from '~/composables/useI18n';
   import { useTheme } from '~/composables/useTheme';
   import { useToast } from '~/composables/useToast';
   import { useTabStore } from '~/stores/useTabStore';
   import type { TabGroup, TabItem } from '~/types/TabGroup';
-  import { formatFullDateTime, sortGroupsByDateDesc } from '~/utils/date';
+  import { formatFullDateTime } from '~/utils/date';
   import { normalizeTabs } from '~/utils/storage';
-  import { deduplicateTabsByUrl, getFaviconUrl, openSingleTab, openTabs } from '~/utils/tabManager';
+  import { deduplicateTabsByUrl, getDomain, getFaviconUrl, openSingleTab, openTabs } from '~/utils/tabManager';
+
+  interface PreparedRestorerEntry {
+    group: TabGroup;
+    tabs: TabItem[];
+  }
 
   const tabStore = useTabStore();
   const toast = useToast();
@@ -35,6 +41,20 @@
   const searchQuery = ref('');
   const expandedGroupIds = ref<Set<string>>(new Set());
   const showSettingsModal = ref(false);
+  const faviconErrors = ref<Record<string, boolean>>({});
+  const overflowingTabIds = ref<Record<string, boolean>>({});
+
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/i.test(navigator.userAgent);
+
+  function handleFaviconError(tabKey: string) {
+    faviconErrors.value[tabKey] = true;
+  }
+
+  function checkTitleOverflow(tabKey: string, event: Event) {
+    const btn = event.currentTarget as HTMLElement | null;
+    const titleEl = btn?.querySelector('[data-tab-title]') as HTMLElement | null;
+    overflowingTabIds.value[tabKey] = Boolean(titleEl && titleEl.scrollWidth > titleEl.clientWidth);
+  }
 
   const logoUrl =
     typeof browser !== 'undefined' && browser.runtime?.getURL ? browser.runtime.getURL('/icon/48.png') : '/icon/48.png';
@@ -47,52 +67,40 @@
     }
   }
 
-  function getGroupTabs(group: TabGroup): TabItem[] {
-    return deduplicateTabsByUrl(normalizeTabs(group.tabs));
-  }
+  function prepareEntries(groups: TabGroup[], isHistory: boolean): PreparedRestorerEntry[] {
+    const q = searchQuery.value.toLowerCase().trim();
+    const result: PreparedRestorerEntry[] = [];
 
-  function getDomain(url?: string): string {
-    if (!url) {return '';}
-    try {
-      const parsed = new URL(url);
-      return parsed.hostname.replace(/^www\./, '');
-    } catch {
-      return '';
+    for (const group of groups) {
+      const tabs = deduplicateTabsByUrl(normalizeTabs(group.tabs));
+      if (!q) {
+        result.push({ group, tabs });
+        continue;
+      }
+      const title = isHistory ? formatFullDateTime(group.createdAt) : group.name || '';
+      const matchName = title.toLowerCase().includes(q);
+      const matchTabs = tabs.some(
+        (tab) => tab.title.toLowerCase().includes(q) || tab.url.toLowerCase().includes(q)
+      );
+      if (matchName || matchTabs) {
+        result.push({ group, tabs });
+      }
     }
+
+    return result;
   }
 
-  // Filter and sort Saved Groups
-  const filteredSavedGroups = computed(() => {
-    const sorted = sortGroupsByDateDesc(tabStore.namedGroups);
-    if (!searchQuery.value.trim()) {return sorted;}
-    const q = searchQuery.value.toLowerCase().trim();
-    return sorted.filter((g) => {
-      const matchName = (g.name || '').toLowerCase().includes(q);
-      const tabs = getGroupTabs(g);
-      const matchTabs = tabs.some((t) => t.title.toLowerCase().includes(q) || t.url.toLowerCase().includes(q));
-      return matchName || matchTabs;
-    });
-  });
-
-  // Filter and sort History Groups
-  const filteredHistoryGroups = computed(() => {
-    const sorted = sortGroupsByDateDesc(tabStore.historyGroups);
-    if (!searchQuery.value.trim()) {return sorted;}
-    const q = searchQuery.value.toLowerCase().trim();
-    return sorted.filter((g) => {
-      const defaultName = formatFullDateTime(g.createdAt);
-      const matchName = defaultName.toLowerCase().includes(q);
-      const tabs = getGroupTabs(g);
-      const matchTabs = tabs.some((t) => t.title.toLowerCase().includes(q) || t.url.toLowerCase().includes(q));
-      return matchName || matchTabs;
-    });
-  });
+  const filteredSavedEntries = computed(() => prepareEntries(tabStore.namedGroups, false));
+  const filteredHistoryEntries = computed(() => prepareEntries(tabStore.historyGroups, true));
 
   // Check if a history group is the most recent one
   const latestHistoryGroupId = computed(() => {
-    const sorted = sortGroupsByDateDesc(tabStore.historyGroups);
-    return sorted.length > 0 ? sorted[0].id : null;
+    return tabStore.historyGroups.length > 0 ? tabStore.historyGroups[0].id : null;
   });
+
+  function formatRemainingLabel(remaining: number): string {
+    return remaining === 1 ? t('remainingTabSingle') : t('remainingTabsCount', { count: remaining });
+  }
 
   async function closeCurrentPage() {
     try {
@@ -118,8 +126,7 @@
     }
   }
 
-  async function handleRestoreGroup(group: TabGroup) {
-    const tabs = getGroupTabs(group);
+  async function handleRestoreGroup(tabs: TabItem[]) {
     if (tabs.length === 0) {return;}
     try {
       await openTabs(tabs);
@@ -133,8 +140,7 @@
     }
   }
 
-  async function handleTabClick(event: MouseEvent, tab: TabItem) {
-    const inBackground = event.ctrlKey || event.metaKey || event.shiftKey;
+  async function openTabFromRestorer(tab: TabItem, inBackground: boolean) {
     try {
       await openSingleTab(tab, inBackground);
       if (inBackground) {
@@ -150,6 +156,18 @@
         detail: t('openedBackgroundFailed'),
         life: 3000,
       });
+    }
+  }
+
+  async function handleTabClick(event: MouseEvent, tab: TabItem) {
+    const inBackground = event.ctrlKey || event.metaKey || event.shiftKey;
+    await openTabFromRestorer(tab, inBackground);
+  }
+
+  async function handleTabMiddleClick(event: MouseEvent, tab: TabItem) {
+    if (event.button === 1) {
+      event.preventDefault();
+      await openTabFromRestorer(tab, true);
     }
   }
 </script>
@@ -179,6 +197,7 @@
             class="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500 pointer-events-none" />
           <Input
             v-model="searchQuery"
+            :aria-label="t('searchWorkspacesOrHistory')"
             :placeholder="t('searchWorkspacesOrHistory')"
             class="h-8 pl-8 text-xs bg-zinc-50 dark:bg-zinc-800/60 border-zinc-200 dark:border-zinc-700/80 text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-zinc-900 focus:border-indigo-500" />
         </div>
@@ -187,16 +206,18 @@
         <div class="flex items-center gap-2">
           <button
             type="button"
-            class="h-8 w-8 flex items-center justify-center rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            class="h-8 w-8 flex items-center justify-center rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors cursor-pointer"
             :title="t('settings')"
+            :aria-label="t('settings')"
             @click="showSettingsModal = true">
             <Settings class="h-4 w-4" />
           </button>
 
           <button
             type="button"
-            class="h-8 w-8 flex items-center justify-center rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            class="h-8 w-8 flex items-center justify-center rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors cursor-pointer"
             :title="themeTooltip"
+            :aria-label="themeTooltip"
             @click="cycleTheme">
             <Sun v-if="theme === 'light'" class="h-4 w-4 text-amber-500" />
             <Moon v-else-if="theme === 'dark'" class="h-4 w-4 text-zinc-100" />
@@ -221,6 +242,7 @@
           class="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500 pointer-events-none" />
         <Input
           v-model="searchQuery"
+          :aria-label="t('searchWorkspacesOrHistory')"
           :placeholder="t('searchWorkspacesOrHistory')"
           class="h-8 pl-8 text-xs bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700" />
       </div>
@@ -242,13 +264,13 @@
               </h2>
             </div>
             <Badge variant="secondary" class="text-[11px] font-normal px-2 py-0.5">
-              {{ filteredSavedGroups.length }}
+              {{ filteredSavedEntries.length }}
             </Badge>
           </div>
 
           <!-- Empty State -->
           <div
-            v-if="filteredSavedGroups.length === 0"
+            v-if="filteredSavedEntries.length === 0"
             class="p-8 text-center rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/40 text-xs text-zinc-400 dark:text-zinc-500">
             <Folder class="h-8 w-8 mx-auto mb-2 text-zinc-300 dark:text-zinc-600 opacity-60" />
             <p>{{ t('noSavedGroupsInStartup') }}</p>
@@ -257,7 +279,7 @@
           <!-- Saved Groups Cards List -->
           <div v-else class="space-y-3">
             <Card
-              v-for="group in filteredSavedGroups"
+              v-for="{ group, tabs } in filteredSavedEntries"
               :key="group.id"
               class="border border-zinc-200/90 dark:border-zinc-800/90 shadow-2xs hover:shadow-xs transition-shadow bg-white dark:bg-zinc-900 overflow-hidden">
               <CardHeader class="p-4 pb-3 flex flex-row items-center justify-between gap-3 space-y-0">
@@ -267,7 +289,7 @@
                       {{ group.name || t('savedGroupFallback') }}
                     </h3>
                     <Badge variant="secondary" class="text-[10px] px-1.5 py-0.5 shrink-0">
-                      {{ t('tabsCount', { count: getGroupTabs(group).length }) }}
+                      {{ formatTabsCount(tabs.length) }}
                     </Badge>
                   </div>
                 </div>
@@ -276,7 +298,8 @@
                 <Button
                   size="sm"
                   class="h-7 px-3 text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 cursor-pointer shadow-2xs"
-                  @click="handleRestoreGroup(group)">
+                  :disabled="tabs.length === 0"
+                  @click="handleRestoreGroup(tabs)">
                   <ExternalLink class="h-3 w-3 mr-1.5" />
                   <span>{{ t('openAll') }}</span>
                 </Button>
@@ -285,45 +308,55 @@
               <!-- Tabs Preview -->
               <CardContent class="p-3 pt-0">
                 <div class="space-y-1">
-                  <!-- First 4 Tabs (or all if expanded) -->
-                  <div
-                    v-for="tab in expandedGroupIds.has(group.id)
-                      ? getGroupTabs(group)
-                      : getGroupTabs(group).slice(0, 4)"
+                  <Tooltip
+                    v-for="tab in expandedGroupIds.has(group.id) ? tabs : tabs.slice(0, 4)"
                     :key="tab.id"
-                    class="group/tab flex items-center justify-between py-1 px-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors cursor-pointer select-none"
-                    @click="handleTabClick($event, tab)">
-                    <div class="flex items-center gap-2 min-w-0 flex-1 mr-2">
-                      <div class="h-3.5 w-3.5 shrink-0 flex items-center justify-center">
-                        <img
-                          v-if="tab.faviconUrl || getFaviconUrl(tab.url)"
-                          :src="tab.faviconUrl || getFaviconUrl(tab.url)"
-                          class="h-3.5 w-3.5 rounded-2xs object-contain"
-                          alt=""
-                          loading="lazy">
-                        <Globe v-else class="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
-                      </div>
-                      <span
-                        class="text-xs text-zinc-700 dark:text-zinc-300 group-hover/tab:text-indigo-600 dark:group-hover/tab:text-indigo-400 truncate transition-colors">
-                        {{ tab.title || t('untitled') }}
+                    :disabled="!overflowingTabIds[`saved:${tab.id}`]"
+                    :content="[tab.title || t('untitled'), tab.url]"
+                    side="top"
+                    :delay-duration="350"
+                  >
+                    <button
+                      type="button"
+                      class="group/tab w-full text-left flex items-center justify-between py-1 px-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors cursor-pointer"
+                      @mouseenter="checkTitleOverflow(`saved:${tab.id}`, $event)"
+                      @focus="checkTitleOverflow(`saved:${tab.id}`, $event)"
+                      @click="handleTabClick($event, tab)"
+                      @auxclick="handleTabMiddleClick($event, tab)">
+                      <span class="flex items-center gap-2 min-w-0 flex-1 mr-2">
+                        <span class="h-3.5 w-3.5 shrink-0 flex items-center justify-center">
+                          <img
+                            v-if="!faviconErrors[`saved:${tab.id}`] && (tab.faviconUrl || getFaviconUrl(tab.url))"
+                            :src="tab.faviconUrl || getFaviconUrl(tab.url)"
+                            class="h-3.5 w-3.5 rounded-2xs object-contain"
+                            alt=""
+                            loading="lazy"
+                            @error="handleFaviconError(`saved:${tab.id}`)">
+                          <Globe v-else class="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
+                        </span>
+                        <span
+                          data-tab-title
+                          class="text-xs text-zinc-700 dark:text-zinc-300 group-hover/tab:text-indigo-600 dark:group-hover/tab:text-indigo-400 truncate transition-colors">
+                          {{ tab.title || t('untitled') }}
+                        </span>
                       </span>
-                    </div>
-                    <span class="text-[10px] text-zinc-500 dark:text-zinc-400 shrink-0 hidden sm:inline">
-                      {{ getDomain(tab.url) }}
-                    </span>
-                  </div>
+                      <span class="text-[10px] text-zinc-500 dark:text-zinc-400 shrink-0 hidden sm:inline">
+                        {{ getDomain(tab.url) }}
+                      </span>
+                    </button>
+                  </Tooltip>
 
                   <!-- Expand / Collapse More Tabs Button -->
                   <button
-                    v-if="getGroupTabs(group).length > 4"
+                    v-if="tabs.length > 4"
                     type="button"
-                    class="w-full text-center py-1 mt-1 text-[11px] font-medium text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
+                    class="w-full text-center py-1 mt-1 text-[11px] font-medium text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded transition-colors cursor-pointer"
                     @click="toggleExpand(group.id)">
                     <span v-if="!expandedGroupIds.has(group.id)">
-                      {{ t('remainingTabsCount', { count: getGroupTabs(group).length - 4 }) }}
+                      {{ formatRemainingLabel(tabs.length - 4) }}
                     </span>
                     <span v-else>
-                      {{ t('close') }}
+                      {{ t('showLess') }}
                     </span>
                   </button>
                 </div>
@@ -345,13 +378,13 @@
               </h2>
             </div>
             <Badge variant="secondary" class="text-[11px] font-normal px-2 py-0.5">
-              {{ filteredHistoryGroups.length }}
+              {{ filteredHistoryEntries.length }}
             </Badge>
           </div>
 
           <!-- Empty State -->
           <div
-            v-if="filteredHistoryGroups.length === 0"
+            v-if="filteredHistoryEntries.length === 0"
             class="p-8 text-center rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/40 text-xs text-zinc-400 dark:text-zinc-500">
             <Clock class="h-8 w-8 mx-auto mb-2 text-zinc-300 dark:text-zinc-600 opacity-60" />
             <p>{{ t('noHistoryGroupsInStartup') }}</p>
@@ -360,7 +393,7 @@
           <!-- History Snapshots Cards List -->
           <div v-else class="space-y-3">
             <Card
-              v-for="group in filteredHistoryGroups"
+              v-for="{ group, tabs } in filteredHistoryEntries"
               :key="group.id"
               class="border shadow-2xs hover:shadow-xs transition-all overflow-hidden"
               :class="[
@@ -384,7 +417,7 @@
                     </h3>
 
                     <Badge variant="secondary" class="text-[10px] px-1.5 py-0.5 shrink-0">
-                      {{ t('tabsCount', { count: getGroupTabs(group).length }) }}
+                      {{ formatTabsCount(tabs.length) }}
                     </Badge>
                   </div>
                 </div>
@@ -392,13 +425,15 @@
                 <!-- Primary Action Button: Restore Session or Open All -->
                 <Button
                   size="sm"
+                  :variant="group.id === latestHistoryGroupId ? 'default' : 'outline'"
                   class="h-7 px-3 text-xs font-medium shrink-0 cursor-pointer shadow-2xs"
                   :class="[
                     group.id === latestHistoryGroupId
                       ? 'bg-indigo-600 hover:bg-indigo-700 text-white ring-2 ring-indigo-500/20'
-                      : 'bg-zinc-800 hover:bg-zinc-900 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900',
+                      : '',
                   ]"
-                  @click="handleRestoreGroup(group)">
+                  :disabled="tabs.length === 0"
+                  @click="handleRestoreGroup(tabs)">
                   <ExternalLink class="h-3 w-3 mr-1.5" />
                   <span>{{ group.id === latestHistoryGroupId ? t('restoreThisSession') : t('openAll') }}</span>
                 </Button>
@@ -407,45 +442,55 @@
               <!-- Tabs Preview -->
               <CardContent class="p-3 pt-0">
                 <div class="space-y-1">
-                  <!-- First 4 Tabs (or all if expanded) -->
-                  <div
-                    v-for="tab in expandedGroupIds.has(group.id)
-                      ? getGroupTabs(group)
-                      : getGroupTabs(group).slice(0, 4)"
+                  <Tooltip
+                    v-for="tab in expandedGroupIds.has(group.id) ? tabs : tabs.slice(0, 4)"
                     :key="tab.id"
-                    class="group/tab flex items-center justify-between py-1 px-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors cursor-pointer select-none"
-                    @click="handleTabClick($event, tab)">
-                    <div class="flex items-center gap-2 min-w-0 flex-1 mr-2">
-                      <div class="h-3.5 w-3.5 shrink-0 flex items-center justify-center">
-                        <img
-                          v-if="tab.faviconUrl || getFaviconUrl(tab.url)"
-                          :src="tab.faviconUrl || getFaviconUrl(tab.url)"
-                          class="h-3.5 w-3.5 rounded-2xs object-contain"
-                          alt=""
-                          loading="lazy">
-                        <Globe v-else class="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
-                      </div>
-                      <span
-                        class="text-xs text-zinc-700 dark:text-zinc-300 group-hover/tab:text-indigo-600 dark:group-hover/tab:text-indigo-400 truncate transition-colors">
-                        {{ tab.title || t('untitled') }}
+                    :disabled="!overflowingTabIds[`history:${tab.id}`]"
+                    :content="[tab.title || t('untitled'), tab.url]"
+                    side="top"
+                    :delay-duration="350"
+                  >
+                    <button
+                      type="button"
+                      class="group/tab w-full text-left flex items-center justify-between py-1 px-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors cursor-pointer"
+                      @mouseenter="checkTitleOverflow(`history:${tab.id}`, $event)"
+                      @focus="checkTitleOverflow(`history:${tab.id}`, $event)"
+                      @click="handleTabClick($event, tab)"
+                      @auxclick="handleTabMiddleClick($event, tab)">
+                      <span class="flex items-center gap-2 min-w-0 flex-1 mr-2">
+                        <span class="h-3.5 w-3.5 shrink-0 flex items-center justify-center">
+                          <img
+                            v-if="!faviconErrors[`history:${tab.id}`] && (tab.faviconUrl || getFaviconUrl(tab.url))"
+                            :src="tab.faviconUrl || getFaviconUrl(tab.url)"
+                            class="h-3.5 w-3.5 rounded-2xs object-contain"
+                            alt=""
+                            loading="lazy"
+                            @error="handleFaviconError(`history:${tab.id}`)">
+                          <Globe v-else class="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
+                        </span>
+                        <span
+                          data-tab-title
+                          class="text-xs text-zinc-700 dark:text-zinc-300 group-hover/tab:text-indigo-600 dark:group-hover/tab:text-indigo-400 truncate transition-colors">
+                          {{ tab.title || t('untitled') }}
+                        </span>
                       </span>
-                    </div>
-                    <span class="text-[10px] text-zinc-500 dark:text-zinc-400 shrink-0 hidden sm:inline">
-                      {{ getDomain(tab.url) }}
-                    </span>
-                  </div>
+                      <span class="text-[10px] text-zinc-500 dark:text-zinc-400 shrink-0 hidden sm:inline">
+                        {{ getDomain(tab.url) }}
+                      </span>
+                    </button>
+                  </Tooltip>
 
                   <!-- Expand / Collapse More Tabs Button -->
                   <button
-                    v-if="getGroupTabs(group).length > 4"
+                    v-if="tabs.length > 4"
                     type="button"
-                    class="w-full text-center py-1 mt-1 text-[11px] font-medium text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
+                    class="w-full text-center py-1 mt-1 text-[11px] font-medium text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded transition-colors cursor-pointer"
                     @click="toggleExpand(group.id)">
                     <span v-if="!expandedGroupIds.has(group.id)">
-                      {{ t('remainingTabsCount', { count: getGroupTabs(group).length - 4 }) }}
+                      {{ formatRemainingLabel(tabs.length - 4) }}
                     </span>
                     <span v-else>
-                      {{ t('close') }}
+                      {{ t('showLess') }}
                     </span>
                   </button>
                 </div>
@@ -460,7 +505,7 @@
     <footer
       class="mt-auto border-t border-zinc-200/60 dark:border-zinc-800/60 py-3 bg-white/50 dark:bg-zinc-900/50 text-center">
       <p class="text-[11px] text-zinc-400 dark:text-zinc-500">
-        {{ t('startupTip') }}
+        {{ isMac ? t('startupTipMac') : t('startupTip') }}
       </p>
     </footer>
 

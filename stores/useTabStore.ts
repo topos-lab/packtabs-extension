@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
-import { activeSessionTabsStorage, tabGroupsStorage } from '~/types/Storage';
+import { t } from '~/composables/useI18n';
+import { tabGroupsStorage } from '~/types/Storage';
 import type { TabGroup, TabItem } from '~/types/TabGroup';
 import { sortGroupsByDateDesc } from '~/utils/date';
 import {
@@ -13,11 +14,17 @@ import {
   getTabsSignature,
   moveTabBetweenGroups as moveTabBetweenGroupsInStorage,
   normalizeTabs,
+  removeMatchingSessionTabs,
   saveTabGroup as saveTabGroupToStorage,
   StorageQuotaExceededError,
   updateTabGroup as updateTabGroupInStorage,
 } from '~/utils/storage';
-import { captureCurrentWindow, deduplicateTabsByUrl, TabPermissionDeniedError } from '~/utils/tabManager';
+import {
+  captureCurrentWindow,
+  deduplicateTabsByUrl,
+  InvalidUrlError,
+  TabPermissionDeniedError,
+} from '~/utils/tabManager';
 
 /**
  * Optional error handler that can be registered from the UI
@@ -26,6 +33,22 @@ let errorHandler: ((error: Error) => void) | null = null;
 
 export function setStoreErrorHandler(handler: (error: Error) => void) {
   errorHandler = handler;
+}
+
+/**
+ * Maps domain/storage errors to localized user-facing error messages.
+ */
+export function getLocalizedErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof StorageQuotaExceededError) {
+    return t('storageQuotaError');
+  }
+  if (error instanceof TabPermissionDeniedError) {
+    return t('permissionDeniedError');
+  }
+  if (error instanceof InvalidUrlError) {
+    return t('invalidUrlError');
+  }
+  return error instanceof Error && error.message ? error.message : fallback;
 }
 
 function handleError(error: unknown, defaultMessage: string): never {
@@ -41,17 +64,7 @@ function handleError(error: unknown, defaultMessage: string): never {
 }
 
 /**
- * Proxy-safe deep clone for reactive tab groups array (avoids DataCloneError)
- */
-function cloneTabGroups(groups: TabGroup[]): TabGroup[] {
-  return groups.map((g) => ({
-    ...g,
-    tabs: (g.tabs || []).map((t) => ({ ...t })),
-  }));
-}
-
-/**
- * Pinia store for managing tab groups with reactive state and optimistic local updates
+ * Pinia store for managing tab groups with reactive state synced to storage
  */
 export const useTabStore = defineStore('tabs', () => {
   // State
@@ -86,7 +99,7 @@ export const useTabStore = defineStore('tabs', () => {
       tabGroupsStorage.watch((newVal) => {
         if (newVal) {
           tabGroups.value = sortGroupsByDateDesc(
-            Object.values(newVal).map((stored) => deserializeTabGroup(stored))
+            Object.values(newVal ?? {}).map((stored) => deserializeTabGroup(stored))
           );
         }
       });
@@ -126,7 +139,7 @@ export const useTabStore = defineStore('tabs', () => {
 
       await saveTabGroupToStorage(newGroup);
 
-      // Optimistic local state update (prepend to list)
+      // Update local state immediately
       const existingIdx = tabGroups.value.findIndex((g) => g.id === newGroup.id);
       if (existingIdx >= 0) {
         tabGroups.value[existingIdx] = newGroup;
@@ -149,14 +162,12 @@ export const useTabStore = defineStore('tabs', () => {
   }
 
   /**
-   * Updates an existing tab group with optimistic local update and rollback on failure
+   * Updates an existing tab group in storage and reflects changes locally on success
    */
   async function updateGroup(id: string, updates: Partial<TabGroup>): Promise<void> {
-    const previousGroups = cloneTabGroups(tabGroups.value);
     try {
       await updateTabGroupInStorage(id, updates);
 
-      // Optimistic update
       const idx = tabGroups.value.findIndex((g) => g.id === id);
       if (idx >= 0) {
         tabGroups.value[idx] = {
@@ -169,7 +180,6 @@ export const useTabStore = defineStore('tabs', () => {
         await loadGroups();
       }
     } catch (error) {
-      tabGroups.value = previousGroups;
       if (error instanceof StorageQuotaExceededError) {
         handleError(error, 'Storage quota exceeded. Cannot update tab group.');
       } else {
@@ -179,58 +189,35 @@ export const useTabStore = defineStore('tabs', () => {
   }
 
   /**
-   * Deletes a tab group with optimistic local update and rollback on failure
+   * Deletes a tab group from storage and cleans up matching pending session tabs
    */
   async function deleteGroup(id: string): Promise<void> {
-    const previousGroups = cloneTabGroups(tabGroups.value);
-    const previousSelectedId = selectedGroupId.value;
     try {
+      const targetGroup = tabGroups.value.find((g) => g.id === id);
       await deleteTabGroupFromStorage(id);
 
-      // Optimistic update
       tabGroups.value = tabGroups.value.filter((g) => g.id !== id);
 
       if (selectedGroupId.value === id) {
         selectedGroupId.value = null;
       }
 
-      // Clean up any pending active session tabs matching the deleted group
-      const deletedGroup = previousGroups.find((g) => g.id === id);
-      if (deletedGroup?.isHistory && deletedGroup.tabs) {
-        const deletedSig = getTabsSignature(deletedGroup.tabs);
-        try {
-          const sessionMap = await activeSessionTabsStorage.getValue();
-          let modified = false;
-          const updated = { ...sessionMap };
-          for (const [winId, tabs] of Object.entries(sessionMap)) {
-            if (getTabsSignature(tabs) === deletedSig) {
-              delete updated[winId];
-              modified = true;
-            }
-          }
-          if (modified) {
-            await activeSessionTabsStorage.setValue(updated);
-          }
-        } catch {
-          // Non-critical session cleanup
-        }
+      // Clean up any pending active session tabs matching the deleted history group
+      if (targetGroup?.isHistory && targetGroup.tabs) {
+        await removeMatchingSessionTabs(getTabsSignature(targetGroup.tabs));
       }
     } catch (error) {
-      tabGroups.value = previousGroups;
-      selectedGroupId.value = previousSelectedId;
       handleError(error, 'Failed to delete tab group');
     }
   }
 
   /**
-   * Deletes a single tab from a group with optimistic local update and rollback on failure
+   * Deletes a single tab from a group in storage and updates local state on success
    */
   async function deleteTab(groupId: string, tabId: string): Promise<void> {
-    const previousGroups = cloneTabGroups(tabGroups.value);
     try {
       await deleteTabFromGroupInStorage(groupId, tabId);
 
-      // Optimistic update
       const group = tabGroups.value.find((g) => g.id === groupId);
       if (group) {
         const rawTabs = normalizeTabs(group.tabs);
@@ -238,7 +225,6 @@ export const useTabStore = defineStore('tabs', () => {
         tabGroups.value = [...tabGroups.value];
       }
     } catch (error) {
-      tabGroups.value = previousGroups;
       handleError(error, 'Failed to delete tab');
     }
   }
@@ -262,16 +248,14 @@ export const useTabStore = defineStore('tabs', () => {
   }
 
   /**
-   * Moves a tab from one group to another with optimistic update and rollback on failure
+   * Moves a tab from one group to another atomically
    */
   async function moveTab(sourceGroupId: string, targetGroupId: string, tabId: string): Promise<void> {
     if (sourceGroupId === targetGroupId) {return;}
-    const previousGroups = cloneTabGroups(tabGroups.value);
 
     try {
       await moveTabBetweenGroupsInStorage(sourceGroupId, targetGroupId, tabId);
 
-      // Optimistic local state update
       const sourceGroup = tabGroups.value.find((g) => g.id === sourceGroupId);
       const targetGroup = tabGroups.value.find((g) => g.id === targetGroupId);
 
@@ -284,35 +268,28 @@ export const useTabStore = defineStore('tabs', () => {
         }
       }
     } catch (error) {
-      tabGroups.value = previousGroups;
       handleError(error, 'Failed to move tab between groups');
     }
   }
 
   /**
-   * Appends a tab to an existing group with optimistic update and rollback on failure
+   * Appends a tab to an existing group if its URL is not already present.
+   * @returns `true` if added, `false` if skipped as duplicate.
    */
-  async function addTab(groupId: string, tab: TabItem): Promise<void> {
-    const previousGroups = cloneTabGroups(tabGroups.value);
+  async function addTab(groupId: string, tab: TabItem): Promise<boolean> {
     try {
-      const targetGroup = tabGroups.value.find((g) => g.id === groupId);
-      if (targetGroup) {
-        const cleanUrl = (u: string) => u.trim().toLowerCase().replace(/\/+$/, '');
-        const exists = targetGroup.tabs.some((t) => cleanUrl(t.url) === cleanUrl(tab.url));
-        if (exists) {
-          return; // Skip duplicate tab URL
-        }
+      const added = await addTabToGroupInStorage(groupId, tab);
+      if (!added) {
+        return false;
       }
 
-      await addTabToGroupInStorage(groupId, tab);
-
-      // Optimistic local state update
+      const targetGroup = tabGroups.value.find((g) => g.id === groupId);
       if (targetGroup) {
         targetGroup.tabs = deduplicateTabsByUrl([...targetGroup.tabs, tab]);
         tabGroups.value = [...tabGroups.value];
       }
+      return true;
     } catch (error) {
-      tabGroups.value = previousGroups;
       handleError(error, 'Failed to add tab to group');
     }
   }

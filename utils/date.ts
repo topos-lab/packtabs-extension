@@ -23,10 +23,19 @@ function getUserLocale(): string {
   return 'en-US';
 }
 
-function getFullDateTimeFormatter(): Intl.DateTimeFormat {
+function ensureLocaleCache(): string {
   const currentLocale = getUserLocale();
-  if (!fullDateTimeFormatter || cachedLocale !== currentLocale) {
+  if (cachedLocale !== currentLocale) {
     cachedLocale = currentLocale;
+    fullDateTimeFormatter = null;
+    shortDateTimeFormatter = null;
+  }
+  return currentLocale;
+}
+
+function getFullDateTimeFormatter(): Intl.DateTimeFormat {
+  const currentLocale = ensureLocaleCache();
+  if (!fullDateTimeFormatter) {
     fullDateTimeFormatter = new Intl.DateTimeFormat(currentLocale, {
       year: 'numeric',
       month: 'short',
@@ -40,9 +49,8 @@ function getFullDateTimeFormatter(): Intl.DateTimeFormat {
 }
 
 function getShortDateTimeFormatter(): Intl.DateTimeFormat {
-  const currentLocale = getUserLocale();
-  if (!shortDateTimeFormatter || cachedLocale !== currentLocale) {
-    cachedLocale = currentLocale;
+  const currentLocale = ensureLocaleCache();
+  if (!shortDateTimeFormatter) {
     shortDateTimeFormatter = new Intl.DateTimeFormat(currentLocale, {
       month: 'short',
       day: 'numeric',

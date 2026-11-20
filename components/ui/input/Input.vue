@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue';
+import { ref } from 'vue';
 
 import { cn } from '~/lib/utils';
 
@@ -10,10 +11,19 @@ defineProps<{
 }>();
 
 const emits = defineEmits<(e: 'update:modelValue', payload: string | number) => void>();
+
+const inputRef = ref<HTMLInputElement | null>(null);
+
+defineExpose({
+  focus: () => inputRef.value?.focus(),
+  select: () => inputRef.value?.select(),
+  el: inputRef,
+});
 </script>
 
 <template>
   <input
+    ref="inputRef"
     :value="modelValue"
     :class="
       cn(

@@ -32,16 +32,22 @@ const buttonVariants = cva(
 );
 
 interface Props {
+  type?: 'button' | 'submit' | 'reset';
   variant?: NonNullable<Parameters<typeof buttonVariants>[0]>['variant'];
   size?: NonNullable<Parameters<typeof buttonVariants>[0]>['size'];
   class?: HTMLAttributes['class'];
 }
 
-defineProps<Props>();
+withDefaults(defineProps<Props>(), {
+  type: 'button',
+  variant: 'default',
+  size: 'default',
+  class: undefined,
+});
 </script>
 
 <template>
-  <button :class="cn(buttonVariants({ variant, size }), $props.class)">
+  <button :type="type" :class="cn(buttonVariants({ variant, size }), $props.class)">
     <slot />
   </button>
 </template>

@@ -226,4 +226,81 @@ describe('TabGroupCard Component', () => {
     expect(tabRows[0].classes()).toContain('cursor-move');
     expect(tabRows[1].classes()).toContain('cursor-move');
   });
+
+  it('ignores Enter key during IME composition when editing group name', async () => {
+    const wrapper = mount(TabGroupCard, {
+      props: { group: mockGroup },
+      global: {
+        plugins: [pinia],
+      },
+    });
+
+    const editButton = wrapper.find('[aria-label="Edit group name"]');
+    await editButton.trigger('click');
+    await wrapper.vm.$nextTick();
+
+    const input = wrapper.find('input');
+    await input.setValue('New IME Name');
+
+    // Simulate IME composition Enter (isComposing: true) - should stay in edit mode
+    const imeEvent = new KeyboardEvent('keydown', { key: 'Enter', isComposing: true });
+    input.element.dispatchEvent(imeEvent);
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.find('input').exists()).toBe(true);
+  });
+
+  it('does not emit save prematurely when opening the Name dialog', async () => {
+    const historyGroup: TabGroup = {
+      ...mockGroup,
+      name: null,
+      isHistory: true,
+    };
+    const wrapper = mount(TabGroupCard, {
+      props: { group: historyGroup },
+      global: {
+        plugins: [pinia],
+      },
+    });
+
+    const saveBtn = wrapper.findAll('button').find((b) => b.text().includes('Save'));
+    expect(saveBtn).toBeDefined();
+    await saveBtn?.trigger('click');
+
+    expect((wrapper.vm as any).showNameDialog).toBe(true);
+    expect(wrapper.emitted('save')).toBeUndefined();
+  });
+
+  it('disables Open All and displays empty state when group has 0 tabs', () => {
+    const emptyGroup: TabGroup = {
+      ...mockGroup,
+      tabs: [],
+    };
+    const wrapper = mount(TabGroupCard, {
+      props: { group: emptyGroup },
+      global: {
+        plugins: [pinia],
+      },
+    });
+
+    const openAllBtn = wrapper.findAll('button').find((b) => b.text().includes('Open All'));
+    expect(openAllBtn?.attributes('disabled')).toBeDefined();
+    expect(wrapper.text()).toContain('No tabs in this tab group.');
+  });
+
+  it('provides accessible aria-labels on inline edit Save and Cancel buttons', async () => {
+    const wrapper = mount(TabGroupCard, {
+      props: { group: mockGroup },
+      global: {
+        plugins: [pinia],
+      },
+    });
+
+    const editButton = wrapper.find('[aria-label="Edit group name"]');
+    await editButton.trigger('click');
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.find('[aria-label="Save"]').exists()).toBe(true);
+    expect(wrapper.find('[aria-label="Cancel"]').exists()).toBe(true);
+  });
 });

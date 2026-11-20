@@ -3,6 +3,17 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
+  :root {
+    color-scheme: light;
+    scrollbar-color: #71717a #fafafa;
+    scrollbar-width: auto;
+  }
+
+  .dark {
+    color-scheme: dark;
+    scrollbar-color: #71717a #09090b;
+  }
+
   * {
     box-sizing: border-box;
   }
@@ -30,29 +41,37 @@
   }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* Fallback scrollbar styling only for engines without standard scrollbar-color */
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #71717a;
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #52525b;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: #71717a;
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: #a1a1aa;
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #d4d4d8;
-  border-radius: 9999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #a1a1aa;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: #27272a;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+/* Defer off-screen heavy group card rendering below the initial fold */
+.group-card-defer {
+  content-visibility: auto;
+  contain-intrinsic-size: auto none auto 280px;
 }

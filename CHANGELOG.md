@@ -14,12 +14,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **History Snapshot Deduplication (Latest-Wins)**: Automatically removes older history snapshots (`isHistory: true`) that have the exact same tab list as a newly saved closed-window snapshot, keeping only the latest entry without touching permanently saved named groups or polluting deletion tombstones.
   - Added atomic `saveHistoryTabGroup` and `normalizeTabUrl` in `utils/storage.ts` and unified URL normalization in `utils/tabManager.ts`.
   - Updated `entrypoints/background.ts` (`windows.onRemoved` and `recoverPendingHistoryGroups`) to deduplicate history snapshots via `saveHistoryTabGroup`.
+- **Configurable History Retention Limit**: Exposed `maxHistoryGroups` (`10` / `25` / `50` / `100`) in `components/SettingsModal.vue`, backed by cross-context settings synchronization (`composables/useSettings.ts`).
+- **Overflow-Only Tab Tooltips & Direct Click Open**: Tab rows (`components/TabItemRow.vue`, `components/StartupRestorer.vue`) now open tabs directly on click (`Ctrl/Cmd/Shift + Click` or middle-click in background), move interaction hints cleanly to card footers/empty states, and show full title + URL tooltips only when titles overflow.
 
 ### Fixed
 - **Multi-Window Dashboard Launch & Current Tabs Scope**: Fixed an issue where clicking the extension icon or triggering the shortcut in a second browser window opened/switched to the dashboard in the first browser window and displayed the first window's tabs.
   - Updated `action.onClicked` and `commands.onCommand` handlers in `entrypoints/background.ts` to forward the active tab's `windowId` and resolve the focused normal window as fallback (`resolveTargetWindowId`).
   - Scoped existing dashboard tab lookup inside `openOrFocusDashboard` to the target window so each browser window maintains its own dashboard tab without stealing focus across windows.
   - Added `getCurrentWindowId` in `utils/tabManager.ts` (preferring `browser.tabs.getCurrent()?.windowId` with `browser.windows.getCurrent()` fallback) so current-tab capture, restoration, and close-window-after-save always operate on the dashboard's actual window.
+- **Duplicate History Snapshot on Close-After-Save & Window Close Races**: Cleared active window session cache (`clearWindowSessionTabs`) before closing the window after saving a group, cancelled pending debounced sync timers on window closing (`tabs.onRemoved` / `windows.onRemoved`), removed unsafe in-memory cold-start fallback in `entrypoints/background.ts`, added a 5-minute TTL to deleted history tombstones, and enabled cross-context `navigator.locks` mutex coordination in `utils/storage.ts`.
+- **UI, Reactivity, Accessibility & Localization Polish**:
+  - Rendered `<ToastContainer />` in Startup Restorer mode as well so startup/settings feedback is visible.
+  - Auto-refreshed `Current Tabs` on window focus/visibility while preserving manually excluded tabs, cleared stale `searchQuery` across view switches, and fixed history date search in `App.vue`.
+  - Fixed `utils/date.ts` locale cache invalidation across both full/short formatters, fixed invisible dark-mode moon icon in `SettingsModal.vue`, prevented duplicate error toasts, added `nextTick` input focus for inline renaming, unified CTA styling, and cleaned up dead code and redundant `_locales` entries.
+
+### 📦 Chrome Web Store & Firefox AMO Release Notes (For Store Submission)
+
+#### English (en-US):
+```text
+What's new in PackTabs v1.4.0:
+- Multi-Window Support: Opening PackTabs from any browser window now stays scoped to that window and captures its own tabs.
+- Smarter History Snapshots: Automatically deduplicates identical closed-window snapshots, avoids duplicate snapshots when closing a window after saving, and lets you configure history retention limits (10 / 25 / 50 / 100) in Settings.
+- Smoother Tab Browsing: Click any saved tab to open it directly (Ctrl/Cmd/Shift + Click or middle-click for background), with cleaner overflow-only title/URL tooltips and automatic Current Tabs refresh.
+- UI & Accessibility Polish: Fixed Startup Restorer notifications, light-mode theme icons, inline rename auto-focus, search isolation, and multi-language formatting.
+```
+
+#### 简体中文 (zh-CN):
+```text
+PackTabs v1.4.0 本次更新：
+- 多窗口独立隔离：在任意浏览器窗口打开 PackTabs 时，仅聚焦该窗口的管理页并捕获当前窗口标签页。
+- 更智能的历史快照：自动去重相同标签集合的关闭窗口快照，保存后关闭窗口不再产生重复历史记录，并可在设置中自定义历史快照保留上限（10 / 25 / 50 / 100）。
+- 更流畅的标签交互：单击即可直接打开已保存标签页（Ctrl/Cmd/Shift + 单击或中键后台打开），悬浮提示仅在标题溢出时展示完整标题与网址，切回面板自动刷新当前窗口标签。
+- 界面与细节打磨：修复启动恢复页通知显示、浅色模式图标对比度、行内重命名自动聚焦、历史搜索隔离及多语言日期格式问题。
+```
 
 ---
 

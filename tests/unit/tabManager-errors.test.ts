@@ -4,11 +4,13 @@ import type { TabItem } from '../../types/TabGroup';
 import {
   captureCurrentWindow,
   closeCurrentTabs,
+  getFaviconUrl,
   InvalidUrlError,
   openSingleTab,
   openTabs,
   TabNotFoundError,
   TabPermissionDeniedError,
+  validateUrl,
 } from '../../utils/tabManager';
 
 describe('Tab Manager Error Handling', () => {
@@ -355,6 +357,58 @@ describe('Tab Manager Error Handling', () => {
       await openSingleTab(tab);
 
       expect(createSpy).toHaveBeenCalledWith(expect.objectContaining({ url: specialUrl }));
+    });
+
+    it('strictly allows only http and https protocols in validateUrl', () => {
+      expect(validateUrl('https://example.com')).toBe(true);
+      expect(validateUrl('http://localhost:3000/path')).toBe(true);
+      expect(validateUrl('ftp://files.example.com/archive.zip')).toBe(false);
+      expect(validateUrl('file:///Users/test/doc.pdf')).toBe(false);
+      expect(validateUrl('javascript:alert(1)')).toBe(false);
+      expect(validateUrl('chrome://settings')).toBe(false);
+      expect(validateUrl('about:blank')).toBe(false);
+    });
+
+    it('returns empty favicon URL on Firefox and _favicon endpoint on Chrome', () => {
+      const originalUserAgent = navigator.userAgent;
+
+      try {
+        Object.defineProperty(navigator, 'userAgent', {
+          value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:142.0) Gecko/20100101 Firefox/142.0',
+          configurable: true,
+        });
+        expect(getFaviconUrl('https://example.com')).toBe('');
+
+        Object.defineProperty(navigator, 'userAgent', {
+          value: 'Mozilla/5.0 Chrome/130.0.0.0 Safari/537.36',
+          configurable: true,
+        });
+        expect(getFaviconUrl('https://example.com')).toContain('/_favicon/?pageUrl=');
+      } finally {
+        Object.defineProperty(navigator, 'userAgent', {
+          value: originalUserAgent,
+          configurable: true,
+        });
+      }
+    });
+
+    it('creates a browser-default blank tab without chrome://newtab/ when closing all tabs', async () => {
+      vi.spyOn(browser.windows, 'getCurrent').mockResolvedValue({
+        id: 1,
+        focused: true,
+        alwaysOnTop: false,
+        incognito: false,
+      } as any);
+
+      vi.spyOn(browser.tabs, 'query').mockResolvedValue([{ id: 10, url: 'https://example.com' }] as any);
+      const createSpy = vi.spyOn(browser.tabs, 'create').mockResolvedValue({ id: 11 } as any);
+      const removeSpy = vi.spyOn(browser.tabs, 'remove').mockResolvedValue(undefined);
+
+      await closeCurrentTabs(1);
+
+      expect(createSpy).toHaveBeenCalledWith({ windowId: 1, active: true });
+      expect(createSpy.mock.calls[0]?.[0]).not.toHaveProperty('url');
+      expect(removeSpy).toHaveBeenCalledWith([10]);
     });
   });
 });

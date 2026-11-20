@@ -1,7 +1,7 @@
 # Chrome Web Store & Firefox AMO Listing — PackTabs
 
-> Last Updated: 2026-10-03
-> Release Version: 1.0.0
+> Last Updated: 2026-11-20
+> Version Reference: 1.4.0 (Stable production release; see `CHANGELOG.md` for release notes)
 
 ---
 
@@ -146,9 +146,9 @@ PackTabs 是一款面向任务与专注力设计的标签页与工作区会话�
 ## 5. Firefox AMO Specific Settings (Firefox 专属配置)
 
 - **Gecko ID**: `packtabs@topos-lab.github.io` (已在 `wxt.config.ts` 中配置)
-- **Minimum Firefox Version**: `109.0`
+- **Minimum Firefox Version**: `142.0`
 - **Data Collection Compliance**: `data_collection_permissions: { required: ['none'] }` (符合 2025 年 11 月新规)
-- **Sources Package**: `.output/packtabs-extension-1.0.0-sources.zip`（WXT 构建自动生成，包含未混淆源码及构建说明，提交流程中上传至 "Source code" 项即可）
+- **Sources Package**: `.output/packtabs-extension-<version>-sources.zip`（WXT 构建自动生成，包含未混淆源码及构建说明，提交流程中上传至 "Source code" 项即可）
 
 ---
 

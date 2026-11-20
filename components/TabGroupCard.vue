@@ -3,38 +3,27 @@ import {
   Calendar,
   Check,
   ExternalLink,
-  Globe,
-  GripVertical,
   Pencil,
   Save,
   Trash2,
   X,
 } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 
+import TabItemRow from '~/components/TabItemRow.vue';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader } from '~/components/ui/card';
 import Modal from '~/components/ui/dialog/Modal.vue';
 import { Input } from '~/components/ui/input';
-import { Tooltip } from '~/components/ui/tooltip';
-import { t } from '~/composables/useI18n';
+import { formatTabsCount, t } from '~/composables/useI18n';
 import { useToast } from '~/composables/useToast';
-import { useTabStore } from '~/stores/useTabStore';
-import type { TabGroup, TabItem } from '~/types/TabGroup';
+import { getLocalizedErrorMessage, useTabStore } from '~/stores/useTabStore';
+import type { TabGroup } from '~/types/TabGroup';
 import { formatFullDateTime } from '~/utils/date';
+import { isImeComposing } from '~/utils/keyboard';
 import { normalizeTabs } from '~/utils/storage';
-import { deduplicateTabsByUrl, getFaviconUrl, openSingleTab, openTabs } from '~/utils/tabManager';
-
-function getDomain(url?: string): string {
-  if (!url) {return '';}
-  try {
-    const parsed = new URL(url);
-    return parsed.hostname.replace(/^www\./, '');
-  } catch {
-    return '';
-  }
-}
+import { deduplicateTabsByUrl, openTabs } from '~/utils/tabManager';
 
 const props = defineProps<{
   group: TabGroup;
@@ -50,20 +39,15 @@ const toast = useToast();
 // Editable title state
 const isEditingTitle = ref(false);
 const editedTitle = ref(props.group.name ?? '');
+const titleInputRef = ref<{ focus: () => void; select: () => void } | null>(null);
 
 // Name input dialog state
 const showNameDialog = ref(false);
 const newGroupName = ref('');
+const nameDialogInputRef = ref<{ focus: () => void } | null>(null);
 
 // Confirm delete dialog state
 const showDeleteConfirm = ref(false);
-
-// Favicon error tracking
-const faviconErrorStates = ref<Record<string, boolean>>({});
-
-function handleFaviconError(tabId: string) {
-  faviconErrorStates.value[tabId] = true;
-}
 
 // Format creation date
 const formattedDate = computed(() => formatFullDateTime(props.group.createdAt));
@@ -79,9 +63,12 @@ const tabList = computed(() => deduplicateTabsByUrl(normalizeTabs(props.group.ta
 
 const tabCount = computed(() => tabList.value.length);
 
-function startEditingTitle() {
+async function startEditingTitle() {
   isEditingTitle.value = true;
   editedTitle.value = props.group.name ?? '';
+  await nextTick();
+  titleInputRef.value?.focus();
+  titleInputRef.value?.select();
 }
 
 async function saveTitle() {
@@ -105,11 +92,14 @@ async function saveTitle() {
           life: 3000,
         });
       }
-    } catch (_error) {
+    } catch (error) {
       toast.add({
         severity: 'error',
         summary: t('errorTitle'),
-        detail: props.group.isHistory ? t('saveGroupFailed') : t('updateGroupNameFailed'),
+        detail: getLocalizedErrorMessage(
+          error,
+          props.group.isHistory ? t('saveGroupFailed') : t('updateGroupNameFailed')
+        ),
         life: 3000,
       });
     }
@@ -123,29 +113,14 @@ function cancelEdit() {
 }
 
 function handleTitleKeydown(event: KeyboardEvent) {
+  if (isImeComposing(event)) {
+    return;
+  }
   if (event.key === 'Enter') {
+    event.preventDefault();
     void saveTitle();
   } else if (event.key === 'Escape') {
     cancelEdit();
-  }
-}
-
-async function handleTabItemRowClick(event: MouseEvent, tab: TabItem) {
-  if (event.ctrlKey || event.metaKey || event.shiftKey) {
-    try {
-      await openSingleTab(tab, true);
-      toast.add({
-        severity: 'info',
-        detail: t('openedBackgroundSuccess', { title: tab.title || t('untitled') }),
-        life: 2000,
-      });
-    } catch {
-      toast.add({
-        severity: 'error',
-        detail: t('openedBackgroundFailed'),
-        life: 3000,
-      });
-    }
   }
 }
 
@@ -157,36 +132,19 @@ async function handleDeleteTab(tabId: string) {
       detail: t('tabRemovedSuccess'),
       life: 2000,
     });
-  } catch (_error) {
+  } catch (error) {
     toast.add({
       severity: 'error',
-      detail: t('removeTabFailed'),
+      detail: getLocalizedErrorMessage(error, t('removeTabFailed')),
       life: 3000,
     });
   }
 }
 
-// Drag & drop tab categorization
-function handleDragStart(event: DragEvent, tab: TabItem) {
-  if (!event.dataTransfer) {return;}
-  tabStore.isDraggingTab = true;
-  event.dataTransfer.effectAllowed = 'move';
-  event.dataTransfer.setData(
-    'application/packtabs-tab',
-    JSON.stringify({
-      sourceGroupId: props.group.id,
-      tab,
-    })
-  );
-  // Avoid setting raw URL on text/plain, which triggers Chrome's native Split View / Side-by-side mode
-  event.dataTransfer.setData('text/plain', `PackTabs: ${tab.title || tab.url}`);
-}
-
-function handleDragEnd() {
-  tabStore.isDraggingTab = false;
-}
-
 async function handleOpenAll() {
+  if (tabList.value.length === 0) {
+    return;
+  }
   try {
     await openTabs(tabList.value);
     toast.add({
@@ -194,25 +152,27 @@ async function handleOpenAll() {
       detail: t('restoredTabsSuccessShort', { count: tabList.value.length }),
       life: 3000,
     });
-  } catch (_error) {
+  } catch (error) {
     toast.add({
       severity: 'error',
-      detail: t('restoreTabsFailed'),
+      detail: getLocalizedErrorMessage(error, t('restoreTabsFailed')),
       life: 3000,
     });
   }
 }
 
-function handleSave() {
+async function handleSave() {
   newGroupName.value = '';
   showNameDialog.value = true;
-  emit('save', props.group.id);
+  await nextTick();
+  nameDialogInputRef.value?.focus();
 }
 
 async function saveWithName() {
   if (newGroupName.value.trim()) {
     try {
       await tabStore.convertToNamed(props.group.id, newGroupName.value.trim());
+      emit('save', props.group.id);
       showNameDialog.value = false;
       newGroupName.value = '';
       toast.add({
@@ -221,14 +181,22 @@ async function saveWithName() {
         detail: t('groupConvertedSuccess'),
         life: 3000,
       });
-    } catch (_error) {
+    } catch (error) {
       toast.add({
         severity: 'error',
-        detail: t('saveGroupFailed'),
+        detail: getLocalizedErrorMessage(error, t('saveGroupFailed')),
         life: 3000,
       });
     }
   }
+}
+
+function handleNameDialogKeydown(event: KeyboardEvent) {
+  if (isImeComposing(event) || event.key !== 'Enter') {
+    return;
+  }
+  event.preventDefault();
+  void saveWithName();
 }
 
 function handleDeleteGroup() {
@@ -244,10 +212,10 @@ async function confirmDeleteGroup() {
       detail: t('tabGroupDeleted'),
       life: 3000,
     });
-  } catch (_error) {
+  } catch (error) {
     toast.add({
       severity: 'error',
-      detail: t('deleteGroupFailed'),
+      detail: getLocalizedErrorMessage(error, t('deleteGroupFailed')),
       life: 3000,
     });
   }
@@ -262,12 +230,12 @@ async function confirmDeleteGroup() {
         <!-- Left: Title & Inline Edit + Subtitle -->
         <div class="flex-1 min-w-0">
           <div v-if="!isEditingTitle" class="flex items-center gap-2 group/title">
-            <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+            <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
               {{ displayTitle }}
             </h3>
             <button
               type="button"
-              class="opacity-0 group-hover/title:opacity-100 transition-opacity p-1 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 rounded cursor-pointer"
+              class="min-h-6 min-w-6 flex items-center justify-center opacity-0 group-hover/title:opacity-100 group-focus-within/title:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-opacity p-1 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 rounded cursor-pointer"
               :title="group.isHistory ? t('saveAsNamedGroup') : t('editGroupName')"
               :aria-label="group.isHistory ? t('saveAsNamedGroup') : t('editGroupName')"
               @click="startEditingTitle"
@@ -277,17 +245,18 @@ async function confirmDeleteGroup() {
           </div>
           <div v-else class="flex items-center gap-2">
             <Input
+              ref="titleInputRef"
               v-model="editedTitle"
               class="h-8 py-1 text-sm font-medium w-full max-w-sm"
-              autofocus
+              :aria-label="group.isHistory ? t('saveAsNamedGroup') : t('editGroupName')"
               :placeholder="group.isHistory ? t('enterNameToSavePlaceholder') : t('groupNameSimplePlaceholder')"
               @keydown="handleTitleKeydown"
               @blur="saveTitle"
             />
-            <Button size="sm" class="h-8 px-2" @click="saveTitle">
+            <Button size="sm" class="h-8 px-2" :aria-label="t('save')" @mousedown.prevent @click="saveTitle">
               <Check class="h-3.5 w-3.5" />
             </Button>
-            <Button size="sm" variant="ghost" class="h-8 px-2" @click="cancelEdit">
+            <Button size="sm" variant="ghost" class="h-8 px-2" :aria-label="t('cancel')" @mousedown.prevent @click="cancelEdit">
               <X class="h-3.5 w-3.5" />
             </Button>
           </div>
@@ -302,13 +271,14 @@ async function confirmDeleteGroup() {
         <!-- Right: Actions Toolbar & Tab Count Badge -->
         <div class="flex items-center gap-2 shrink-0">
           <Badge :variant="group.isHistory ? 'secondary' : 'default'" class="shrink-0 font-medium text-xs">
-            {{ t('tabsCount', { count: tabCount }) }}
+            {{ formatTabsCount(tabCount) }}
           </Badge>
 
           <Button
             size="sm"
-            variant="success"
+            variant="default"
             class="h-7 text-xs font-medium gap-1.5 px-2.5"
+            :disabled="tabCount === 0"
             @click="handleOpenAll"
           >
             <ExternalLink class="h-3.5 w-3.5" />
@@ -343,71 +313,19 @@ async function confirmDeleteGroup() {
 
     <!-- Body: Tab List -->
     <CardContent class="p-3">
-      <div class="flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800/80 max-h-96 overflow-y-auto pr-1">
-        <Tooltip
+      <div v-if="tabList.length === 0" class="py-8 text-center text-zinc-400 dark:text-zinc-500 text-xs">
+        {{ t('noTabsInGroup') }}
+      </div>
+      <div v-else role="list" class="flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800/80 max-h-96 overflow-y-auto pr-1">
+        <TabItemRow
           v-for="tab in tabList"
           :key="tab.id"
-          :content="[t('tooltipDragTab'), t('tooltipOpenBackground')]"
-          side="top"
-          :delay-duration="400"
-        >
-          <div
-            draggable="true"
-            class="group/tab flex items-center justify-between py-2 px-2.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors select-none cursor-move"
-            @dragstart="handleDragStart($event, tab)"
-            @dragend="handleDragEnd"
-            @click="handleTabItemRowClick($event, tab)"
-          >
-            <!-- Favicon + Title + Domain (pointer-events-none for seamless drag) -->
-            <div class="flex items-center gap-2 min-w-0 flex-1 mr-3 pointer-events-none">
-              <!-- Drag Handle with hover hint -->
-              <div
-                class="p-1 -ml-1 rounded text-zinc-400 dark:text-zinc-500 group-hover/tab:text-zinc-600 dark:group-hover/tab:text-zinc-300 transition-colors shrink-0 cursor-move active:cursor-move pointer-events-auto"
-              >
-                <GripVertical class="h-3.5 w-3.5" />
-              </div>
-
-              <!-- Favicon -->
-              <div class="h-4 w-4 shrink-0 flex items-center justify-center">
-                <img
-                  v-if="!faviconErrorStates[tab.id] && (tab.faviconUrl || getFaviconUrl(tab.url))"
-                  :src="tab.faviconUrl || getFaviconUrl(tab.url)"
-                  class="h-4 w-4 rounded-xs object-contain"
-                  alt=""
-                  loading="lazy"
-                  @error="handleFaviconError(tab.id)"
-                >
-                <Globe v-else class="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
-              </div>
-
-              <!-- Title -->
-              <span class="text-xs font-medium text-zinc-800 dark:text-zinc-200 group-hover/tab:text-indigo-600 dark:group-hover/tab:text-indigo-400 truncate transition-colors">
-                {{ tab.title || t('untitled') }}
-              </span>
-
-              <!-- Domain name -->
-              <span
-                v-if="getDomain(tab.url)"
-                class="text-[11px] text-zinc-500 dark:text-zinc-400 font-normal shrink-0 ml-auto pr-2 hidden sm:inline"
-              >
-                {{ getDomain(tab.url) }}
-              </span>
-            </div>
-
-            <!-- Tab Actions: Remove tab only -->
-            <div class="flex items-center shrink-0 pointer-events-auto">
-              <button
-                type="button"
-                class="p-1 text-zinc-400 dark:text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded transition-colors shrink-0 cursor-pointer"
-                :title="t('removeTabFromGroup')"
-                :aria-label="t('deleteTabAria')"
-                @click.stop="handleDeleteTab(tab.id)"
-              >
-                <X class="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
-        </Tooltip>
+          :tab="tab"
+          :source-group-id="group.id"
+          :remove-title="t('removeTabFromGroup')"
+          :remove-aria-label="t('deleteTabAria')"
+          @remove="handleDeleteTab"
+        />
       </div>
     </CardContent>
   </Card>
@@ -425,10 +343,10 @@ async function confirmDeleteGroup() {
         </label>
         <Input
           id="groupName"
+          ref="nameDialogInputRef"
           v-model="newGroupName"
-          autofocus
           :placeholder="t('groupNameInputPlaceholder')"
-          @keydown.enter="saveWithName"
+          @keydown="handleNameDialogKeydown"
         />
       </div>
     </div>

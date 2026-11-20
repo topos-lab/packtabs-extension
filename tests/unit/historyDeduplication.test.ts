@@ -5,14 +5,18 @@ import { useTabStore } from '../../stores/useTabStore';
 import {
   activeSessionTabsStorage,
   deletedHistorySignaturesStorage,
+  settingsStorage,
   tabGroupsStorage,
 } from '../../types/Storage';
 import type { TabGroup, TabItem } from '../../types/TabGroup';
 import {
+  clearWindowSessionTabs,
+  DELETED_SIGNATURE_TTL_MS,
   getTabGroups,
   getTabsSignature,
   isDeletedHistorySignature,
   normalizeTabUrl,
+  recordDeletedHistorySignature,
   saveHistoryTabGroup,
   saveTabGroup,
 } from '../../utils/storage';
@@ -418,6 +422,157 @@ describe('History Tab Group Deduplication', () => {
       expect(finalGroups).toHaveLength(1);
       expect(finalGroups[0].isHistory).toBe(true);
       expect(finalGroups[0].tabs[0].title).toBe('Latest Recovery');
+    });
+
+    it('enforces settings.maxHistoryGroups retention limit while preserving named groups', async () => {
+      await settingsStorage.setValue({
+        autoCloseAfterSave: true,
+        maxHistoryGroups: 2,
+      });
+
+      await saveTabGroup({
+        id: 'named-keep',
+        name: 'Pinned Workspace',
+        createdAt: new Date('2026-01-01T10:00:00Z'),
+        tabs: [makeTab('https://pinned.example.com', 'Pinned', 'p-1')],
+        isHistory: false,
+      });
+
+      await saveHistoryTabGroup({
+        id: 'hist-1',
+        name: null,
+        createdAt: new Date('2026-10-01T10:00:00Z'),
+        tabs: [makeTab('https://one.example.com', 'One', 'h-1')],
+        isHistory: true,
+      });
+      await saveHistoryTabGroup({
+        id: 'hist-2',
+        name: null,
+        createdAt: new Date('2026-10-02T10:00:00Z'),
+        tabs: [makeTab('https://two.example.com', 'Two', 'h-2')],
+        isHistory: true,
+      });
+      await saveHistoryTabGroup({
+        id: 'hist-3',
+        name: null,
+        createdAt: new Date('2026-10-03T10:00:00Z'),
+        tabs: [makeTab('https://three.example.com', 'Three', 'h-3')],
+        isHistory: true,
+      });
+
+      const finalGroups = await getTabGroups();
+      const historyIds = finalGroups.filter((g) => g.isHistory).map((g) => g.id);
+      const namedIds = finalGroups.filter((g) => !g.isHistory).map((g) => g.id);
+
+      expect(namedIds).toEqual(['named-keep']);
+      expect(historyIds).toEqual(['hist-3', 'hist-2']);
+    });
+
+    it('does not create duplicate history snapshot on window close after clearWindowSessionTabs', async () => {
+      const { windowRemovedListeners } = setupBackgroundListenerMocks();
+      vi.spyOn(browser.windows, 'getAll').mockImplementation((async () => [
+        {
+          id: 77,
+          type: 'normal',
+          tabs: [{ url: 'https://example.com', title: 'Example' }],
+        },
+      ]) as unknown as typeof browser.windows.getAll);
+
+      vi.resetModules();
+      const bgModule = await import('../../entrypoints/background');
+      bgModule.default.main();
+
+      await vi.waitFor(async () => {
+        const sessionMap = await activeSessionTabsStorage.getValue();
+        expect(sessionMap['77']).toHaveLength(1);
+      });
+
+      // Clear session before intentionally closing window after saving a named group
+      await clearWindowSessionTabs(77);
+      windowRemovedListeners[0](77);
+
+      await new Promise((r) => setTimeout(r, 50));
+      const finalGroups = await getTabGroups();
+      expect(finalGroups).toHaveLength(0);
+    });
+
+    it('cancels pending debounced sync when tabs.onRemoved fires with isWindowClosing', async () => {
+      const windowRemovedListeners: ((windowId: number) => void)[] = [];
+      const tabUpdatedListeners: ((id: number, info: Record<string, unknown>) => void)[] = [];
+      const tabRemovedListeners: ((id: number, info: { isWindowClosing: boolean }) => void)[] = [];
+
+      const ensureEventMock = (eventObj: { addListener?: unknown } | undefined) => {
+        if (eventObj) {
+          vi.spyOn(eventObj as { addListener: (cb: unknown) => void }, 'addListener').mockImplementation(() => undefined);
+        }
+      };
+
+      ensureEventMock(browser.tabs.onCreated);
+      ensureEventMock(browser.windows.onCreated);
+      ensureEventMock(browser.tabs.onMoved);
+      ensureEventMock(browser.tabs.onAttached);
+      ensureEventMock(browser.tabs.onDetached);
+      ensureEventMock(browser.runtime.onStartup);
+      ensureEventMock(browser.action?.onClicked);
+      ensureEventMock(browser.commands?.onCommand);
+
+      vi.spyOn(browser.tabs.onUpdated, 'addListener').mockImplementation((cb) => {
+        tabUpdatedListeners.push(cb as unknown as (id: number, info: Record<string, unknown>) => void);
+      });
+      vi.spyOn(browser.tabs.onRemoved, 'addListener').mockImplementation((cb) => {
+        tabRemovedListeners.push(cb as (id: number, info: { isWindowClosing: boolean }) => void);
+      });
+      vi.spyOn(browser.windows.onRemoved, 'addListener').mockImplementation((cb) => {
+        windowRemovedListeners.push(cb as (windowId: number) => void);
+      });
+
+      let openTabsList = [{ url: 'https://example.com/important', title: 'Important' }];
+      vi.spyOn(browser.windows, 'getAll').mockImplementation((async () =>
+        openTabsList.length > 0
+          ? [{ id: 88, type: 'normal', tabs: openTabsList }]
+          : []
+      ) as unknown as typeof browser.windows.getAll);
+
+      vi.resetModules();
+      const bgModule = await import('../../entrypoints/background');
+      bgModule.default.main();
+
+      await vi.waitFor(async () => {
+        const sessionMap = await activeSessionTabsStorage.getValue();
+        expect(sessionMap['88']).toHaveLength(1);
+      });
+
+      // Trigger a debounced update right before window closes with 0 remaining tabs
+      openTabsList = [];
+      tabUpdatedListeners[0](1, { status: 'complete' });
+      tabRemovedListeners[0](1, { isWindowClosing: true });
+
+      // Wait past 150ms debounce window; cancelled sync must NOT wipe window 88
+      await new Promise((r) => setTimeout(r, 200));
+      const sessionBeforeWindowRemove = await activeSessionTabsStorage.getValue();
+      expect(sessionBeforeWindowRemove['88']).toHaveLength(1);
+
+      windowRemovedListeners[0](88);
+      await vi.waitFor(async () => {
+        const groups = await getTabGroups();
+        expect(groups).toHaveLength(1);
+      });
+    });
+
+    it('expires deleted history signature tombstones after TTL', async () => {
+      const tabs = [makeTab('https://example.com/daily')];
+      await recordDeletedHistorySignature(tabs);
+      expect(await isDeletedHistorySignature(tabs)).toBe(true);
+
+      // Backdate timestamp past TTL
+      await deletedHistorySignaturesStorage.setValue([
+        {
+          sig: getTabsSignature(tabs),
+          deletedAt: Date.now() - DELETED_SIGNATURE_TTL_MS - 1000,
+        },
+      ]);
+
+      expect(await isDeletedHistorySignature(tabs)).toBe(false);
     });
   });
 });

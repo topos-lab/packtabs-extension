@@ -1,21 +1,12 @@
-import type { StoredTabGroup } from '../types/Storage';
-import { deletedHistorySignaturesStorage, tabGroupsStorage } from '../types/Storage';
+import type { DeletedHistorySignatureEntry, StoredTabGroup } from '../types/Storage';
+import {
+  activeSessionTabsStorage,
+  deletedHistorySignaturesStorage,
+  settingsStorage,
+  tabGroupsStorage,
+} from '../types/Storage';
 import type { TabGroup, TabItem } from '../types/TabGroup';
 import { getTimeSafe, sortGroupsByDateDesc } from './date';
-
-/**
- * Storage service interface for tab group operations
- */
-export interface StorageService {
-  saveTabGroup(group: TabGroup): Promise<void>;
-  getTabGroups(): Promise<TabGroup[]>;
-  updateTabGroup(id: string, updates: Partial<TabGroup>): Promise<void>;
-  deleteTabGroup(id: string): Promise<void>;
-  deleteTabFromGroup(groupId: string, tabId: string): Promise<void>;
-  moveTabBetweenGroups(sourceGroupId: string, targetGroupId: string, tabId: string): Promise<void>;
-  addTabToGroup(groupId: string, tab: TabItem): Promise<void>;
-  clearAllTabGroups(): Promise<void>;
-}
 
 /**
  * Custom error types for storage operations
@@ -35,17 +26,31 @@ export class StorageNotFoundError extends Error {
 }
 
 /**
- * In-memory mutex to ensure atomic serialization of write operations and prevent race conditions
+ * Creates a promise mutex to serialize async operations atomically.
+ * When `lockName` is provided and Web Locks API (`navigator.locks`) is available,
+ * coordinates mutually exclusive execution across browser contexts (service worker & extension tabs).
  */
-let writeLock: Promise<unknown> = Promise.resolve();
+export function createMutex(lockName?: string) {
+  let lock: Promise<unknown> = Promise.resolve();
 
-async function withLock<T>(operation: () => Promise<T>): Promise<T> {
-  const result = writeLock.then(() => operation());
-  writeLock = result.catch(() => {
-    // Suppress errors to avoid breaking subsequent lock acquisitions
-  });
-  return await result;
+  return async <T>(operation: () => Promise<T>): Promise<T> => {
+    const webLocks = typeof navigator !== 'undefined' ? navigator.locks : undefined;
+    if (lockName && webLocks && typeof webLocks.request === 'function') {
+      return await webLocks.request(lockName, () => operation());
+    }
+
+    const result = lock.then(() => operation());
+    lock = result.catch(() => {
+      // Suppress errors to avoid breaking subsequent lock acquisitions
+    });
+    return await result;
+  };
 }
+
+const withLock = createMutex('packtabs:tabGroups');
+const withSignatureLock = createMutex('packtabs:deletedSignatures');
+export const withSessionLock = createMutex('packtabs:activeSessionTabs');
+export const withSettingsLock = createMutex('packtabs:settings');
 
 /**
  * Retry configuration for storage operations
@@ -141,7 +146,7 @@ export function deserializeTabGroup(stored: StoredTabGroup): TabGroup {
     id: stored.id,
     name: stored.name,
     createdAt: new Date(stored.createdAt),
-    tabs: stored.tabs == null ? (null as unknown as TabItem[]) : normalizeTabs(stored.tabs),
+    tabs: normalizeTabs(stored.tabs),
     isHistory: Boolean(stored.isHistory),
   };
 }
@@ -151,8 +156,8 @@ export function deserializeTabGroup(stored: StoredTabGroup): TabGroup {
  * Validates Requirement 2.3 and Property 18.3.
  */
 export function resolveSyncConflict(localGroup: TabGroup, remoteGroup: StoredTabGroup): StoredTabGroup {
-  const localTimestamp = localGroup.createdAt instanceof Date ? localGroup.createdAt.getTime() : new Date(localGroup.createdAt).getTime();
-  const remoteTimestamp = new Date(remoteGroup.createdAt).getTime();
+  const localTimestamp = getTimeSafe(localGroup.createdAt);
+  const remoteTimestamp = getTimeSafe(remoteGroup.createdAt);
 
   // Keep the most recent version (newer wins; on tie, localGroup wins)
   return localTimestamp >= remoteTimestamp ? serializeTabGroup(localGroup) : remoteGroup;
@@ -213,6 +218,26 @@ export async function saveHistoryTabGroup(group: TabGroup): Promise<void> {
       if (!supersededByNewer) {
         upsertGroupInMap(allGroups, { ...group, isHistory: true });
       }
+
+      // Enforce maxHistoryGroups retention limit if configured
+      let maxHistoryGroups: number | undefined;
+      try {
+        const settings = await settingsStorage?.getValue?.();
+        maxHistoryGroups = settings?.maxHistoryGroups;
+      } catch {
+        // Non-critical fallback if settings storage is unavailable in isolated tests
+      }
+
+      if (typeof maxHistoryGroups === 'number' && Number.isFinite(maxHistoryGroups) && maxHistoryGroups > 0) {
+        const historyEntries = Object.entries(allGroups)
+          .filter(([, entry]) => Boolean(entry?.isHistory))
+          .sort(([, a], [, b]) => getTimeSafe(b.createdAt) - getTimeSafe(a.createdAt));
+
+        for (const [overflowId] of historyEntries.slice(Math.floor(maxHistoryGroups))) {
+          delete allGroups[overflowId];
+        }
+      }
+
       await tabGroupsStorage.setValue(allGroups);
     });
   });
@@ -223,7 +248,7 @@ export async function saveHistoryTabGroup(group: TabGroup): Promise<void> {
  */
 export async function getTabGroups(): Promise<TabGroup[]> {
   return await withRetry(async () => {
-    const allGroups = await tabGroupsStorage.getValue();
+    const allGroups = (await tabGroupsStorage.getValue()) ?? {};
 
     const deserialized = Object.values(allGroups).map((stored) => deserializeTabGroup(stored));
     return sortGroupsByDateDesc(deserialized);
@@ -293,25 +318,50 @@ export function getTabsSignature(tabs?: TabItem[]): string {
     .join('|');
 }
 
+export const DELETED_SIGNATURE_TTL_MS = 5 * 60 * 1000;
+
+function normalizeSignatureEntries(
+  rawList: (string | DeletedHistorySignatureEntry)[] | undefined | null,
+  now: number
+): DeletedHistorySignatureEntry[] {
+  if (!Array.isArray(rawList)) {
+    return [];
+  }
+  const entries: DeletedHistorySignatureEntry[] = [];
+  for (const item of rawList) {
+    if (item && typeof item === 'object' && typeof item.sig === 'string' && typeof item.deletedAt === 'number') {
+      if (now - item.deletedAt <= DELETED_SIGNATURE_TTL_MS) {
+        entries.push(item);
+      }
+    }
+  }
+  return entries;
+}
+
 /**
- * Records a deleted history group's signature so it will not be resurrected.
+ * Records a deleted history group's signature with a TTL so transient window-close / recovery
+ * events do not resurrect it, without permanently blocking future sessions with the same tabs.
  */
 export async function recordDeletedHistorySignature(tabs?: TabItem[]): Promise<void> {
   const sig = getTabsSignature(tabs);
   if (!sig) {
     return;
   }
-  try {
-    const list = await deletedHistorySignaturesStorage.getValue();
-    const updated = [sig, ...list.filter((s) => s !== sig)].slice(0, 100);
-    await deletedHistorySignaturesStorage.setValue(updated);
-  } catch {
-    // Non-critical fallback
-  }
+  await withSignatureLock(async () => {
+    try {
+      const now = Date.now();
+      const rawList = await deletedHistorySignaturesStorage.getValue();
+      const active = normalizeSignatureEntries(rawList, now).filter((entry) => entry.sig !== sig);
+      const updated: DeletedHistorySignatureEntry[] = [{ sig, deletedAt: now }, ...active].slice(0, 100);
+      await deletedHistorySignaturesStorage.setValue(updated);
+    } catch {
+      // Non-critical fallback
+    }
+  });
 }
 
 /**
- * Checks if a tab set matches a user-deleted history group signature.
+ * Checks if a tab set matches a recently deleted history group signature (within TTL).
  */
 export async function isDeletedHistorySignature(tabs?: TabItem[]): Promise<boolean> {
   const sig = getTabsSignature(tabs);
@@ -319,11 +369,59 @@ export async function isDeletedHistorySignature(tabs?: TabItem[]): Promise<boole
     return false;
   }
   try {
-    const list = await deletedHistorySignaturesStorage.getValue();
-    return list.includes(sig);
+    const now = Date.now();
+    const rawList = await deletedHistorySignaturesStorage.getValue();
+    return normalizeSignatureEntries(rawList, now).some((entry) => entry.sig === sig);
   } catch {
     return false;
   }
+}
+
+/**
+ * Removes tracked active session tabs for a specific browser window atomically.
+ * Used before intentionally closing a window after saving so onRemoved does not create a duplicate history snapshot.
+ */
+export async function clearWindowSessionTabs(windowId: number): Promise<void> {
+  await withSessionLock(async () => {
+    try {
+      const sessionMap = (await activeSessionTabsStorage.getValue()) ?? {};
+      const key = String(windowId);
+      if (key in sessionMap) {
+        const updated = { ...sessionMap };
+        delete updated[key];
+        await activeSessionTabsStorage.setValue(updated);
+      }
+    } catch {
+      // Non-critical session cleanup
+    }
+  });
+}
+
+/**
+ * Removes any pending active session tab entries whose URL signature matches a deleted history group.
+ */
+export async function removeMatchingSessionTabs(signature: string): Promise<void> {
+  if (!signature) {
+    return;
+  }
+  await withSessionLock(async () => {
+    try {
+      const sessionMap = (await activeSessionTabsStorage.getValue()) ?? {};
+      let modified = false;
+      const updated = { ...sessionMap };
+      for (const [winId, tabs] of Object.entries(sessionMap)) {
+        if (getTabsSignature(tabs) === signature) {
+          delete updated[winId];
+          modified = true;
+        }
+      }
+      if (modified) {
+        await activeSessionTabsStorage.setValue(updated);
+      }
+    } catch {
+      // Non-critical session cleanup
+    }
+  });
 }
 
 /**
@@ -418,6 +516,10 @@ export async function moveTabBetweenGroups(
       }
 
       const tabToMove = sourceTabs[tabIndex];
+      const incomingUrl = normalizeTabUrl(tabToMove.url);
+      const alreadyInTarget = Boolean(
+        incomingUrl && targetTabs.some((t) => normalizeTabUrl(t.url) === incomingUrl)
+      );
 
       allGroups[sourceGroupId] = {
         ...sourceStored,
@@ -426,7 +528,7 @@ export async function moveTabBetweenGroups(
 
       allGroups[targetGroupId] = {
         ...targetStored,
-        tabs: [...targetTabs, tabToMove],
+        tabs: alreadyInTarget ? targetTabs : [...targetTabs, tabToMove],
       };
 
       await tabGroupsStorage.setValue(allGroups);
@@ -435,11 +537,12 @@ export async function moveTabBetweenGroups(
 }
 
 /**
- * Appends a tab to an existing group in storage
+ * Appends a tab to an existing group in storage if its normalized URL is not already present.
+ * @returns `true` if added, `false` if skipped as duplicate.
  */
-export async function addTabToGroup(groupId: string, tab: TabItem): Promise<void> {
-  await withLock(async () => {
-    await withRetry(async () => {
+export async function addTabToGroup(groupId: string, tab: TabItem): Promise<boolean> {
+  return await withLock(async () => {
+    return await withRetry(async () => {
       const rawGroups = await tabGroupsStorage.getValue();
       const allGroups: Record<string, StoredTabGroup> = { ...rawGroups };
 
@@ -449,6 +552,10 @@ export async function addTabToGroup(groupId: string, tab: TabItem): Promise<void
       }
 
       const existingTabs = normalizeTabs(existingGroup.tabs);
+      const incomingUrl = normalizeTabUrl(tab.url);
+      if (incomingUrl && existingTabs.some((t) => normalizeTabUrl(t.url) === incomingUrl)) {
+        return false;
+      }
 
       const cleanTab: TabItem = {
         id: String(tab.id || crypto.randomUUID()),
@@ -463,13 +570,7 @@ export async function addTabToGroup(groupId: string, tab: TabItem): Promise<void
       };
 
       await tabGroupsStorage.setValue(allGroups);
+      return true;
     });
   });
-}
-
-/**
- * Clears all tab groups from storage
- */
-export async function clearAllTabGroups(): Promise<void> {
-  await tabGroupsStorage.setValue({});
 }

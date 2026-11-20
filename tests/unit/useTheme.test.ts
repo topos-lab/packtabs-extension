@@ -81,4 +81,14 @@ describe('useTheme Composable', () => {
     const stored = await settingsStorage.getValue();
     expect(stored.theme).toBe('dark');
   });
+
+  it('should synchronize documentElement.style.colorScheme with resolved theme', async () => {
+    const { setTheme } = useTheme();
+
+    await setTheme('dark');
+    expect(document.documentElement.style.colorScheme).toBe('dark');
+
+    await setTheme('light');
+    expect(document.documentElement.style.colorScheme).toBe('light');
+  });
 });

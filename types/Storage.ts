@@ -65,11 +65,18 @@ export const activeSessionTabsStorage = storage.defineItem<Record<string, TabIte
   defaultValue: {},
 });
 
+export interface DeletedHistorySignatureEntry {
+  sig: string;
+  deletedAt: number;
+}
+
 /**
  * WXT storage item for recording deleted history group signatures.
  * Prevents deleted history snapshots from being resurrected by background session recovery or window close events.
  */
-export const deletedHistorySignaturesStorage = storage.defineItem<string[]>('local:deletedHistorySignatures', {
+export const deletedHistorySignaturesStorage = storage.defineItem<
+  (string | DeletedHistorySignatureEntry)[]
+>('local:deletedHistorySignatures', {
   defaultValue: [],
 });
 

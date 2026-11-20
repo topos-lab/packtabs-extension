@@ -1,12 +1,14 @@
 import { computed, ref } from 'vue';
 
 import { t } from '~/composables/useI18n';
+import { updateSettings } from '~/composables/useSettings';
 import type { ThemeMode } from '~/types/Storage';
 import { settingsStorage } from '~/types/Storage';
 
 const theme = ref<ThemeMode>('system');
 const isDark = ref(false);
 let isInitialized = false;
+let isWatching = false;
 
 function getSystemPrefersDark(): boolean {
   if (typeof window === 'undefined' || !window.matchMedia) {return false;}
@@ -19,6 +21,8 @@ function applyTheme(mode: ThemeMode) {
   const shouldBeDark = mode === 'dark' || (mode === 'system' && getSystemPrefersDark());
   isDark.value = shouldBeDark;
 
+  document.documentElement.style.colorScheme = shouldBeDark ? 'dark' : 'light';
+
   if (shouldBeDark) {
     document.documentElement.classList.add('dark');
   } else {
@@ -28,6 +32,22 @@ function applyTheme(mode: ThemeMode) {
 
 export function useTheme() {
   async function initTheme() {
+    if (!isWatching) {
+      isWatching = true;
+      try {
+        if (typeof settingsStorage?.watch === 'function') {
+          settingsStorage.watch((updated) => {
+            if (updated?.theme && updated.theme !== theme.value) {
+              theme.value = updated.theme;
+              applyTheme(updated.theme);
+            }
+          });
+        }
+      } catch {
+        // Ignore in environments where storage watch is unsupported
+      }
+    }
+
     if (isInitialized) {
       applyTheme(theme.value);
       return;
@@ -62,11 +82,7 @@ export function useTheme() {
     applyTheme(newMode);
 
     try {
-      const current = await settingsStorage.getValue();
-      await settingsStorage.setValue({
-        ...current,
-        theme: newMode,
-      });
+      await updateSettings({ theme: newMode });
     } catch (err) {
       console.error('Failed to persist theme preference:', err);
     }

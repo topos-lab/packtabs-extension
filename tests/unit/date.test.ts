@@ -3,6 +3,8 @@
  */
 import { describe, expect, it } from 'vitest';
 
+import { useI18n } from '~/composables/useI18n';
+
 import { formatDefaultGroupName, formatFullDateTime, getTimeSafe, sortGroupsByDateDesc } from '../../utils/date';
 
 describe('Date Formatting Utilities', () => {
@@ -68,5 +70,25 @@ describe('Date Formatting Utilities', () => {
     expect(sorted[0].id).toBe('3');
     expect(sorted[1].id).toBe('1');
     expect(sorted[2].id).toBe('2');
+  });
+
+  it('should update both full and short date formatters when active locale changes', async () => {
+    const { setLocale } = useI18n();
+    const testDate = new Date('2026-10-02T12:30:00Z');
+
+    await setLocale('en');
+    const enFull = formatFullDateTime(testDate);
+    const enShort = formatDefaultGroupName(testDate, 'Group');
+
+    await setLocale('zh_CN');
+    const zhFull = formatFullDateTime(testDate);
+    const zhShort = formatDefaultGroupName(testDate, '分组');
+
+    expect(enFull).toContain('Oct');
+    expect(enShort).toContain('Oct');
+    expect(zhFull).toContain('10月');
+    expect(zhShort).toContain('10月');
+
+    await setLocale('en');
   });
 });

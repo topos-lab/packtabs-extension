@@ -122,11 +122,12 @@ function updateVersionInWxtConfig(version: string, dryRun: boolean) {
 
 function archiveChangelogForRelease(devVersion: string, releaseVersion: string, dryRun: boolean) {
   const today = new Date().toISOString().split('T')[0];
+  const escapedVersion = devVersion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   updateFile(
     changelogPath,
     (content) => {
       // Look for ## [1.1.0] - In Development or ## [Unreleased]
-      const devHeaderPattern = new RegExp(`##\\s*\\[(?:${devVersion}|Unreleased)\\]\\s*-\\s*(?:In Development|未发布)`, 'i');
+      const devHeaderPattern = new RegExp(`##\\s*\\[(?:${escapedVersion}|Unreleased)\\]\\s*-\\s*(?:In Development|未发布)`, 'i');
       if (!devHeaderPattern.test(content)) {
         console.warn(`  ⚠️ Could not find "## [${devVersion}] - In Development" header in CHANGELOG.md`);
         return content;

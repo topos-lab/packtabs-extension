@@ -187,9 +187,20 @@ export interface AmoMetadata {
   approval_notes?: string;
 }
 
-export function extractAmoMetadataFromChangelog(changelogContent: string): AmoMetadata | null {
+export function extractAmoMetadataFromChangelog(changelogContent: string, targetVersion?: string): AmoMetadata | null {
+  let scopedContent = changelogContent;
+  if (targetVersion) {
+    const escapedVersion = targetVersion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const versionBlockPattern = new RegExp(`##\\s*\\[${escapedVersion}\\][\\s\\S]*?(?=\\n## \\[|$)`, 'i');
+    const versionBlockMatch = versionBlockPattern.exec(changelogContent);
+    if (!versionBlockMatch) {
+      return null;
+    }
+    scopedContent = versionBlockMatch[0];
+  }
+
   const sectionPattern = /### 📦 Chrome Web Store & Firefox AMO Release Notes[\s\S]*?(?=\n## \[|$)/i;
-  const notesSectionMatch = sectionPattern.exec(changelogContent);
+  const notesSectionMatch = sectionPattern.exec(scopedContent);
   if (!notesSectionMatch) {
     return null;
   }
@@ -221,13 +232,14 @@ export function extractAmoMetadataFromChangelog(changelogContent: string): AmoMe
 
 export function generateAmoMetadataFile(
   changelogFilePath: string = changelogPath,
-  outputDir: string = path.join(rootDir, '.output')
+  outputDir: string = path.join(rootDir, '.output'),
+  targetVersion?: string
 ): string | null {
   if (!fs.existsSync(changelogFilePath)) {
     return null;
   }
   const content = fs.readFileSync(changelogFilePath, 'utf-8');
-  const metadata = extractAmoMetadataFromChangelog(content);
+  const metadata = extractAmoMetadataFromChangelog(content, targetVersion);
   if (!metadata) {
     return null;
   }
@@ -364,7 +376,8 @@ export function runSubmit(options: SubmitOptions = parseSubmitArgs()) {
   // 4. Generate AMO release notes metadata for Firefox if applicable
   let amoMetadataPath: string | null = null;
   if (targets.submitFirefox) {
-    amoMetadataPath = generateAmoMetadataFile();
+    const matchedVersion = /packtabs-extension-(.+)-firefox\.zip$/i.exec(artifacts.firefoxZip)?.[1];
+    amoMetadataPath = generateAmoMetadataFile(changelogPath, path.join(rootDir, '.output'), matchedVersion);
     if (amoMetadataPath) {
       console.log('  ✓ Extracted version release notes for Firefox AMO (.output/amo-metadata.json)');
     }

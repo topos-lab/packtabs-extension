@@ -36,6 +36,7 @@ export const zh_CN: Record<MessageKey, string> = {
   noMatchingTabs: '没有符合搜索条件的标签页。',
   tooltipDragTab: '拖动标签页归类到分组',
   tooltipOpenBackground: 'Ctrl / Cmd / Shift + 单击在后台打开',
+  tabRowHint: '单击打开 · Ctrl / Cmd / Shift + 单击后台打开 · 拖拽可归类到已保存分组',
   excludeTab: '从分组中排除',
   excludeTabAria: '排除标签页',
 
@@ -58,6 +59,7 @@ export const zh_CN: Record<MessageKey, string> = {
   delete: '删除',
   cancel: '取消',
   close: '关闭',
+  showLess: '收起',
   saveGroup: '保存分组',
   deleteTabGroup: '删除标签分组',
   renameTabGroup: '重命名标签分组',
@@ -87,11 +89,10 @@ export const zh_CN: Record<MessageKey, string> = {
   // Settings Modal
   settings: '设置',
   settingsDesc: '首选项与功能配置',
-  openSettings: '打开设置',
-  closeWindowAfterSaveDesc: '保存分组后自动关闭窗口中的所有网页标签',
+  closeWindowAfterSaveDesc: '保存分组后自动关闭当前浏览器窗口',
+  maxHistoryLabel: '历史快照上限',
+  maxHistoryDesc: '自动保留的关闭窗口历史快照最大数量',
   startupSettingTipTitle: '必须完成的前置设置',
-  startupSettingTipDesc:
-    '若设为「从上次停下的地方继续」，Chrome 每次启动都会自动恢复旧标签页，导致功能失效或产生重复会话。请务必点击下方按钮，将 Chrome「启动时」设置为「打开新标签页」。',
   startupSettingTipDescChrome:
     '若设为「从上次停下的地方继续」，Chrome 每次启动都会自动恢复旧标签页，导致功能失效或产生重复会话。请务必点击下方按钮，将 Chrome「启动时」设置为「打开新标签页」。',
   startupSettingTipDescFirefox:
@@ -125,10 +126,12 @@ export const zh_CN: Record<MessageKey, string> = {
   langZhTW: '繁體中文',
   versionLabel: '版本',
   authorLabel: '作者',
-  githubLabel: 'GitHub',
   shortcutLabel: '快捷键',
   shortcutDesc: '可在浏览器中配置',
   shortcutNotSet: '未设置 (默认: Alt + Shift + K)',
+  shortcutNotSetMac: '未设置 (默认: Command + Shift + K)',
+  openShortcutSettingsTitle: '打开快捷键设置',
+  copyFirefoxAddonsTitle: '复制 about:addons',
   change: '修改',
   startupSettingLabel: '浏览器启动时恢复',
   startupSettingDesc: '浏览器冷启动时自动打开会话恢复页',
@@ -139,12 +142,14 @@ export const zh_CN: Record<MessageKey, string> = {
   startupSubtitle: '选择一个工作区或恢复上次会话，开启今日浏览',
   lastClosedSession: '上次关闭的会话',
   restoreThisSession: '恢复此会话',
-  openFullDashboard: '打开完整管理看板',
   searchWorkspacesOrHistory: '搜索工作区或历史...',
   noSavedGroupsInStartup: '暂无保存的工作区',
   noHistoryGroupsInStartup: '暂无历史会话快照',
   startupTip: '提示：日常保存或整理标签页，请点击工具栏图标或按 Alt + Shift + K。',
+  startupTipMac: '提示：日常保存或整理标签页，请点击工具栏图标或按 Command + Shift + K。',
+  remainingTabSingle: '+1 个更多标签',
   remainingTabsCount: '+{count} 个更多标签',
+  loadGroupsFailed: '加载标签分组失败',
 
   // Notifications / Toasts
   storageQuotaError: '存储空间已满。请删除部分分组以释放空间。',
@@ -183,4 +188,6 @@ export const zh_CN: Record<MessageKey, string> = {
   themeTooltipSystem: '外观主题：跟随系统 ({current}) • 点击切换为浅色',
   themeTooltipLight: '外观主题：浅色 • 点击切换为深色',
   themeTooltipDark: '外观主题：深色 • 点击切换为跟随系统',
+  notificationsAria: '通知',
+  closeNotificationAria: '关闭通知',
 };

@@ -10,6 +10,8 @@ import {
   DialogTitle,
 } from 'radix-vue';
 
+import { t } from '~/composables/useI18n';
+
 defineProps<{
   open: boolean;
   title?: string;
@@ -24,17 +26,17 @@ const emit = defineEmits<(e: 'update:open', value: boolean) => void>();
     <DialogPortal>
       <DialogOverlay class="fixed inset-0 z-50 bg-black/40 dark:bg-black/70 backdrop-blur-xs transition-opacity" />
       <DialogContent
-        class="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white dark:bg-zinc-900 p-6 shadow-xl border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 outline-none"
+        class="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md max-h-[85vh] overflow-y-auto -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white dark:bg-zinc-900 p-6 shadow-xl border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 outline-none"
       >
         <div class="flex items-center justify-between pb-1">
           <DialogTitle v-if="title" class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
             {{ title }}
           </DialogTitle>
           <DialogClose
-            class="rounded-md p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            class="rounded-md p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors cursor-pointer"
           >
             <X class="h-4 w-4" />
-            <span class="sr-only">Close</span>
+            <span class="sr-only">{{ t('close') }}</span>
           </DialogClose>
         </div>
         <DialogDescription v-if="description" class="text-sm text-zinc-500 dark:text-zinc-400 mt-1 mb-4">

@@ -5,10 +5,11 @@
   import { Button } from '~/components/ui/button';
   import Modal from '~/components/ui/dialog/Modal.vue';
   import { useI18n } from '~/composables/useI18n';
+  import { useSettings } from '~/composables/useSettings';
   import { useTheme } from '~/composables/useTheme';
   import { useToast } from '~/composables/useToast';
   import { getBrowserType } from '~/lib/utils';
-  import { settingsStorage } from '~/types/Storage';
+  import type { LocaleMode, ThemeMode } from '~/types/Storage';
 
   const props = defineProps<{
     open: boolean;
@@ -20,10 +21,48 @@
 
   const { t, localeMode, setLocale } = useI18n();
   const { theme, setTheme } = useTheme();
+  const {
+    openOnStartup: openOnStartupRef,
+    closeWindowAfterSave: closeWindowAfterSaveRef,
+    maxHistoryGroups,
+    initSettings,
+    loadSettings,
+    setOpenOnStartup,
+    setCloseWindowAfterSave,
+    setMaxHistoryGroups,
+  } = useSettings();
 
-  const openOnStartup = ref(false);
-  const closeWindowAfterSave = ref(true);
-  const currentShortcut = ref('Alt + Shift + K');
+  const openOnStartup = computed({
+    get: () => openOnStartupRef.value,
+    set: (val: boolean) => {
+      void setOpenOnStartup(val);
+    },
+  });
+
+  const closeWindowAfterSave = computed({
+    get: () => closeWindowAfterSaveRef.value,
+    set: (val: boolean) => {
+      void setCloseWindowAfterSave(val);
+    },
+  });
+
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/i.test(navigator.userAgent);
+  const currentShortcut = ref(isMac ? 'Command + Shift + K' : 'Alt + Shift + K');
+
+  const themeOptions: { mode: ThemeMode; labelKey: 'themeLight' | 'themeDark' | 'themeSystem' }[] = [
+    { mode: 'light', labelKey: 'themeLight' },
+    { mode: 'dark', labelKey: 'themeDark' },
+    { mode: 'system', labelKey: 'themeSystem' },
+  ];
+
+  const localeOptions: { mode: LocaleMode; labelKey: 'langSystem' | 'langZhCN' | 'langZhTW' | 'langEn' }[] = [
+    { mode: 'system', labelKey: 'langSystem' },
+    { mode: 'zh_CN', labelKey: 'langZhCN' },
+    { mode: 'zh_TW', labelKey: 'langZhTW' },
+    { mode: 'en', labelKey: 'langEn' },
+  ];
+
+  const historyLimitOptions = [10, 25, 50, 100];
 
   async function loadShortcut() {
     try {
@@ -34,7 +73,7 @@
         if (targetCmd?.shortcut) {
           currentShortcut.value = targetCmd.shortcut.split('+').join(' + ');
         } else if (targetCmd?.shortcut === '') {
-          currentShortcut.value = t('shortcutNotSet');
+          currentShortcut.value = isMac ? t('shortcutNotSetMac') : t('shortcutNotSet');
         }
       }
     } catch (err) {
@@ -44,15 +83,20 @@
     }
   }
 
-  async function loadSettings() {
-    try {
-      const settings = await settingsStorage.getValue();
-      openOnStartup.value = settings.openOnStartup ?? false;
-      closeWindowAfterSave.value = settings.autoCloseAfterSave ?? true;
-    } catch (err) {
-      console.error('Failed to load settings in SettingsModal:', err);
+  watch(
+    () => props.open,
+    (isOpen) => {
+      if (isOpen) {
+        void loadSettings();
+        void loadShortcut();
+      }
     }
-  }
+  );
+
+  onMounted(() => {
+    void initSettings();
+    void loadShortcut();
+  });
 
   const toast = useToast();
   const browserType = computed(() => getBrowserType());
@@ -134,49 +178,6 @@
       console.error('Failed to open onStartup settings:', err);
     }
   }
-
-  watch(
-    () => props.open,
-    (isOpen) => {
-      if (isOpen) {
-        void loadSettings();
-        void loadShortcut();
-      }
-    }
-  );
-
-  watch(openOnStartup, async (newVal) => {
-    try {
-      const current = await settingsStorage.getValue();
-      if (current.openOnStartup !== newVal) {
-        await settingsStorage.setValue({
-          ...current,
-          openOnStartup: newVal,
-        });
-      }
-    } catch (err) {
-      console.error('Failed to persist openOnStartup:', err);
-    }
-  });
-
-  watch(closeWindowAfterSave, async (newVal) => {
-    try {
-      const current = await settingsStorage.getValue();
-      if (current.autoCloseAfterSave !== newVal) {
-        await settingsStorage.setValue({
-          ...current,
-          autoCloseAfterSave: newVal,
-        });
-      }
-    } catch (err) {
-      console.error('Failed to persist autoCloseAfterSave:', err);
-    }
-  });
-
-  onMounted(() => {
-    void loadSettings();
-    void loadShortcut();
-  });
 </script>
 
 <template>
@@ -187,7 +188,7 @@
     @update:open="emit('update:open', $event)">
     <div class="space-y-4 py-1 text-xs text-zinc-600 dark:text-zinc-300">
       <!-- 1. Appearance / Theme Segmented Control -->
-      <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
+      <div class="flex items-center justify-between gap-3 py-1.5 border-b border-zinc-100 dark:border-zinc-800">
         <div>
           <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('themeLabel') }}</span>
           <p class="text-[10px] text-zinc-500 dark:text-zinc-400">
@@ -195,48 +196,29 @@
           </p>
         </div>
         <div
-          class="inline-flex items-center p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60 text-xs">
+          class="inline-flex items-center p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60 text-xs shrink-0">
           <button
+            v-for="opt in themeOptions"
+            :key="opt.mode"
             type="button"
-            class="flex items-center gap-1 px-2 py-1 rounded-md transition-all font-medium cursor-pointer"
+            :aria-pressed="theme === opt.mode"
+            class="flex items-center gap-1 px-2 py-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-all font-medium cursor-pointer"
             :class="
-              theme === 'light'
+              theme === opt.mode
                 ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-2xs'
                 : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
             "
-            @click="setTheme('light')">
-            <Sun class="h-3 w-3 text-amber-500" />
-            <span>{{ t('themeLight') }}</span>
-          </button>
-          <button
-            type="button"
-            class="flex items-center gap-1 px-2 py-1 rounded-md transition-all font-medium cursor-pointer"
-            :class="
-              theme === 'dark'
-                ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-2xs'
-                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
-            "
-            @click="setTheme('dark')">
-            <Moon class="h-3 w-3 text-zinc-100" />
-            <span>{{ t('themeDark') }}</span>
-          </button>
-          <button
-            type="button"
-            class="flex items-center gap-1 px-2 py-1 rounded-md transition-all font-medium cursor-pointer"
-            :class="
-              theme === 'system'
-                ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-2xs'
-                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
-            "
-            @click="setTheme('system')">
-            <SunMoon class="h-3 w-3 text-zinc-500 dark:text-zinc-400" />
-            <span>{{ t('themeSystem') }}</span>
+            @click="setTheme(opt.mode)">
+            <Sun v-if="opt.mode === 'light'" class="h-3 w-3 text-amber-500" />
+            <Moon v-else-if="opt.mode === 'dark'" class="h-3 w-3 text-zinc-600 dark:text-zinc-200" />
+            <SunMoon v-else class="h-3 w-3 text-zinc-500 dark:text-zinc-400" />
+            <span>{{ t(opt.labelKey) }}</span>
           </button>
         </div>
       </div>
 
       <!-- 2. Display Language -->
-      <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
+      <div class="flex flex-col gap-2 py-1.5 border-b border-zinc-100 dark:border-zinc-800">
         <div>
           <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('languageLabel') }}</span>
           <p class="text-[10px] text-zinc-500 dark:text-zinc-400">
@@ -244,67 +226,44 @@
           </p>
         </div>
         <div
-          class="inline-flex items-center p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60 text-xs">
+          class="inline-flex w-full items-center p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60 text-xs">
           <button
+            v-for="opt in localeOptions"
+            :key="opt.mode"
             type="button"
-            class="px-2 py-1 rounded-md transition-all font-medium cursor-pointer"
+            :aria-pressed="localeMode === opt.mode"
+            class="flex-1 px-2 py-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-all font-medium cursor-pointer truncate"
             :class="
-              localeMode === 'system'
+              localeMode === opt.mode
                 ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-2xs'
                 : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
             "
-            @click="setLocale('system')">
-            <span>{{ t('langSystem') }}</span>
-          </button>
-          <button
-            type="button"
-            class="px-2 py-1 rounded-md transition-all font-medium cursor-pointer"
-            :class="
-              localeMode === 'zh_CN'
-                ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-2xs'
-                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
-            "
-            @click="setLocale('zh_CN')">
-            <span>{{ t('langZhCN') }}</span>
-          </button>
-          <button
-            type="button"
-            class="px-2 py-1 rounded-md transition-all font-medium cursor-pointer"
-            :class="
-              localeMode === 'zh_TW'
-                ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-2xs'
-                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
-            "
-            @click="setLocale('zh_TW')">
-            <span>{{ t('langZhTW') }}</span>
-          </button>
-          <button
-            type="button"
-            class="px-2 py-1 rounded-md transition-all font-medium cursor-pointer"
-            :class="
-              localeMode === 'en'
-                ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-2xs'
-                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
-            "
-            @click="setLocale('en')">
-            <span>{{ t('langEn') }}</span>
+            @click="setLocale(opt.mode)">
+            <span>{{ t(opt.labelKey) }}</span>
           </button>
         </div>
       </div>
 
       <!-- 3. Restore on Startup Toggle + Deep Link Contextual Guidance -->
       <div class="py-1.5 border-b border-zinc-100 dark:border-zinc-800">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-3">
           <div>
             <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('startupSettingLabel') }}</span>
             <p class="text-[10px] text-zinc-500 dark:text-zinc-400">
               {{ t('startupSettingDesc') }}
             </p>
           </div>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input v-model="openOnStartup" type="checkbox" class="sr-only peer">
+          <label class="relative inline-flex items-center cursor-pointer shrink-0">
+            <input
+              v-model="openOnStartup"
+              type="checkbox"
+              role="switch"
+              :aria-checked="openOnStartup"
+              :aria-label="t('startupSettingLabel')"
+              class="sr-only peer"
+            >
             <div
-              class="w-8 h-4.5 bg-zinc-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-3.5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all dark:border-zinc-600 peer-checked:bg-indigo-600" />
+              class="w-8 h-4.5 bg-zinc-200 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-indigo-500 peer-focus-visible:ring-offset-2 dark:peer-focus-visible:ring-offset-zinc-900 rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-3.5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all motion-reduce:after:transition-none dark:border-zinc-600 peer-checked:bg-indigo-600" />
           </label>
         </div>
 
@@ -333,37 +292,71 @@
       </div>
 
       <!-- 4. Close Window After Save Toggle -->
-      <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800">
+      <div class="flex items-center justify-between gap-3 py-1.5 border-b border-zinc-100 dark:border-zinc-800">
         <div>
           <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('closeWindowAfterSave') }}</span>
           <p class="text-[10px] text-zinc-500 dark:text-zinc-400">
             {{ t('closeWindowAfterSaveDesc') }}
           </p>
         </div>
-        <label class="relative inline-flex items-center cursor-pointer">
-          <input v-model="closeWindowAfterSave" type="checkbox" class="sr-only peer">
+        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+          <input
+            v-model="closeWindowAfterSave"
+            type="checkbox"
+            role="switch"
+            :aria-checked="closeWindowAfterSave"
+            :aria-label="t('closeWindowAfterSave')"
+            class="sr-only peer"
+          >
           <div
-            class="w-8 h-4.5 bg-zinc-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-3.5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all dark:border-zinc-600 peer-checked:bg-indigo-600" />
+            class="w-8 h-4.5 bg-zinc-200 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-indigo-500 peer-focus-visible:ring-offset-2 dark:peer-focus-visible:ring-offset-zinc-900 rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-3.5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all motion-reduce:after:transition-none dark:border-zinc-600 peer-checked:bg-indigo-600" />
         </label>
       </div>
 
-      <!-- 5. Keyboard Shortcut -->
-      <div class="flex items-center justify-between py-1.5">
+      <!-- 5. Max History Snapshots Retention Limit -->
+      <div class="flex items-center justify-between gap-3 py-1.5 border-b border-zinc-100 dark:border-zinc-800">
+        <div>
+          <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('maxHistoryLabel') }}</span>
+          <p class="text-[10px] text-zinc-500 dark:text-zinc-400">
+            {{ t('maxHistoryDesc') }}
+          </p>
+        </div>
+        <div
+          class="inline-flex items-center p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60 text-xs shrink-0">
+          <button
+            v-for="limit in historyLimitOptions"
+            :key="limit"
+            type="button"
+            :aria-pressed="maxHistoryGroups === limit"
+            class="px-2 py-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-all font-medium cursor-pointer tabular-nums"
+            :class="
+              maxHistoryGroups === limit
+                ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-2xs'
+                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+            "
+            @click="setMaxHistoryGroups(limit)">
+            {{ limit }}
+          </button>
+        </div>
+      </div>
+
+      <!-- 6. Keyboard Shortcut -->
+      <div class="flex items-center justify-between gap-3 py-1.5">
         <div>
           <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('shortcutLabel') }}</span>
           <p class="text-[10px] text-zinc-500 dark:text-zinc-400">
             {{ t('shortcutDesc') }}
           </p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 shrink-0">
           <span
             class="font-mono text-[11px] bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded text-zinc-700 dark:text-zinc-300 font-semibold border border-zinc-200/60 dark:border-zinc-700/60">
             {{ currentShortcut }}
           </span>
           <button
             type="button"
-            class="text-[11px] text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline font-medium cursor-pointer"
-            :title="browserType === 'firefox' ? 'Copy about:addons' : 'Open Shortcut Settings'"
+            class="text-[11px] text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded font-medium cursor-pointer"
+            :title="browserType === 'firefox' ? t('copyFirefoxAddonsTitle') : t('openShortcutSettingsTitle')"
             @click="openShortcutSettings">
             {{ t('change') }}
           </button>

@@ -166,4 +166,34 @@ describe('SettingsModal Component', () => {
       configurable: true,
     });
   });
+
+  it('renders visible moon icon class in light mode and persists maxHistoryGroups changes', async () => {
+    mount(SettingsModal, {
+      props: {
+        open: true,
+      },
+      attachTo: document.body,
+    });
+
+    await nextTick();
+    await new Promise((r) => setTimeout(r, 20));
+
+    // Moon icon must not use light-on-light invisible text-zinc-100
+    const darkThemeBtn = Array.from(document.body.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Dark')
+    );
+    expect(darkThemeBtn).toBeDefined();
+    expect(darkThemeBtn?.innerHTML).not.toContain('text-zinc-100');
+
+    const limit50Btn = Array.from(document.body.querySelectorAll('button')).find(
+      (b) => b.textContent?.trim() === '50'
+    );
+    expect(limit50Btn).toBeDefined();
+    limit50Btn?.click();
+    await nextTick();
+    await new Promise((r) => setTimeout(r, 30));
+
+    const stored = await settingsStorage.getValue();
+    expect(stored.maxHistoryGroups).toBe(50);
+  });
 });

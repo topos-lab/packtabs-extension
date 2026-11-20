@@ -111,7 +111,7 @@ function handleSave(groupId: string) {
       class="space-y-6 w-full"
     >
       <div
-        v-for="section in timeSections"
+        v-for="(section, sectionIndex) in timeSections"
         :key="section.label"
         class="space-y-3"
       >
@@ -128,14 +128,22 @@ function handleSave(groupId: string) {
 
         <!-- Group Cards in this Section -->
         <div class="flex flex-col gap-4 w-full">
-          <TabGroupCard
-            v-for="group in section.groups"
+          <div
+            v-for="(group, cardIndex) in section.groups"
             :key="group.id"
-            :group="group"
-            @save="handleSave"
-          />
+            :class="{ 'group-card-defer': sectionIndex > 0 || cardIndex >= 2 }"
+          >
+            <TabGroupCard
+              :group="group"
+              @save="handleSave"
+            />
+          </div>
         </div>
       </div>
+
+      <p class="text-[11px] text-zinc-400 dark:text-zinc-500 text-center pt-1">
+        {{ t('tabRowHint') }}
+      </p>
     </div>
   </div>
 </template>

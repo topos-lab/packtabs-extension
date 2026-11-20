@@ -35,6 +35,7 @@ export const en = {
   noMatchingTabs: 'No tabs match your search query.',
   tooltipDragTab: 'Drag tab to categorize into group',
   tooltipOpenBackground: 'Ctrl / Cmd / Shift + Click to open in background',
+  tabRowHint: 'Click to open · Ctrl / Cmd / Shift + Click for background · Drag to organize into saved groups',
   excludeTab: 'Exclude from group',
   excludeTabAria: 'Exclude tab',
 
@@ -57,6 +58,7 @@ export const en = {
   delete: 'Delete',
   cancel: 'Cancel',
   close: 'Close',
+  showLess: 'Show less',
   saveGroup: 'Save Group',
   deleteTabGroup: 'Delete tab group',
   renameTabGroup: 'Rename tab group',
@@ -86,11 +88,10 @@ export const en = {
   // Settings Modal
   settings: 'Settings',
   settingsDesc: 'Preferences and feature configurations',
-  openSettings: 'Open Settings',
-  closeWindowAfterSaveDesc: 'Close remaining window tabs after saving a group',
+  closeWindowAfterSaveDesc: 'Automatically close the current browser window after saving a group',
+  maxHistoryLabel: 'History Limit',
+  maxHistoryDesc: 'Maximum automatic closed-window snapshots to keep',
   startupSettingTipTitle: 'Required Prerequisite Setup',
-  startupSettingTipDesc:
-    'If set to "Continue where you left off", Chrome will auto-restore old tabs on startup, causing duplicates and conflicts. Please click below to set Chrome "On startup" to "Open the New Tab page".',
   startupSettingTipDescChrome:
     'If set to "Continue where you left off", Chrome will auto-restore old tabs on startup, causing duplicates and conflicts. Please click below to set Chrome "On startup" to "Open the New Tab page".',
   startupSettingTipDescFirefox:
@@ -124,10 +125,12 @@ export const en = {
   langZhTW: '繁體中文',
   versionLabel: 'Version',
   authorLabel: 'Author',
-  githubLabel: 'GitHub',
   shortcutLabel: 'Shortcut',
-  shortcutDesc: 'Configurable in Chrome',
+  shortcutDesc: 'Configurable in browser',
   shortcutNotSet: 'Not set (Default: Alt + Shift + K)',
+  shortcutNotSetMac: 'Not set (Default: Command + Shift + K)',
+  openShortcutSettingsTitle: 'Open shortcut settings',
+  copyFirefoxAddonsTitle: 'Copy about:addons',
   change: 'Change',
   startupSettingLabel: 'Restore on Startup',
   startupSettingDesc: 'Automatically open session restore page when browser starts',
@@ -138,12 +141,14 @@ export const en = {
   startupSubtitle: 'Select a workspace or restore previous session to begin browsing',
   lastClosedSession: 'Last Closed Session',
   restoreThisSession: 'Restore Session',
-  openFullDashboard: 'Open Full Dashboard',
   searchWorkspacesOrHistory: 'Search workspaces or history...',
   noSavedGroupsInStartup: 'No saved workspaces yet',
   noHistoryGroupsInStartup: 'No history sessions yet',
   startupTip: 'Tip: To pack or organize tabs during browsing, click the extension icon or press Alt + Shift + K.',
+  startupTipMac: 'Tip: To pack or organize tabs during browsing, click the extension icon or press Command + Shift + K.',
+  remainingTabSingle: '+1 more tab',
   remainingTabsCount: '+{count} more tabs',
+  loadGroupsFailed: 'Failed to load tab groups',
 
   // Notifications / Toasts
   storageQuotaError: 'Storage quota reached. Please delete some groups to free space.',
@@ -182,6 +187,8 @@ export const en = {
   themeTooltipSystem: 'Theme: Auto (System) ({current}) • Click for Light',
   themeTooltipLight: 'Theme: Light • Click for Dark',
   themeTooltipDark: 'Theme: Dark • Click for Auto (System)',
+  notificationsAria: 'Notifications',
+  closeNotificationAria: 'Dismiss notification',
 } as const;
 
 export type MessageKey = keyof typeof en;

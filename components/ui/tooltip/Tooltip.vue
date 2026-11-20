@@ -11,9 +11,12 @@ import {
   TooltipRoot,
   TooltipTrigger,
 } from 'radix-vue';
-import type { HTMLAttributes } from 'vue';
+import type { Component, HTMLAttributes } from 'vue';
+import { inject } from 'vue';
 
 import { cn } from '~/lib/utils';
+
+import { TOOLTIP_PROVIDER_KEY } from './context';
 
 interface Props {
   content?: string | string[];
@@ -25,7 +28,7 @@ interface Props {
   class?: HTMLAttributes['class'];
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   content: undefined,
   side: 'top',
   align: 'center',
@@ -34,38 +37,53 @@ withDefaults(defineProps<Props>(), {
   disabled: false,
   class: undefined,
 });
+
+const hasRootProvider = inject(TOOLTIP_PROVIDER_KEY, false);
+
+const Passthrough: Component = (_, { slots }) => slots.default?.();
 </script>
 
 <template>
-  <TooltipProvider :delay-duration="delayDuration">
-    <TooltipRoot :disabled="disabled">
+  <component
+    :is="hasRootProvider ? Passthrough : TooltipProvider"
+    v-bind="hasRootProvider ? undefined : { delayDuration: props.delayDuration, disableHoverableContent: true }"
+  >
+    <TooltipRoot :delay-duration="props.delayDuration" :disabled="props.disabled" :disable-hoverable-content="true">
       <TooltipTrigger as-child>
         <slot />
       </TooltipTrigger>
       <TooltipPortal>
         <TooltipContent
-          :side="side"
-          :align="align"
-          :side-offset="sideOffset"
+          :side="props.side"
+          :align="props.align"
+          :side-offset="props.sideOffset"
           :class="
             cn(
-              'z-50 overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-800 dark:text-zinc-200 shadow-md select-none pointer-events-none transition-all whitespace-pre-line max-w-xs leading-relaxed',
-              $props.class
+              'z-50 overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-800 dark:text-zinc-200 shadow-md select-none pointer-events-none transition-all whitespace-pre-line max-w-md break-words leading-relaxed',
+              props.class
             )
           "
         >
           <slot name="content">
-            <template v-if="Array.isArray(content)">
-              <div v-for="(line, idx) in content" :key="idx" class="leading-relaxed">
+            <template v-if="Array.isArray(props.content)">
+              <div
+                v-for="(line, idx) in props.content"
+                :key="idx"
+                :class="
+                  idx === 0
+                    ? 'leading-relaxed line-clamp-3'
+                    : 'text-[11px] text-zinc-500 dark:text-zinc-400 break-all line-clamp-2 mt-0.5'
+                "
+              >
                 {{ line }}
               </div>
             </template>
             <template v-else>
-              {{ content }}
+              {{ props.content }}
             </template>
           </slot>
         </TooltipContent>
       </TooltipPortal>
     </TooltipRoot>
-  </TooltipProvider>
+  </component>
 </template>

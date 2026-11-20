@@ -1,20 +1,27 @@
 <script setup lang="ts">
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-vue-next';
 
+import { useI18n } from '~/composables/useI18n';
 import { useToast } from '~/composables/useToast';
 
 const { toasts, remove } = useToast();
+const { t } = useI18n();
 </script>
 
 <template>
-  <div class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm pointer-events-none">
+  <div
+    role="region"
+    aria-live="polite"
+    :aria-label="t('notificationsAria')"
+    class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"
+  >
     <TransitionGroup
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="transform translate-y-2 opacity-0"
+      enter-active-class="transition duration-300 ease-out motion-reduce:transition-none"
+      enter-from-class="transform translate-y-2 opacity-0 motion-reduce:translate-y-0"
       enter-to-class="transform translate-y-0 opacity-100"
-      leave-active-class="transition duration-200 ease-in"
+      leave-active-class="transition duration-200 ease-in motion-reduce:transition-none"
       leave-from-class="transform translate-y-0 opacity-100"
-      leave-to-class="transform translate-y-2 opacity-0"
+      leave-to-class="transform translate-y-2 opacity-0 motion-reduce:translate-y-0"
     >
       <div
         v-for="toast in toasts"
@@ -41,7 +48,8 @@ const { toasts, remove } = useToast();
 
         <button
           type="button"
-          class="shrink-0 p-0.5 rounded opacity-60 hover:opacity-100 transition-opacity"
+          :aria-label="t('closeNotificationAria')"
+          class="shrink-0 min-h-6 min-w-6 flex items-center justify-center rounded opacity-60 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-opacity"
           @click="remove(toast.id)"
         >
           <X class="h-4 w-4" />

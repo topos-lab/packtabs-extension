@@ -135,9 +135,19 @@ describe('useI18n Composable', () => {
       await setLocale('zh_TW');
       expect(locale.value).toBe('zh_TW');
       expect(activeLocale.value).toBe('zh_TW');
+      expect(document.documentElement.lang).toBe('zh-TW');
 
       const savedTW = await settingsStorage.getValue();
       expect(savedTW.locale).toBe('zh_TW');
+
+      await setLocale('en');
+      expect(document.documentElement.lang).toBe('en');
+    });
+
+    it('should update document.documentElement.lang when switching to zh_CN', async () => {
+      const { setLocale } = useI18n();
+      await setLocale('zh_CN');
+      expect(document.documentElement.lang).toBe('zh-CN');
     });
   });
 });

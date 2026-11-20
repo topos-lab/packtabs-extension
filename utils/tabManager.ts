@@ -1,16 +1,7 @@
+import { getBrowserType } from '~/lib/utils';
 import type { TabItem } from '~/types/TabGroup';
 import { formatDefaultGroupName } from '~/utils/date';
 import { normalizeTabUrl } from '~/utils/storage';
-
-/**
- * Interface for tab management operations
- */
-export interface TabManager {
-  captureCurrentWindow(windowId?: number): Promise<TabItem[]>;
-  openTabs(tabs: TabItem[], windowId?: number): Promise<void>;
-  openSingleTab(tab: TabItem, inBackground?: boolean, windowId?: number): Promise<void>;
-  closeCurrentTabs(windowId?: number): Promise<void>;
-}
 
 /**
  * Custom error types for tab operations
@@ -36,28 +27,29 @@ export class InvalidUrlError extends Error {
   }
 }
 
-const RESTRICTED_PROTOCOLS = [
-  'chrome:',
-  'chrome-extension:',
-  'moz-extension:',
-  'about:',
-  'data:',
-  'javascript:',
-  'file:',
-  'edge:',
-  'brave:',
-  'opera:',
-];
-
 /**
- * Validates and sanitizes a URL
+ * Validates and sanitizes a URL, allowing only http and https protocols.
  */
 export function validateUrl(url: string): boolean {
   try {
     const urlObj = new URL(url);
-    return !RESTRICTED_PROTOCOLS.some((protocol) => urlObj.protocol.startsWith(protocol));
+    return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
   } catch {
     return false;
+  }
+}
+
+/**
+ * Extracts a display hostname/domain from a URL string safely.
+ */
+export function getDomain(url?: string): string {
+  if (!url) {
+    return '';
+  }
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return '';
   }
 }
 
@@ -80,10 +72,13 @@ export function deduplicateTabsByUrl(tabs: TabItem[]): TabItem[] {
 
 /**
  * Generates a Manifest V3 compliant favicon URL using Chrome's _favicon endpoint.
+ * Returns an empty string on Firefox where the Chromium _favicon API is unavailable.
  */
 export function getFaviconUrl(pageUrl: string): string {
   try {
-    if (!pageUrl) {return '';}
+    if (!pageUrl || getBrowserType() === 'firefox') {
+      return '';
+    }
     const extId = browser.runtime?.id;
     if (extId) {
       return `chrome-extension://${extId}/_favicon/?pageUrl=${encodeURIComponent(pageUrl)}&size=32`;
@@ -241,9 +236,9 @@ export async function closeCurrentTabs(windowId?: number): Promise<void> {
     const tabIds = tabs.map((tab) => tab.id).filter((id): id is number => id !== undefined);
 
     if (tabIds.length > 0) {
-      // Create a new blank tab first so the window does not close
+      // Create a new browser-default blank tab first so the window does not close
       try {
-        await browser.tabs.create({ url: 'chrome://newtab/', windowId: targetWindowId, active: true });
+        await browser.tabs.create({ windowId: targetWindowId, active: true });
       } catch {
         // Ignore if tabs.create fails in headless test environment
       }
@@ -265,35 +260,6 @@ export async function closeCurrentTabs(windowId?: number): Promise<void> {
  */
 export function generateDefaultGroupName(date: Date = new Date(), prefix?: string): string {
   return formatDefaultGroupName(date, prefix);
-}
-
-/**
- * Detects whether the initial tabs in a browser window indicate that the browser
- * was launched specifically to view a local document (e.g. double-clicking a PDF or HTML file in OS).
- *
- * Rules:
- * 1. Checks both `url` and `pendingUrl` to guard against startup navigation race conditions.
- * 2. Returns true if there is at least one local file tab (`file://`) and NO regular remote web pages (`http://` or `https://`).
- * 3. Returns false if the window only has blank/new tab pages or normal web browsing sessions.
- */
-export function isLocalFileStartup(
-  tabs: { url?: string; pendingUrl?: string }[]
-): boolean {
-  if (!tabs || tabs.length === 0) {
-    return false;
-  }
-
-  const hasLocalFile = tabs.some((tab) => {
-    const u = tab.url || tab.pendingUrl || '';
-    return u.startsWith('file://');
-  });
-
-  const hasRemoteWebPage = tabs.some((tab) => {
-    const u = tab.url || tab.pendingUrl || '';
-    return u.startsWith('http://') || u.startsWith('https://');
-  });
-
-  return hasLocalFile && !hasRemoteWebPage;
 }
 
 /**
