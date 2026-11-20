@@ -18,9 +18,11 @@ trigger: always_on
    - Access favicons exclusively through `chrome-extension://${browser.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=32`.
    - Never use `chrome://favicon/`.
 
-4. **Storage & Capacity**:
+4. **Storage, Cross-Context Concurrency & Settings**:
    - Store large or variable tab lists in `local:`, not `sync:`, to prevent exceeding Chrome's 8KB single-item sync quota.
-   - Use atomic serialization queues (mutex) to avoid concurrent write loss.
+   - MV3 Service Worker and Dashboard run in separate JS contexts: serialize writes across contexts with named Web Locks (`navigator.locks` via `createMutex` in `utils/storage.ts`: `withLock`, `withSessionLock`, `withSettingsLock`), falling back to an in-memory queue only in test environments lacking `navigator.locks`.
+   - Route all `sync:settings` writes (`theme`, `language`, `closeTabsAfterSave`, `maxHistoryGroups`) through `updateSettings` in `composables/useSettings.ts` and subscribe with `settingsStorage.watch` for multi-window synchronization.
+   - Always validate persisted array fields defensively on read (e.g. `Array.isArray(tabs) ? tabs : []`) rather than casting raw storage objects directly.
 
 5. **Commands & Keyboard Shortcuts**:
    - Chrome caches command bindings per extension ID in user Profile `Preferences`. If a command was previously set or cleared, updating `suggested_key` for the same command will NOT overwrite existing user profiles. Introduce a new command name (e.g. `open_dashboard`) if an automatic reset is required.
@@ -32,13 +34,16 @@ trigger: always_on
    - Always configure `firefoxProfile: './.wxt/firefox-data'` and `keepProfileChanges: true` in `wxt.config.ts`.
    - Ensure the profile directory exists on disk prior to launch (`fs.mkdirSync(..., { recursive: true })`), otherwise `web-ext` misidentifies the path as a named profile in `profiles.ini` and throws an error.
 
-7. **Cross-Browser Session Lifecycle & Cold Start Recovery**:
-   - **`runtime.onStartup` Limitation**: In Firefox (and whenever extensions are loaded as temporary add-ons via `web-ext`), Mozilla explicitly NEVER fires `browser.runtime.onStartup`.
-   - **Reliable Cold Start Detection**: Do NOT rely solely on `browser.runtime.onStartup`. Use `browser.storage.session` (which browser engines wipe automatically on browser process exit, but preserve across service worker sleep cycles) to detect cold browser launches (`isColdBrowserStart`).
+7. **Cross-Browser Session Lifecycle, Snapshot Hygiene & Cold Start**:
+   - **`runtime.onStartup` Limitation**: In Firefox (and temporary add-ons via `web-ext`), `browser.runtime.onStartup` never fires. Detect cold browser launches via `browser.storage.session` (`isColdBrowserStart`), and **fail closed** (`return false`) if `storage.session` is unavailable — never fall back to an in-memory boolean (service workers sleep and lose in-memory state).
    - **Startup Race Condition & Window ID Collisions**:
-     - Window IDs reset upon browser restarts (e.g. new window gets ID `1`, colliding with closed window ID `1`). Never rely on window ID existence to skip cold recovery.
-     - Guard active tab synchronization with `isStartupComplete`: prevent blank startup windows (`about:blank`, `about:newtab`, `about:home`) from syncing and wiping cached session tabs before previous session recovery has persisted to `local:tabGroups`.
-     - Support `about:home` alongside `about:blank` and `about:newtab` when detecting empty tabs for in-place dashboard replacement.
+     - Window IDs reset after browser restarts; never rely on window ID existence to skip cold recovery.
+     - Guard active tab sync with `isStartupComplete` so blank startup tabs (`about:blank`, `about:newtab`, `about:home`) cannot wipe cached previous-session tabs before recovery persists to `local:tabGroups`.
+     - Treat `about:home` alongside `about:blank` and `about:newtab` as replaceable empty tabs.
+   - **Close-After-Save & Snapshot Deduplication Hygiene**:
+     - Before intentionally closing a window after saving a named group (`browser.windows.remove`), explicitly call `clearWindowSessionTabs(windowId)` so `windows.onRemoved` does not create a duplicate history snapshot.
+     - Cancel pending debounced session sync (`cancelPendingSessionSync`) in `tabs.onRemoved` when `removeInfo.isWindowClosing` is true and in `windows.onRemoved`.
+     - Keep history deletion tombstones (`deletedHistorySignaturesStorage`) TTL-bounded (5 minutes) instead of permanent; discard legacy bare-string entries on read rather than re-stamping them.
 
 8. **Date Sorting & Property Testing Safety**:
    - When reading collections from dictionary storages (`Record<string, T>`), key order is arbitrary. Always sort explicitly.
@@ -59,8 +64,16 @@ trigger: always_on
    - **Even Minors for Stable Store Releases**: Even minor versions (`1.0.0`, `1.2.0`, `1.4.0`) designate milestone production releases verified for Chrome Web Store and Firefox AMO submission. Hotfix patches use `MAJOR.EVEN_MINOR.PATCH` (e.g. `1.2.1`).
    - **Store Numerical Format Rule**: Manifest V3 and AMO reject non-numeric version suffixes (e.g. `-dev`, `-beta`). Versions across `package.json`, `wxt.config.ts`, and manifest must strictly use dot-separated integers (`X.Y.Z`).
 
-12. **Continuous Changelog & Store Submission Tracking**:
-   - Maintain `CHANGELOG.md` adhering to Keep a Changelog (`Added`, `Fixed`, `Changed`).
-   - Any new feature or bugfix must be immediately recorded under the active development version header.
-   - When graduating to an even release, provide curated bilingual (English & Simplified Chinese) release notes in `CHANGELOG.md` ready for store review forms.
+12. **Continuous Changelog, Automated CI Submission & Docs Boundary**:
+   - Maintain `CHANGELOG.md` adhering to Keep a Changelog (`Added`, `Fixed`, `Changed`), recording changes immediately under the active odd-minor dev header.
+   - **Pre-Release Gate**: `.github/workflows/release.yml` automatically builds and runs `bun run submit` (Chrome Web Store + Firefox AMO) on every `v*` tag push when GitHub Secrets are configured. Always write the curated bilingual `### 📦 Chrome Web Store & Firefox AMO Release Notes` block in `CHANGELOG.md` **before** running `bun run release`, and never run local `bun run submit` concurrently with a tag push.
+   - Release/submission parsers must extract metadata strictly within the target version section (`## [X.Y.Z]`), never scanning across older versions.
+   - Keep `README.md` focused on end-user value and quick start; maintain release mechanics, store credentials, and CI/CD workflows in `docs/RELEASING.md`.
+
+13. **UI/UX, Radix Vue Primitives & Anti-Over-Design Invariants**:
+   - **Hints & Overflow-Only Tooltips**: Place subtle interaction hints in card footers or empty states, never as repetitive text in every row tooltip. On tab rows, show full title/URL hover tooltips **only when content overflows** (`scrollWidth > clientWidth`).
+   - **Radix Vue Tooltip Anti-Sticky**: Always configure `disable-hoverable-content` on `TooltipProvider` and `TooltipRoot` (with `max-w-md` and `line-clamp-*`) so collision-flipped tooltips close immediately when moving to adjacent rows.
+   - **Global Toast Visibility**: Mount `<ToastContainer />` outside mode-conditional `v-if`/`v-else` branches (e.g. `isStartupMode`) so notifications always render.
+   - **Accessible Row Controls**: Never nest `<button>` elements inside clickable rows; render the primary open action and secondary actions (remove/delete) as sibling `<button>` elements.
+   - **Avoid Over-Design & Keep `_locales` Minimal**: Enforce invariants at storage/composable seams rather than fragmenting cohesive components; keep `public/_locales/*/messages.json` strictly limited to the 4 Manifest `__MSG_*__` keys (`extName`, `extDescription`, `actionTitle`, `commandOpenDashboard`).
 
