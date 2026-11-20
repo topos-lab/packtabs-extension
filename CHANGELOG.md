@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.3.0] - In Development
+## [1.4.0] - 2026-11-20
 
 ### Added
 - **History Snapshot Deduplication (Latest-Wins)**: Automatically removes older history snapshots (`isHistory: true`) that have the exact same tab list as a newly saved closed-window snapshot, keeping only the latest entry without touching permanently saved named groups or polluting deletion tombstones.
