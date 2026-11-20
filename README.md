@@ -12,10 +12,10 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Bun](https://img.shields.io/badge/Bun-1.x-f472b6?logo=bun&logoColor=white)](https://bun.sh/)
-[![Tests](https://img.shields.io/badge/tests-249%20passed-brightgreen?logo=vitest&logoColor=white)](https://vitest.dev/)
+[![Tests](https://img.shields.io/badge/tests-306%20passed-brightgreen?logo=vitest&logoColor=white)](https://vitest.dev/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
 
-PackTabs is a productivity-first Chrome Manifest V3 browser extension built with the WXT Framework, Vue 3, and Tailwind CSS v4.
+PackTabs is a productivity-first Manifest V3 browser extension built with the WXT Framework, Vue 3, and Tailwind CSS v4.
 
 ## 📥 Installation
 
@@ -31,27 +31,31 @@ Install directly from your preferred browser extension store:
 
 > 📘 **User Guides**: [English User Guide](docs/USER_GUIDE.md) | [中文使用指南](docs/USER_GUIDE_ZH.md)
 
+![PackTabs Preview](docs/screenshots/theme-comparison-en.png)
+
 When working on multitasking projects, research topics, or troubleshooting issues, tabs easily pile up. Bookmarking them one by one is tedious, slow, and clutters your permanent browser bookmarks with temporary links. PackTabs eliminates this friction: package all open tabs from an unfinished task into an organized group in one click, cleanly close the window to clear your mind and free browser memory, and restore your entire work context whenever you're ready to pick up where you left off.
 
 ## Why PackTabs?
 
 - ⚡ **Task-Oriented Session Capture**: Staging and saving 10+ open tabs takes just one click—no more tedious one-by-one bookmarking.
 - 🧹 **Instant Focus & Memory Relief**: Save current tabs and close the window automatically to eliminate multitasking clutter and free up system RAM.
-- 🚀 **One-Click Workspace Restoration**: Reopen entire task sessions with a single click, or peek into individual links in the background with `Ctrl/Cmd/Shift+Click`.
-- 🛡️ **Zero-Loss History Snapshots**: Closed a window or quit the browser unexpectedly? Open sessions are automatically captured as history snapshots so your context is never lost.
+- 🚀 **One-Click Workspace Restoration**: Reopen entire task sessions or click any tab item directly to launch it (`Ctrl/Cmd/Shift+Click` or middle-click for background opening).
+- 🛡️ **Zero-Loss History Snapshots**: Closed a window or quit the browser unexpectedly? Open sessions are automatically captured as deduplicated history snapshots with configurable retention limits.
 - 🎯 **Flexible Drag & Drop Categorization**: Move or organize tabs across task groups effortlessly on the sidebar.
 
 ## Core Features
 
 - **One-Click Session Capture**: Save all open tabs in the current window with optional window closing.
-- **Smart Auto-Naming**: Intelligent timestamps (e.g. `Tab Group · Oct 2, 20:30`) if no group name is provided.
-- **Automatic History Snapshots**: Silently captures tabs before browser or window closing to prevent data loss.
+- **Multi-Window Isolation**: Each browser window keeps its own dashboard tab and captures only its own open tabs.
+- **Smart Auto-Naming**: Intelligent timestamps (e.g. `Tab Group · Oct 2, 18:40`) if no group name is provided.
+- **Automatic History Snapshots**: Silently captures closed-window tabs with latest-wins deduplication and configurable retention limits (`10` / `25` / `50` / `100`).
+- **Startup Restorer**: Optional session restoration view on browser cold launch (`?mode=startup`).
 - **Drag-and-Drop Categorization**: Drag any tab from Current Tabs or saved groups into other groups on the sidebar.
-- **Background Tab Opening**: Hold `Ctrl`, `Cmd`, or `Shift` and click any tab item to open it silently in the background without switching tabs.
-- **Tri-State Theme System**: Seamless toggle between Light, Dark, and Auto (System) themes using Tailwind Zinc palette (Shadcn UI style).
-- **Accessible & Lightweight UI**: Headless accessible primitives powered by Radix Vue and styled with pure Tailwind CSS v4 (no bulky UI frameworks).
-- **Theme-Adaptive Tooltips**: Custom accessible tooltips supporting multi-line formatting without native OS black tooltip bubbles.
-- **Configurable Shortcut**: Quick launcher configurable via Chrome settings (default: `Alt+Shift+K` on Windows/Linux, `Command+Shift+K` on macOS).
+- **Direct & Background Tab Opening**: Click any tab row to open it immediately, or use `Ctrl/Cmd/Shift + Click` (or middle-click) to open silently in the background.
+- **Tri-State Theme System**: Seamless toggle between Light, Dark, and Auto (System) themes using Tailwind Zinc palette.
+- **Accessible & Lightweight UI**: Headless accessible primitives powered by Radix Vue and styled with Tailwind CSS v4 (no bulky UI frameworks).
+- **Overflow-Only Tooltips**: Custom theme-adaptive tooltips show full tab titles and URLs only when titles truncate.
+- **Configurable Shortcut**: Quick launcher configurable via browser settings (default: `Alt+Shift+K` on Windows/Linux, `Command+Shift+K` on macOS).
 - **Robust Storage Architecture**: Sharded storage under `local:tabGroups` bypassing Chrome Sync's 8KB quota, paired with `sync:settings` for cross-device preferences.
 
 ## Technology Stack
@@ -68,7 +72,7 @@ When working on multitasking projects, research topics, or troubleshooting issue
 ### Prerequisites
 
 - [Bun](https://bun.sh/) (v1.1+)
-- Chrome or Chromium-based browser for testing
+- Chrome, Edge, or Firefox for local testing
 
 ### Setup
 
@@ -89,171 +93,59 @@ bun run dev
 # Start development server for Firefox
 bun run dev:firefox
 
-# Build production extension for Chrome MV3
+# Build production extension for Chrome MV3 / Firefox MV3
 bun run build
-
-# Build production extension for Firefox
 bun run build:firefox
 
-# TypeScript type check (no emit)
-bun run compile
-
-# Run full test suite (249 unit and property tests)
-bun run test
-
-# Run complete quality gate (type check + lint + test)
+# Run complete quality gate (type check + lint + 300+ Vitest tests)
 bun run check
 
 # Package extensions into release zips (.output/*.zip)
 bun run zip
 bun run zip:firefox
-
-# Automated release promotion & next dev cycle advancement
-bun run release
-
-# Dry-run release simulation (no file or git modification)
-bun run release:dry
-
-# Code style linting
-bun run lint
 ```
 
-## 🚀 Release Process & Versioning Strategy
+## Release & Documentation
 
-PackTabs follows the **Even/Odd Versioning Scheme** alongside a fully automated release pipeline:
+PackTabs uses an **Even/Odd versioning scheme** (odd minors for development, even minors for store releases) with automated GitHub Actions CI, release tagging, and Chrome Web Store / Firefox AMO publishing:
 
-- **Odd Minor Versions** (`1.1.0`, `1.3.0`): Active in-progress development cycles on `main` (never published to public extension stores).
-- **Even Minor Versions** (`1.0.0`, `1.2.0`, `1.4.0`): Stable milestone production releases verified and submitted to Chrome Web Store and Firefox AMO. Hotfix patches use `MAJOR.EVEN_MINOR.PATCH` (`1.2.1`).
-
-### 1. One-Command Automated Release
-
-When you are ready to promote the current development version to a production release:
-
-```bash
-# Step A: Simulate release flow (Dry-Run mode: no file or git modifications)
-bun run release:dry
-
-# Step B: Execute the automated release
-bun run release
-```
-
-**What the release script does automatically:**
-1. **Version Promotion**: Promotes active dev version (e.g. `1.1.0`) to the next stable release version (e.g. `1.2.0`).
-2. **File Synchronization**: Synchronizes version across `package.json` and `wxt.config.ts`.
-3. **CHANGELOG Archival**: Formats and dates the release section in `CHANGELOG.md`.
-4. **Automated Quality Gate**: Runs `bun run check` (TypeScript compilation + ESLint + 249 Vitest tests).
-5. **Git Tagging**: Creates a release commit (`chore(release): v1.2.0`) and an annotated Git tag (`v1.2.0`).
-6. **Cycle Advancement**: Automatically advances codebase to the next development cycle (e.g. `1.3.0`), injects a fresh `CHANGELOG.md` template, and commits.
-
-### 2. Publishing to GitHub & Extension Stores
-
-Push the release commits and tag to GitHub:
-
-```bash
-git push origin main --follow-tags
-```
-
-Once pushed:
-- **GitHub Actions (`release.yml`)**: Automatically triggers upon new tag push (`v*`), compiles packages for Chrome MV3, Firefox MV3, and source zip archives, extracts release notes from `CHANGELOG.md`, creates a GitHub Release, and **automatically submits packages to Chrome Web Store & Firefox AMO** if secrets are configured.
-- **Local Submission Script**: You can also verify or submit directly from your local terminal:
-  ```bash
-  # Step A: Dry-run check (verifies credentials and packages without uploading)
-  bun run submit:dry
-
-  # Step B: Publish and submit to Chrome Web Store & Firefox AMO
-  bun run submit
-  ```
-
-#### Configuring Store API Credentials
-
-> 📖 **详细配置教程**：完整的申请、授权步骤与故障排查说明，请参阅 [**浏览器扩展商店 API 凭据申请指南**](docs/STORE_API_KEY_GUIDE.md)。
-
-##### Option A: GitHub Actions Secrets (Recommended for Full CI/CD Automation)
-Configure the following Repository Secrets in **GitHub Settings -> Secrets and variables -> Actions**:
-
-| Secret Name | Description | Source |
-|---|---|---|
-| `CHROME_PUBLISHER_ID` | Your Chrome Web Store Publisher ID | Chrome Web Store Developer Console -> Account |
-| `CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL` | Google Cloud Service Account Email | Google Cloud Console (IAM & Admin -> Service Accounts) |
-| `CHROME_SERVICE_ACCOUNT_PRIVATE_KEY` | Google Cloud Service Account Private Key | JSON key downloaded from Google Cloud Service Account |
-| `FIREFOX_JWT_ISSUER` | Mozilla AMO API JWT Issuer | [AMO API Keys](https://addons.mozilla.org/developers/addon/api/key/) |
-| `FIREFOX_JWT_SECRET` | Mozilla AMO API JWT Secret | [AMO API Keys](https://addons.mozilla.org/developers/addon/api/key/) |
-
-##### Option B: Local `.env.submit` Configuration
-Copy the template [`.env.submit.example`](.env.submit.example) to `.env.submit` in the project root:
-
-```bash
-# PowerShell
-Copy-Item .env.submit.example .env.submit
-
-# Bash / Zsh
-cp .env.submit.example .env.submit
-```
-
-Fill in your store credentials in `.env.submit` (ignored by `.gitignore`):
-```env
-# Chrome Web Store (API v2)
-CHROME_API_VERSION=v2
-CHROME_EXTENSION_ID=mpjjbfgjjbphemiklfoojlogcmjdkjjp
-CHROME_PUBLISHER_ID=your_publisher_id
-CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL=your_service_account@project.iam.gserviceaccount.com
-CHROME_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-
-# Firefox Add-ons (AMO)
-FIREFOX_EXTENSION_ID=packtabs@topos-lab.github.io
-FIREFOX_JWT_ISSUER=your_jwt_issuer
-FIREFOX_JWT_SECRET=your_jwt_secret
-FIREFOX_CHANNEL=listed
-```
-*Tip: Run `bunx wxt submit init` to launch the interactive configuration wizard.*
-
-## CI/CD & Automation
-
-This project uses **GitHub Actions** for continuous integration, automated testing, dependency management, and releases:
-
-- **Continuous Integration (`ci.yml`)**:
-  - Automatically triggered whenever code is pushed to `main` or upon creating a Pull Request.
-  - Installs Bun environment and frozen dependencies.
-  - Runs strict TypeScript compilation (`vue-tsc --noEmit`), the complete test suite (268 unit & property-based tests via `vitest`), and builds both Chrome MV3 and Firefox extensions to prevent regressions.
-- **Release Pipeline (`release.yml`)**:
-  - Automatically triggered on release tag push (`v*`) or manually via GitHub's **Actions** tab (`Run workflow`).
-  - Packages production builds for Chrome MV3, Firefox MV3, and source zip archives.
-  - Automatically extracts release notes from `CHANGELOG.md`, creates a GitHub Release, and submits updates directly to Chrome Web Store and Firefox AMO.
-- **Dependency Management & Security (`dependabot.yml`)**:
-  - Automatically scans npm/bun dependencies weekly and GitHub Actions monthly.
-  - Opens automated Pull Requests for security patches and library upgrades.
+- **[Release Process, Store Credentials & CI/CD](docs/RELEASING.md)** — `bun run release`, GitHub Actions (`ci.yml`, `release.yml`, `dependabot.yml`), and store secrets setup
+- **[Browser Store API Key Guide](docs/STORE_API_KEY_GUIDE.md)** — Step-by-step guide for Chrome Web Store & Firefox AMO API credentials
+- **[Architecture Guide](docs/architecture.md)** — Storage mutexes, concurrency, and extension lifecycle design
+- **[Changelog](CHANGELOG.md)** — Version history and release notes
 
 ## Directory Structure
 
 ```
 packtabs-extension/
 ├── entrypoints/
-│   ├── background.ts              # Service worker (tab capture, snapshot preservation)
-│   └── dashboard/                 # Full-page manager application (Vue 3)
-│       ├── App.vue                # Main dashboard component
+│   ├── background.ts              # Service worker (session sync, snapshot recovery, commands)
+│   └── dashboard/                 # Full-page manager & startup restorer app (Vue 3)
+│       ├── App.vue                # Main dashboard shell
 │       ├── main.ts                # App mount entry
 │       └── style.css              # Global styles & Tailwind entry
 ├── components/
-│   ├── ui/                        # Reusable accessible UI primitives
-│   │   ├── badge/                 # Badge component
-│   │   ├── button/                # Button component (cva variants)
-│   │   ├── card/                  # Card, CardHeader, CardContent, CardTitle
-│   │   ├── dialog/                # Accessible Modal (Radix Vue)
-│   │   ├── input/                 # Input component
-│   │   ├── toast/                 # ToastContainer component
-│   │   └── tooltip/               # Multi-line Tooltip component (Radix Vue)
-│   ├── TabGroupCard.vue           # Interactive tab group card
+│   ├── ui/                        # Reusable accessible UI primitives (Badge, Button, Card, Modal, Input, Toast, Tooltip)
+│   ├── CollectionDetail.vue       # Dedicated saved group detail view
+│   ├── SettingsModal.vue          # Preferences, theme, language & history retention settings
+│   ├── StartupRestorer.vue        # Dedicated cold-start session restorer view
+│   ├── TabGroupCard.vue           # Interactive history/group card
 │   ├── TabGroupList.vue           # Timeline-categorized groups list
-│   └── CollectionDetail.vue       # Dedicated group detail view
+│   └── TabItemRow.vue             # Draggable tab row with overflow-only tooltip
 ├── stores/
-│   └── useTabStore.ts             # Pinia store with optimistic updates & lock-safe storage
+│   └── useTabStore.ts             # Pinia store synced with mutex-locked storage
 ├── composables/
+│   ├── useI18n.ts                 # Multi-language i18n (en, zh_CN, zh_TW)
+│   ├── useSettings.ts             # Atomic sync:settings state & cross-window watcher
 │   ├── useTheme.ts                # Tri-state theme manager (light/dark/system)
 │   └── useToast.ts                # Floating toast notifications
 ├── utils/
-│   ├── storage.ts                 # Mutex-locked chrome.storage service
-│   ├── tabManager.ts              # Browser tabs capture, restore, and favicon service
-│   └── init-app.ts                # App initialization
+│   ├── dashboardLauncher.ts       # Per-window dashboard launch & focus manager
+│   ├── date.ts                    # Locale-aware cached date formatters & safe sorting
+│   ├── init-app.ts                # App initialization
+│   ├── keyboard.ts                # IME composition keyboard guard
+│   ├── storage.ts                 # Web Locks / mutex-serialized chrome.storage service
+│   └── tabManager.ts              # Browser tabs capture, restore, and favicon helpers
 ├── types/
 │   ├── TabGroup.ts                # Core tab and group models
 │   └── Storage.ts                 # Storage schemas and items
