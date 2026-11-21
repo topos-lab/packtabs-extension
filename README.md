@@ -12,7 +12,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Bun](https://img.shields.io/badge/Bun-1.x-f472b6?logo=bun&logoColor=white)](https://bun.sh/)
-[![Tests](https://img.shields.io/badge/tests-306%20passed-brightgreen?logo=vitest&logoColor=white)](https://vitest.dev/)
+[![Tests](https://img.shields.io/badge/tests-331%20passed-brightgreen?logo=vitest&logoColor=white)](https://vitest.dev/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
 
 PackTabs is a productivity-first Manifest V3 browser extension built with the WXT Framework, Vue 3, and Tailwind CSS v4.
@@ -45,16 +45,18 @@ When working on multitasking projects, research topics, or troubleshooting issue
 
 ## Core Features
 
-- **One-Click Session Capture**: Save all open tabs in the current window with optional window closing.
+- **Quick Action Popup**: Click the toolbar icon to either save your current window in 1 click or launch any Saved Group immediately (with `↗` new-window launch).
+- **One-Click Session Capture**: Save all open tabs in the current window with an inline "Close window after save" switch ("Save & Exit" by default).
 - **Multi-Window Isolation**: Each browser window keeps its own dashboard tab and captures only its own open tabs.
 - **Smart Auto-Naming**: Intelligent timestamps (e.g. `Tab Group · Oct 2, 18:40`) if no group name is provided.
-- **Automatic History Snapshots**: Silently captures closed-window tabs with latest-wins deduplication and configurable retention limits (`10` / `25` / `50` / `100`).
-- **Startup Restorer**: Optional session restoration view on browser cold launch (`?mode=startup`).
-- **Drag-and-Drop Categorization**: Drag any tab from Current Tabs or saved groups into other groups on the sidebar.
+- **Automatic History Snapshots**: Silently captures closed-window tabs with latest-wins deduplication, configurable retention limits (`10` / `25` / `50` / `100`), and inline header save-to-group conversion.
+- **Dual-Mode Restoration & Undo Toasts**: Open tabs in the current window or click `↗` (`Shift+Click`) to open in a new window; delete groups or items instantaneously with 5-second Undo toast recovery.
+- **Startup Restorer**: Minimalist 2-column session restoration view on browser cold launch (`?mode=startup`) with hover-only cleanup and drag-to-group organization.
+- **Drag-and-Drop Categorization**: Drag any tab across groups (`Current Tabs` / `Saved Groups` / `Startup Restorer`); history snapshots copy cleanly while saved groups move atomically.
 - **Direct & Background Tab Opening**: Click any tab row to open it immediately, or use `Ctrl/Cmd/Shift + Click` (or middle-click) to open silently in the background.
-- **Tri-State Theme System**: Seamless toggle between Light, Dark, and Auto (System) themes using Tailwind Zinc palette.
+- **Tri-State Theme System**: Seamless Light, Dark, and Auto (System) themes with cached first-paint rendering across Dashboard and Popup.
 - **Accessible & Lightweight UI**: Headless accessible primitives powered by Radix Vue and styled with Tailwind CSS v4 (no bulky UI frameworks).
-- **Overflow-Only Tooltips**: Custom theme-adaptive tooltips show full tab titles and URLs only when titles truncate.
+- **Theme-Aware Tooltips & Neutral Toast Cards**: Fast `300ms` theme-adaptive tooltips on action buttons, overflow-only tooltips on truncated tab titles, and neutral floating Undo toasts.
 - **Configurable Shortcut**: Quick launcher configurable via browser settings (default: `Alt+Shift+K` on Windows/Linux, `Command+Shift+K` on macOS).
 - **Robust Storage Architecture**: Sharded storage under `local:tabGroups` bypassing Chrome Sync's 8KB quota, paired with `sync:settings` for cross-device preferences.
 
@@ -120,6 +122,7 @@ PackTabs uses an **Even/Odd versioning scheme** (odd minors for development, eve
 packtabs-extension/
 ├── entrypoints/
 │   ├── background.ts              # Service worker (session sync, snapshot recovery, commands)
+│   ├── popup/                     # Compact 280px toolbar popup (save trigger & group launcher)
 │   └── dashboard/                 # Full-page manager & startup restorer app (Vue 3)
 │       ├── App.vue                # Main dashboard shell
 │       ├── main.ts                # App mount entry
@@ -127,7 +130,7 @@ packtabs-extension/
 ├── components/
 │   ├── ui/                        # Reusable accessible UI primitives (Badge, Button, Card, Modal, Input, Toast, Tooltip)
 │   ├── CollectionDetail.vue       # Dedicated saved group detail view
-│   ├── SettingsModal.vue          # Preferences, theme, language & history retention settings
+│   ├── SettingsModal.vue          # Preferences, theme, language, startup & history retention settings
 │   ├── StartupRestorer.vue        # Dedicated cold-start session restorer view
 │   ├── TabGroupCard.vue           # Interactive history/group card
 │   ├── TabGroupList.vue           # Timeline-categorized groups list
@@ -137,16 +140,17 @@ packtabs-extension/
 ├── composables/
 │   ├── useI18n.ts                 # Multi-language i18n (en, zh_CN, zh_TW)
 │   ├── useSettings.ts             # Atomic sync:settings state & cross-window watcher
-│   ├── useTheme.ts                # Tri-state theme manager (light/dark/system)
-│   └── useToast.ts                # Floating toast notifications
+│   ├── useTheme.ts                # Tri-state theme manager + cached first-paint helper
+│   └── useToast.ts                # Floating toast notifications with Undo actions
 ├── utils/
 │   ├── dashboardLauncher.ts       # Per-window dashboard launch & focus manager
 │   ├── date.ts                    # Locale-aware cached date formatters & safe sorting
 │   ├── init-app.ts                # App initialization
 │   ├── keyboard.ts                # IME composition keyboard guard
 │   ├── storage.ts                 # Web Locks / mutex-serialized chrome.storage service
-│   └── tabManager.ts              # Browser tabs capture, restore, and favicon helpers
+│   └── tabManager.ts              # Browser tabs capture, URL sorting, restore & favicon helpers
 ├── types/
+│   ├── env.d.ts                   # Build timestamp declaration
 │   ├── TabGroup.ts                # Core tab and group models
 │   └── Storage.ts                 # Storage schemas and items
 └── tests/

@@ -1,4 +1,8 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 import { mount } from '@vue/test-utils';
+import { TooltipRoot } from 'radix-vue';
 import { describe, expect, it } from 'vitest';
 
 import { Tooltip } from '../../components/ui/tooltip';
@@ -82,5 +86,24 @@ describe('Tooltip Component', () => {
     });
 
     expect(wrapper.exists()).toBe(true);
+  });
+
+  it('uses industry-standard 300ms default delay, disables hoverable content, and omits transition-all animation', () => {
+    const wrapper = mount(Tooltip, {
+      props: {
+        content: 'Fast dark-theme hint',
+      },
+      slots: {
+        default: '<button>Trigger</button>',
+      },
+    });
+
+    const root = wrapper.findComponent(TooltipRoot);
+    expect(root.props('delayDuration')).toBe(300);
+    expect(root.props('disableHoverableContent')).toBe(true);
+
+    const source = readFileSync(resolve(process.cwd(), 'components/ui/tooltip/Tooltip.vue'), 'utf-8');
+    expect(source).not.toContain('transition-all');
+    expect(source).toContain('dark:bg-[#27272c]');
   });
 });

@@ -33,7 +33,7 @@ const props = withDefaults(defineProps<Props>(), {
   side: 'top',
   align: 'center',
   sideOffset: 6,
-  delayDuration: 400,
+  delayDuration: 300,
   disabled: false,
   class: undefined,
 });
@@ -46,7 +46,7 @@ const Passthrough: Component = (_, { slots }) => slots.default?.();
 <template>
   <component
     :is="hasRootProvider ? Passthrough : TooltipProvider"
-    v-bind="hasRootProvider ? undefined : { delayDuration: props.delayDuration, disableHoverableContent: true }"
+    v-bind="hasRootProvider ? undefined : { delayDuration: props.delayDuration, skipDelayDuration: 300, disableHoverableContent: true }"
   >
     <TooltipRoot :delay-duration="props.delayDuration" :disabled="props.disabled" :disable-hoverable-content="true">
       <TooltipTrigger as-child>
@@ -59,7 +59,7 @@ const Passthrough: Component = (_, { slots }) => slots.default?.();
           :side-offset="props.sideOffset"
           :class="
             cn(
-              'z-50 overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-800 dark:text-zinc-200 shadow-md select-none pointer-events-none transition-all whitespace-pre-line max-w-md break-words leading-relaxed',
+              'z-50 overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-[#27272c] px-2.5 py-1.5 text-xs text-zinc-800 dark:text-zinc-200 shadow-md select-none pointer-events-none whitespace-pre-line max-w-md break-words leading-relaxed',
               props.class
             )
           "

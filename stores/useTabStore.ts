@@ -7,6 +7,7 @@ import type { TabGroup, TabItem } from '~/types/TabGroup';
 import { sortGroupsByDateDesc } from '~/utils/date';
 import {
   addTabToGroup as addTabToGroupInStorage,
+  clearDeletedHistorySignature,
   deleteTabFromGroup as deleteTabFromGroupInStorage,
   deleteTabGroup as deleteTabGroupFromStorage,
   deserializeTabGroup,
@@ -71,6 +72,7 @@ export const useTabStore = defineStore('tabs', () => {
   const tabGroups = ref<TabGroup[]>([]);
   const selectedGroupId = ref<string | null>(null);
   const isDraggingTab = ref(false);
+  const draggingSourceIsHistory = ref(false);
 
   // Computed properties (sorted newest first)
   const historyGroups = computed(() =>
@@ -294,11 +296,49 @@ export const useTabStore = defineStore('tabs', () => {
     }
   }
 
+  /**
+   * Restores a previously deleted tab group snapshot with its original metadata and clears
+   * any matching history deletion tombstone.
+   */
+  async function restoreGroup(group: TabGroup): Promise<void> {
+    try {
+      const snapshot: TabGroup = {
+        id: group.id,
+        name: group.name,
+        createdAt: new Date(group.createdAt),
+        tabs: normalizeTabs(group.tabs),
+        isHistory: Boolean(group.isHistory),
+      };
+
+      if (snapshot.isHistory) {
+        await clearDeletedHistorySignature(snapshot.tabs);
+      }
+
+      await saveTabGroupToStorage(snapshot);
+
+      const existingIdx = tabGroups.value.findIndex((g) => g.id === snapshot.id);
+      if (existingIdx >= 0) {
+        tabGroups.value[existingIdx] = snapshot;
+      } else {
+        tabGroups.value = [snapshot, ...tabGroups.value];
+      }
+      tabGroups.value = sortGroupsByDateDesc(tabGroups.value);
+    } catch (error) {
+      if (error instanceof StorageQuotaExceededError) {
+        handleError(error, 'Storage quota exceeded. Please delete some tab groups to free up space.');
+      } else {
+        handleError(error, 'Failed to restore tab group');
+      }
+      throw error;
+    }
+  }
+
   return {
     // State
     tabGroups,
     selectedGroupId,
     isDraggingTab,
+    draggingSourceIsHistory,
     // Computed
     historyGroups,
     namedGroups,
@@ -312,5 +352,6 @@ export const useTabStore = defineStore('tabs', () => {
     convertToNamed,
     moveTab,
     addTab,
+    restoreGroup,
   };
 });

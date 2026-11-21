@@ -11,13 +11,14 @@
 
   .dark {
     color-scheme: dark;
-    scrollbar-color: #71717a #09090b;
+    scrollbar-color: #71717a #18181b;
   }
 
   * {
     box-sizing: border-box;
   }
 
+  html,
   body {
     margin: 0;
     padding: 0;
@@ -30,8 +31,9 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  .dark body {
-    background-color: #09090b;
+  html.dark,
+  html.dark body {
+    background-color: #18181b;
     color: #fafafa;
   }
 

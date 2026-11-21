@@ -25,6 +25,7 @@ packtabs-extension/
 │   └── specs/                 # Feature requirements, design specs, and tasks
 ├── entrypoints/               # WXT extension entry points
 │   ├── background.ts          # MV3 Service Worker (session tracking, cold-start recovery, shortcuts)
+│   ├── popup/                 # Compact 280px Quick Action Popup (save trigger + 1-click group launcher)
 │   └── dashboard/             # Full-page manager dashboard (Vue 3 application)
 ├── components/                # Reusable Vue components
 │   ├── ui/                    # Headless Tailwind primitives (badge, button, card, dialog, input, toast, tooltip)
@@ -32,11 +33,12 @@ packtabs-extension/
 │   ├── TabGroupCard.vue       # Interactive tab group card
 │   ├── TabGroupList.vue       # Responsive list/grid of groups
 │   ├── TabItemRow.vue         # Tab row with overflow-only tooltip & sibling controls
+│   ├── StartupTabList.vue     # Shared tab preview list for Startup Restorer cards
 │   ├── StartupRestorer.vue    # Cold-start recovery view
-│   └── SettingsModal.vue      # Preferences modal (theme, language, close-after-save, history limit)
-├── composables/               # Vue composables (useSettings, useTheme, useI18n, useToast)
+│   └── SettingsModal.vue      # Preferences modal (theme, language, startup recovery, history limit, shortcut)
+├── composables/               # Vue composables (useGroupActions, useSettings, useTheme, useI18n, useToast)
 ├── stores/                    # Pinia stores (useTabStore.ts)
-├── types/                     # TypeScript domain models (TabGroup.ts, Storage.ts)
+├── types/                     # TypeScript domain models & env declarations (TabGroup.ts, Storage.ts, env.d.ts)
 ├── utils/                     # Services (storage.ts, tabManager.ts, dashboardLauncher.ts, date.ts, keyboard.ts, init-app.ts)
 ├── scripts/                   # Release & store submission automation (release.ts, submit.ts)
 ├── tests/                     # Unit & fast-check property tests

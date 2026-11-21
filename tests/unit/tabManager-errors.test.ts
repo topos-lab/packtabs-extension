@@ -5,9 +5,12 @@ import {
   captureCurrentWindow,
   closeCurrentTabs,
   getFaviconUrl,
+  getTabUrlSortKey,
   InvalidUrlError,
   openSingleTab,
   openTabs,
+  openTabsInNewWindow,
+  sortTabsByUrl,
   TabNotFoundError,
   TabPermissionDeniedError,
   validateUrl,
@@ -409,6 +412,47 @@ describe('Tab Manager Error Handling', () => {
       expect(createSpy).toHaveBeenCalledWith({ windowId: 1, active: true });
       expect(createSpy.mock.calls[0]?.[0]).not.toHaveProperty('url');
       expect(removeSpy).toHaveBeenCalledWith([10]);
+    });
+
+    it('sorts tabs alphabetically by normalized URL without mutating input array', () => {
+      expect(getTabUrlSortKey('https://www.Example.com/Path?a=1')).toBe('example.com/path?a=1');
+      expect(getTabUrlSortKey('not-a-valid-url')).toBe('not-a-valid-url');
+      expect(getTabUrlSortKey('')).toBe('');
+
+      const original: TabItem[] = [
+        { id: '3', url: 'https://zeta.org/docs', title: 'Zeta' },
+        { id: '1', url: 'https://www.alpha.org/b', title: 'Alpha B' },
+        { id: '2', url: 'http://alpha.org/a', title: 'Alpha A' },
+        { id: '4', url: 'https://alpha.org/a', title: 'Alpha A2' },
+      ];
+
+      const sorted = sortTabsByUrl(original);
+      expect(sorted.map((t) => t.id)).toEqual(['2', '4', '1', '3']);
+      expect(original.map((t) => t.id)).toEqual(['3', '1', '2', '4']);
+    });
+
+    it('opens valid tabs in a newly created focused window and filters invalid URLs', async () => {
+      const createWinSpy = vi.spyOn(browser.windows, 'create').mockResolvedValue({ id: 99 } as any);
+
+      await openTabsInNewWindow([
+        { id: '1', url: 'https://example.com', title: 'Valid' },
+        { id: '2', url: 'chrome://settings', title: 'Invalid' },
+        { id: '3', url: 'https://vitest.dev', title: 'Vitest' },
+      ]);
+
+      expect(createWinSpy).toHaveBeenCalledWith({
+        url: ['https://example.com', 'https://vitest.dev'],
+        focused: true,
+      });
+
+      createWinSpy.mockClear();
+      await openTabsInNewWindow([{ id: '4', url: 'about:blank', title: 'Blank' }]);
+      expect(createWinSpy).not.toHaveBeenCalled();
+
+      createWinSpy.mockRejectedValueOnce(new Error('permission denied'));
+      await expect(
+        openTabsInNewWindow([{ id: '5', url: 'https://example.com', title: 'Valid' }])
+      ).rejects.toThrow(TabPermissionDeniedError);
     });
   });
 });

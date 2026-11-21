@@ -192,4 +192,20 @@ describe('TabGroupList Component', () => {
     expect(cards).toHaveLength(1);
     expect(wrapper.text()).toContain('Work Tabs');
   });
+
+  it('renders time category headers without group count numbers', () => {
+    const wrapper = mount(TabGroupList, {
+      props: { groups: mockGroups },
+      global: {
+        plugins: [pinia],
+        stubs: {
+          TabGroupCard: true,
+        },
+      },
+    });
+
+    const text = wrapper.text().trim();
+    expect(text).toContain('Older');
+    expect(text).not.toContain('3');
+  });
 });

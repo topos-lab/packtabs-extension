@@ -2,8 +2,8 @@
   import { AlertCircle, Copy, ExternalLink, Moon, Sun, SunMoon } from 'lucide-vue-next';
   import { computed, onMounted, ref, watch } from 'vue';
 
-  import { Button } from '~/components/ui/button';
   import Modal from '~/components/ui/dialog/Modal.vue';
+  import { Tooltip } from '~/components/ui/tooltip';
   import { useI18n } from '~/composables/useI18n';
   import { useSettings } from '~/composables/useSettings';
   import { useTheme } from '~/composables/useTheme';
@@ -23,12 +23,10 @@
   const { theme, setTheme } = useTheme();
   const {
     openOnStartup: openOnStartupRef,
-    closeWindowAfterSave: closeWindowAfterSaveRef,
     maxHistoryGroups,
     initSettings,
     loadSettings,
     setOpenOnStartup,
-    setCloseWindowAfterSave,
     setMaxHistoryGroups,
   } = useSettings();
 
@@ -36,13 +34,6 @@
     get: () => openOnStartupRef.value,
     set: (val: boolean) => {
       void setOpenOnStartup(val);
-    },
-  });
-
-  const closeWindowAfterSave = computed({
-    get: () => closeWindowAfterSaveRef.value,
-    set: (val: boolean) => {
-      void setCloseWindowAfterSave(val);
     },
   });
 
@@ -184,19 +175,14 @@
   <Modal
     :open="open"
     :title="t('settings')"
-    :description="t('settingsDesc')"
+    content-class="max-w-lg p-5"
     @update:open="emit('update:open', $event)">
-    <div class="space-y-4 py-1 text-xs text-zinc-600 dark:text-zinc-300">
+    <div class="divide-y divide-zinc-100 dark:divide-zinc-700/50 text-xs text-zinc-600 dark:text-zinc-300">
       <!-- 1. Appearance / Theme Segmented Control -->
-      <div class="flex items-center justify-between gap-3 py-1.5 border-b border-zinc-100 dark:border-zinc-800">
-        <div>
-          <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('themeLabel') }}</span>
-          <p class="text-[10px] text-zinc-500 dark:text-zinc-400">
-            {{ t('themeDesc') }}
-          </p>
-        </div>
+      <div class="flex items-center justify-between gap-3 py-2.5">
+        <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('themeLabel') }}</span>
         <div
-          class="inline-flex items-center p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60 text-xs shrink-0">
+          class="inline-flex items-center p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-900/80 border border-zinc-200/60 dark:border-zinc-700/60 text-xs shrink-0">
           <button
             v-for="opt in themeOptions"
             :key="opt.mode"
@@ -218,21 +204,16 @@
       </div>
 
       <!-- 2. Display Language -->
-      <div class="flex flex-col gap-2 py-1.5 border-b border-zinc-100 dark:border-zinc-800">
-        <div>
-          <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('languageLabel') }}</span>
-          <p class="text-[10px] text-zinc-500 dark:text-zinc-400">
-            {{ t('languageDesc') }}
-          </p>
-        </div>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 py-2.5">
+        <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('languageLabel') }}</span>
         <div
-          class="inline-flex w-full items-center p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60 text-xs">
+          class="inline-flex items-center p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-900/80 border border-zinc-200/60 dark:border-zinc-700/60 text-xs shrink-0">
           <button
             v-for="opt in localeOptions"
             :key="opt.mode"
             type="button"
             :aria-pressed="localeMode === opt.mode"
-            class="flex-1 px-2 py-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-all font-medium cursor-pointer truncate"
+            class="px-2 py-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-all font-medium cursor-pointer whitespace-nowrap"
             :class="
               localeMode === opt.mode
                 ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-2xs'
@@ -244,8 +225,8 @@
         </div>
       </div>
 
-      <!-- 3. Restore on Startup Toggle + Deep Link Contextual Guidance -->
-      <div class="py-1.5 border-b border-zinc-100 dark:border-zinc-800">
+      <!-- 3. Restore on Startup Toggle + Compact Prerequisite Banner -->
+      <div class="py-2.5">
         <div class="flex items-center justify-between gap-3">
           <div>
             <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('startupSettingLabel') }}</span>
@@ -263,58 +244,33 @@
               class="sr-only peer"
             >
             <div
-              class="w-8 h-4.5 bg-zinc-200 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-indigo-500 peer-focus-visible:ring-offset-2 dark:peer-focus-visible:ring-offset-zinc-900 rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-3.5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all motion-reduce:after:transition-none dark:border-zinc-600 peer-checked:bg-indigo-600" />
+              class="w-8 h-4.5 bg-zinc-200 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-indigo-500 peer-focus-visible:ring-offset-2 dark:peer-focus-visible:ring-offset-[#222226] rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-3.5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all motion-reduce:after:transition-none dark:border-zinc-600 peer-checked:bg-indigo-600" />
           </label>
         </div>
 
-        <!-- Contextual tip when openOnStartup is enabled: required prerequisite -->
+        <!-- Contextual tip when openOnStartup is enabled: compact horizontal strip -->
         <div
           v-if="openOnStartup"
-          class="mt-2.5 p-3 rounded-lg bg-amber-50/70 dark:bg-zinc-800/60 border border-amber-200/80 dark:border-zinc-700/80 text-[11px] space-y-2">
-          <div class="flex items-center gap-1.5 font-medium text-amber-900 dark:text-amber-400">
-            <AlertCircle class="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
-            <span>{{ t('startupSettingTipTitle') }}</span>
+          class="mt-2 px-3 py-2 rounded-lg bg-amber-50/70 dark:bg-zinc-900/60 border border-amber-200/80 dark:border-zinc-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-[11px]">
+          <div class="flex items-start gap-2 min-w-0">
+            <AlertCircle class="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+            <p class="text-amber-900/85 dark:text-zinc-300 leading-snug">
+              {{ startupTipDesc }}
+            </p>
           </div>
-          <p class="text-amber-900/80 dark:text-zinc-400 leading-relaxed text-[11px]">
-            {{ startupTipDesc }}
-          </p>
-          <div class="pt-0.5">
-            <button
-              type="button"
-              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-500/15 dark:hover:bg-amber-500/25 dark:text-amber-300 dark:border dark:border-amber-500/30 font-medium text-[11px] shadow-2xs transition-colors cursor-pointer"
-              @click="openOnStartupSettings">
-              <span>{{ startupButtonLabel }}</span>
-              <Copy v-if="browserType === 'firefox'" class="h-3 w-3" />
-              <ExternalLink v-else class="h-3 w-3" />
-            </button>
-          </div>
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-500/15 dark:hover:bg-amber-500/25 dark:text-amber-300 dark:border dark:border-amber-500/30 font-medium text-[11px] shadow-2xs transition-colors shrink-0 self-start sm:self-center cursor-pointer"
+            @click="openOnStartupSettings">
+            <span>{{ startupButtonLabel }}</span>
+            <Copy v-if="browserType === 'firefox'" class="h-3 w-3" />
+            <ExternalLink v-else class="h-3 w-3" />
+          </button>
         </div>
       </div>
 
-      <!-- 4. Close Window After Save Toggle -->
-      <div class="flex items-center justify-between gap-3 py-1.5 border-b border-zinc-100 dark:border-zinc-800">
-        <div>
-          <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('closeWindowAfterSave') }}</span>
-          <p class="text-[10px] text-zinc-500 dark:text-zinc-400">
-            {{ t('closeWindowAfterSaveDesc') }}
-          </p>
-        </div>
-        <label class="relative inline-flex items-center cursor-pointer shrink-0">
-          <input
-            v-model="closeWindowAfterSave"
-            type="checkbox"
-            role="switch"
-            :aria-checked="closeWindowAfterSave"
-            :aria-label="t('closeWindowAfterSave')"
-            class="sr-only peer"
-          >
-          <div
-            class="w-8 h-4.5 bg-zinc-200 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-indigo-500 peer-focus-visible:ring-offset-2 dark:peer-focus-visible:ring-offset-zinc-900 rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-3.5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all motion-reduce:after:transition-none dark:border-zinc-600 peer-checked:bg-indigo-600" />
-        </label>
-      </div>
-
-      <!-- 5. Max History Snapshots Retention Limit -->
-      <div class="flex items-center justify-between gap-3 py-1.5 border-b border-zinc-100 dark:border-zinc-800">
+      <!-- 4. Max History Snapshots Retention Limit -->
+      <div class="flex items-center justify-between gap-3 py-2.5">
         <div>
           <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('maxHistoryLabel') }}</span>
           <p class="text-[10px] text-zinc-500 dark:text-zinc-400">
@@ -322,7 +278,7 @@
           </p>
         </div>
         <div
-          class="inline-flex items-center p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60 text-xs shrink-0">
+          class="inline-flex items-center p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-900/80 border border-zinc-200/60 dark:border-zinc-700/60 text-xs shrink-0">
           <button
             v-for="limit in historyLimitOptions"
             :key="limit"
@@ -341,33 +297,23 @@
       </div>
 
       <!-- 6. Keyboard Shortcut -->
-      <div class="flex items-center justify-between gap-3 py-1.5">
-        <div>
-          <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('shortcutLabel') }}</span>
-          <p class="text-[10px] text-zinc-500 dark:text-zinc-400">
-            {{ t('shortcutDesc') }}
-          </p>
-        </div>
+      <div class="flex items-center justify-between gap-3 pt-2.5 pb-0.5">
+        <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ t('shortcutLabel') }}</span>
         <div class="flex items-center gap-2 shrink-0">
           <span
-            class="font-mono text-[11px] bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded text-zinc-700 dark:text-zinc-300 font-semibold border border-zinc-200/60 dark:border-zinc-700/60">
+            class="font-mono text-[11px] bg-zinc-100 dark:bg-zinc-900/80 px-2 py-0.5 rounded text-zinc-700 dark:text-zinc-300 font-semibold border border-zinc-200/60 dark:border-zinc-700/60">
             {{ currentShortcut }}
           </span>
-          <button
-            type="button"
-            class="text-[11px] text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded font-medium cursor-pointer"
-            :title="browserType === 'firefox' ? t('copyFirefoxAddonsTitle') : t('openShortcutSettingsTitle')"
-            @click="openShortcutSettings">
-            {{ t('change') }}
-          </button>
+          <Tooltip :content="browserType === 'firefox' ? t('copyFirefoxAddonsTitle') : t('openShortcutSettingsTitle')">
+            <button
+              type="button"
+              class="text-[11px] text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded font-medium cursor-pointer"
+              @click="openShortcutSettings">
+              {{ t('change') }}
+            </button>
+          </Tooltip>
         </div>
       </div>
     </div>
-
-    <template #footer>
-      <Button size="sm" variant="outline" @click="emit('update:open', false)">
-        {{ t('close') }}
-      </Button>
-    </template>
   </Modal>
 </template>

@@ -1,7 +1,7 @@
 import { getBrowserType } from '~/lib/utils';
-import type { TabItem } from '~/types/TabGroup';
+import type { TabGroup, TabItem } from '~/types/TabGroup';
 import { formatDefaultGroupName } from '~/utils/date';
-import { normalizeTabUrl } from '~/utils/storage';
+import { normalizeTabs, normalizeTabUrl } from '~/utils/storage';
 
 /**
  * Custom error types for tab operations
@@ -67,6 +67,42 @@ export function deduplicateTabsByUrl(tabs: TabItem[]): TabItem[] {
     }
     seen.add(key);
     return true;
+  });
+}
+
+/**
+ * Generates a normalized sort key from a URL so tabs on the same domain
+ * (regardless of http/https or www prefix) group together alphabetically.
+ */
+export function getTabUrlSortKey(url?: string): string {
+  if (!url) {
+    return '';
+  }
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase().replace(/^www\./, '');
+    const port = parsed.port ? `:${parsed.port}` : '';
+    return `${host}${port}${parsed.pathname}${parsed.search}${parsed.hash}`.toLowerCase();
+  } catch {
+    return url.toLowerCase();
+  }
+}
+
+/**
+ * Returns a new array of tabs sorted alphabetically by normalized URL,
+ * falling back to title and id for deterministic ordering.
+ */
+export function sortTabsByUrl(tabs: TabItem[]): TabItem[] {
+  return [...tabs].sort((a, b) => {
+    const urlCmp = getTabUrlSortKey(a.url).localeCompare(getTabUrlSortKey(b.url));
+    if (urlCmp !== 0) {
+      return urlCmp;
+    }
+    const titleCmp = (a.title || '').localeCompare(b.title || '');
+    if (titleCmp !== 0) {
+      return titleCmp;
+    }
+    return (a.id || '').localeCompare(b.id || '');
   });
 }
 
@@ -193,6 +229,39 @@ export async function openTabs(tabs: TabItem[], windowId?: number): Promise<void
 }
 
 /**
+ * Opens all valid tabs from a tab group together in a newly created focused browser window.
+ */
+export async function openTabsInNewWindow(tabs: TabItem[]): Promise<void> {
+  const validUrls: string[] = [];
+  for (const tab of tabs) {
+    if (!validateUrl(tab.url)) {
+      console.warn(`Skipping invalid or restricted URL: ${tab.url}`);
+      continue;
+    }
+    validUrls.push(tab.url);
+  }
+
+  if (validUrls.length === 0) {
+    return;
+  }
+
+  try {
+    await browser.windows.create({
+      url: validUrls,
+      focused: true,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('permission')) {
+      throw new TabPermissionDeniedError(validUrls[0] ?? 'new window');
+    }
+    throw new Error(
+      `Failed to open tabs in new window: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error }
+    );
+  }
+}
+
+/**
  * Opens a single tab in the current (or specified) window
  * @param tab TabItem object to open
  * @param inBackground Whether to open in background without switching focus
@@ -294,4 +363,88 @@ export function isBlankStartupTab(tab?: { url?: string; pendingUrl?: string }): 
 
   return isBlankUrl(tab.url);
 }
+
+/**
+ * Custom MIME type used when dragging PackTabs tab items within Dashboard and Startup Restorer.
+ */
+export const PACKTABS_TAB_MIME = 'application/packtabs-tab';
+
+/**
+ * Structured payload serialized into DataTransfer during tab row drag-and-drop.
+ */
+export interface TabDragPayload {
+  sourceGroupId: string;
+  sourceIsHistory: boolean;
+  tab: TabItem;
+}
+
+/**
+ * Serializes a tab drag payload into DataTransfer and sets matching effectAllowed ('copy' for history, 'move' otherwise).
+ */
+export function writeTabDragData(dataTransfer: DataTransfer, payload: TabDragPayload): void {
+  const sourceIsHistory = Boolean(payload.sourceIsHistory);
+  dataTransfer.effectAllowed = sourceIsHistory ? 'copy' : 'move';
+  dataTransfer.setData(
+    PACKTABS_TAB_MIME,
+    JSON.stringify({
+      sourceGroupId: payload.sourceGroupId,
+      sourceIsHistory,
+      tab: { ...payload.tab },
+    })
+  );
+  // Avoid setting raw URL on text/plain, which triggers Chrome's native Split View / Side-by-side mode
+  dataTransfer.setData('text/plain', `PackTabs: ${payload.tab.title || payload.tab.url}`);
+}
+
+/**
+ * Returns true if the active drag operation carries a PackTabs tab payload.
+ */
+export function hasTabDragData(dataTransfer: DataTransfer | null): boolean {
+  return Boolean(dataTransfer?.types.includes(PACKTABS_TAB_MIME));
+}
+
+/**
+ * Parses a PackTabs tab drag payload from DataTransfer, returning null if missing or malformed.
+ */
+export function readTabDragData(dataTransfer: DataTransfer | null): TabDragPayload | null {
+  const raw = dataTransfer?.getData(PACKTABS_TAB_MIME);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<TabDragPayload>;
+    if (!parsed.sourceGroupId || !parsed.tab?.id) {
+      return null;
+    }
+    return {
+      sourceGroupId: parsed.sourceGroupId,
+      sourceIsHistory: Boolean(parsed.sourceIsHistory),
+      tab: { ...parsed.tab },
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Normalizes, deduplicates by URL, and sorts tabs alphabetically by normalized URL for UI presentation.
+ */
+export function prepareTabsForDisplay(tabs: TabItem[] | undefined | null): TabItem[] {
+  return sortTabsByUrl(deduplicateTabsByUrl(normalizeTabs(tabs)));
+}
+
+/**
+ * Creates a Proxy-safe plain-object snapshot of a TabGroup suitable for Undo restoration.
+ */
+export function snapshotTabGroup(group: TabGroup): TabGroup {
+  return {
+    id: group.id,
+    name: group.name,
+    createdAt: new Date(group.createdAt),
+    tabs: normalizeTabs(group.tabs),
+    isHistory: Boolean(group.isHistory),
+  };
+}
+
 

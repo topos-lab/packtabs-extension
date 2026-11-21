@@ -1,12 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useTheme } from '~/composables/useTheme';
+import { applyCachedTheme, useTheme } from '~/composables/useTheme';
 import { settingsStorage } from '~/types/Storage';
 
 describe('useTheme Composable', () => {
   beforeEach(async () => {
-    // Reset document classes
-    document.documentElement.classList.remove('dark');
+    // Reset document classes and localStorage cache
+    document.documentElement.classList.remove('dark', 'light');
+    localStorage.clear();
     // Mock settings storage
     await settingsStorage.setValue({
       autoCloseAfterSave: true,
@@ -16,7 +17,8 @@ describe('useTheme Composable', () => {
   });
 
   afterEach(() => {
-    document.documentElement.classList.remove('dark');
+    document.documentElement.classList.remove('dark', 'light');
+    localStorage.clear();
     vi.restoreAllMocks();
   });
 
@@ -90,5 +92,16 @@ describe('useTheme Composable', () => {
 
     await setTheme('light');
     expect(document.documentElement.style.colorScheme).toBe('light');
+    expect(document.documentElement.classList.contains('light')).toBe(true);
+  });
+
+  it('synchronously applies cached dark theme from localStorage before async initTheme runs', () => {
+    localStorage.setItem('packtabs:theme-mode', 'dark');
+
+    applyCachedTheme();
+
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(document.documentElement.classList.contains('light')).toBe(false);
+    expect(document.documentElement.style.colorScheme).toBe('dark');
   });
 });

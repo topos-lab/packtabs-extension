@@ -11,7 +11,6 @@ export const zh_CN: Record<MessageKey, string> = {
   tabManager: '标签页管理',
   aboutPackTabs: '关于 PackTabs',
   aboutDesc: '一键保存未完成任务的标签页，随时恢复工作区。',
-  aboutTagline: '面向任务的标签页与会话管理器',
 
   // Navigation / Sidebar
   currentTabs: '当前标签页',
@@ -32,6 +31,7 @@ export const zh_CN: Record<MessageKey, string> = {
   closeWindowAfterSave: '保存后关闭窗口',
   saving: '保存中...',
   saveAsTabGroup: '保存为标签分组',
+  saveAndExit: '保存并退出',
   noCurrentTabs: '当前窗口没有打开的网页标签页。',
   noMatchingTabs: '没有符合搜索条件的标签页。',
   tooltipDragTab: '拖动标签页归类到分组',
@@ -55,15 +55,18 @@ export const zh_CN: Record<MessageKey, string> = {
 
   // Tab Group Actions & Details
   openAll: '全部打开',
+  openInNewWindow: '在新窗口中打开',
   save: '保存',
   delete: '删除',
   cancel: '取消',
   close: '关闭',
+  undo: '撤销',
   showLess: '收起',
+  popupSaveCurrentTabs: '保存当前窗口标签页',
   saveGroup: '保存分组',
   deleteTabGroup: '删除标签分组',
   renameTabGroup: '重命名标签分组',
-  saveAsNamedGroup: '保存为具名分组',
+  saveAsNamedGroup: '保存为分组',
   editGroupName: '编辑分组名称',
   untitledTabGroup: '未命名标签分组',
   untitled: '无标题',
@@ -94,14 +97,14 @@ export const zh_CN: Record<MessageKey, string> = {
   maxHistoryDesc: '自动保留的关闭窗口历史快照最大数量',
   startupSettingTipTitle: '必须完成的前置设置',
   startupSettingTipDescChrome:
-    '若设为「从上次停下的地方继续」，Chrome 每次启动都会自动恢复旧标签页，导致功能失效或产生重复会话。请务必点击下方按钮，将 Chrome「启动时」设置为「打开新标签页」。',
+    '请将 Chrome「启动时」设为「打开新标签页」，避免重复恢复旧标签。',
   startupSettingTipDescFirefox:
-    '若勾选了「打开先前的窗口和标签页」，Firefox 每次启动都会自动恢复旧标签页，导致功能失效或产生重复会话。请务必点击下方按钮复制地址并在地址栏打开，在「主页与启动 -> 启动」中取消勾选「打开先前的窗口和标签页」。',
+    '请在地址栏打开 about:preferences#home，取消勾选「打开先前的窗口和标签页」以避免重复恢复。',
   startupSettingTipDescEdge:
-    '若设为「打开上一会话中的标签页」，Edge 每次启动都会自动恢复旧标签页，导致功能失效或产生重复会话。请务必点击下方按钮，将 Edge「启动时」设置为「打开新标签页」。',
-  openChromeStartupSettings: '前往 Chrome 启动设置 (必设项)',
-  openFirefoxStartupSettings: '复制设置地址并在地址栏打开 (Firefox)',
-  openEdgeStartupSettings: '前往 Edge 启动设置 (必设项)',
+    '请将 Edge「启动时」设为「打开新标签页」，避免重复恢复旧标签。',
+  openChromeStartupSettings: '前往 Chrome 启动设置',
+  openFirefoxStartupSettings: '复制 Firefox 设置地址',
+  openEdgeStartupSettings: '前往 Edge 启动设置',
   firefoxSettingsCopiedTitle: '设置地址已复制',
   firefoxStartupSettingsCopiedDesc:
     '已复制「about:preferences#home」到剪贴板。因 Firefox 安全限制，请在地址栏粘贴并回车打开，在「主页与启动 -> 启动」中取消勾选「打开先前的窗口和标签页」。',
@@ -145,8 +148,8 @@ export const zh_CN: Record<MessageKey, string> = {
   searchWorkspacesOrHistory: '搜索工作区或历史...',
   noSavedGroupsInStartup: '暂无保存的工作区',
   noHistoryGroupsInStartup: '暂无历史会话快照',
-  startupTip: '提示：日常保存或整理标签页，请点击工具栏图标或按 Alt + Shift + K。',
-  startupTipMac: '提示：日常保存或整理标签页，请点击工具栏图标或按 Command + Shift + K。',
+  startupTip: '提示：拖拽标签可归类到已保存分组 · 日常保存或整理标签页，请点击工具栏图标或按 Alt + Shift + K。',
+  startupTipMac: '提示：拖拽标签可归类到已保存分组 · 日常保存或整理标签页，请点击工具栏图标或按 Command + Shift + K。',
   remainingTabSingle: '+1 个更多标签',
   remainingTabsCount: '+{count} 个更多标签',
   loadGroupsFailed: '加载标签分组失败',
@@ -180,9 +183,11 @@ export const zh_CN: Record<MessageKey, string> = {
   couldNotSaveTabs: '无法保存标签页',
   restoredTabsSuccess: '已在浏览器中恢复 {count} 个标签页',
   restoredTabsSuccessShort: '已恢复 {count} 个标签页',
+  openedInNewWindowSuccess: '已在新窗口中打开 {count} 个标签页',
+  restoredUndoSuccess: '已撤销',
   restoreTabsFailed: '恢复标签页失败',
   savedAsNamedGroupDetail: '已在已保存分组中保存为 "{name}"',
-  groupConvertedSuccess: '分组已转换为永久具名分组',
+  groupConvertedSuccess: '已保存为永久分组',
 
   // Theme Tooltip
   themeTooltipSystem: '外观主题：跟随系统 ({current}) • 点击切换为浅色',

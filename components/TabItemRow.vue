@@ -7,17 +7,19 @@ import { useI18n } from '~/composables/useI18n';
 import { useToast } from '~/composables/useToast';
 import { useTabStore } from '~/stores/useTabStore';
 import type { TabItem } from '~/types/TabGroup';
-import { getDomain, getFaviconUrl, openSingleTab } from '~/utils/tabManager';
+import { getDomain, getFaviconUrl, openSingleTab, writeTabDragData } from '~/utils/tabManager';
 
 const props = withDefaults(
   defineProps<{
     tab: TabItem;
     sourceGroupId: string;
+    sourceIsHistory?: boolean;
     removeTitle: string;
     removeAriaLabel: string;
     draggable?: boolean;
   }>(),
   {
+    sourceIsHistory: false,
     draggable: true,
   }
 );
@@ -83,20 +85,17 @@ function handleDragStart(event: DragEvent) {
     return;
   }
   tabStore.isDraggingTab = true;
-  event.dataTransfer.effectAllowed = 'move';
-  event.dataTransfer.setData(
-    'application/packtabs-tab',
-    JSON.stringify({
-      sourceGroupId: props.sourceGroupId,
-      tab: props.tab,
-    })
-  );
-  // Avoid setting raw URL on text/plain, which triggers Chrome's native Split View / Side-by-side mode
-  event.dataTransfer.setData('text/plain', `PackTabs: ${props.tab.title || props.tab.url}`);
+  tabStore.draggingSourceIsHistory = props.sourceIsHistory;
+  writeTabDragData(event.dataTransfer, {
+    sourceGroupId: props.sourceGroupId,
+    sourceIsHistory: props.sourceIsHistory,
+    tab: props.tab,
+  });
 }
 
 function handleDragEnd() {
   tabStore.isDraggingTab = false;
+  tabStore.draggingSourceIsHistory = false;
 }
 </script>
 
@@ -104,7 +103,7 @@ function handleDragEnd() {
   <div
     :draggable="draggable"
     role="listitem"
-    class="group/tab flex items-center justify-between gap-1 py-1.5 px-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors cursor-move"
+    class="group/tab flex items-center justify-between gap-1 py-1.5 pl-2 pr-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700/45 transition-colors cursor-move"
     @dragstart="handleDragStart"
     @dragend="handleDragEnd"
   >
@@ -112,7 +111,6 @@ function handleDragEnd() {
       :disabled="!isTitleOverflowing"
       :content="[tab.title || t('untitled'), tab.url]"
       side="top"
-      :delay-duration="350"
     >
       <button
         type="button"
@@ -154,22 +152,23 @@ function handleDragEnd() {
         <!-- Domain -->
         <span
           v-if="getDomain(tab.url)"
-          class="text-[11px] text-zinc-500 dark:text-zinc-400 font-normal shrink-0 ml-auto pr-1 hidden sm:inline"
+          class="text-[11px] text-zinc-400 dark:text-zinc-500 font-normal shrink-0 ml-auto pr-1 hidden sm:inline"
         >
           {{ getDomain(tab.url) }}
         </span>
       </button>
     </Tooltip>
 
-    <!-- Tab Row Actions: Remove / Exclude tab -->
-    <button
-      type="button"
-      class="min-h-6 min-w-6 flex items-center justify-center p-1 text-zinc-400 dark:text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 rounded transition-colors shrink-0 select-none cursor-pointer"
-      :title="removeTitle"
-      :aria-label="removeAriaLabel"
-      @click="emit('remove', tab.id)"
-    >
-      <X class="h-3.5 w-3.5" />
-    </button>
+    <!-- Tab Row Actions: Remove / Exclude tab (always visible on Dashboard) -->
+    <Tooltip :content="removeTitle">
+      <button
+        type="button"
+        class="h-7 w-7 flex items-center justify-center text-zinc-400 dark:text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 rounded transition-colors shrink-0 select-none cursor-pointer"
+        :aria-label="removeAriaLabel"
+        @click="emit('remove', tab.id)"
+      >
+        <X class="h-3.5 w-3.5" />
+      </button>
+    </Tooltip>
   </div>
 </template>

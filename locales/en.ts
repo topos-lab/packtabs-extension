@@ -10,7 +10,6 @@ export const en = {
   tabManager: 'Tab Manager',
   aboutPackTabs: 'About PackTabs',
   aboutDesc: 'Save open tabs for unfinished tasks in one click and restore your workspace anytime.',
-  aboutTagline: 'Task-oriented tab & session manager',
 
   // Navigation / Sidebar
   currentTabs: 'Current Tabs',
@@ -31,6 +30,7 @@ export const en = {
   closeWindowAfterSave: 'Close window after save',
   saving: 'Saving...',
   saveAsTabGroup: 'Save as Tab Group',
+  saveAndExit: 'Save & Exit',
   noCurrentTabs: 'No open web tabs in the current window.',
   noMatchingTabs: 'No tabs match your search query.',
   tooltipDragTab: 'Drag tab to categorize into group',
@@ -54,11 +54,14 @@ export const en = {
 
   // Tab Group Actions & Details
   openAll: 'Open All',
+  openInNewWindow: 'Open in new window',
   save: 'Save',
   delete: 'Delete',
   cancel: 'Cancel',
   close: 'Close',
+  undo: 'Undo',
   showLess: 'Show less',
+  popupSaveCurrentTabs: 'Save current window tabs',
   saveGroup: 'Save Group',
   deleteTabGroup: 'Delete tab group',
   renameTabGroup: 'Rename tab group',
@@ -93,14 +96,14 @@ export const en = {
   maxHistoryDesc: 'Maximum automatic closed-window snapshots to keep',
   startupSettingTipTitle: 'Required Prerequisite Setup',
   startupSettingTipDescChrome:
-    'If set to "Continue where you left off", Chrome will auto-restore old tabs on startup, causing duplicates and conflicts. Please click below to set Chrome "On startup" to "Open the New Tab page".',
+    'Set Chrome "On startup" to "Open the New Tab page" to avoid restoring duplicate tabs.',
   startupSettingTipDescFirefox:
-    'If "Open previous windows and tabs" is checked, Firefox will auto-restore old tabs on startup, causing duplicates and conflicts. Please click below to copy the URL, open it in the address bar, and under "Home and startup -> Startup", uncheck "Open previous windows and tabs".',
+    'Open about:preferences#home and uncheck "Open previous windows and tabs" to avoid duplicate restores.',
   startupSettingTipDescEdge:
-    'If set to "Open tabs from the previous session", Edge will auto-restore old tabs on startup, causing duplicates and conflicts. Please click below to set Edge "Start, home, and new tabs" to "Open the new tab page".',
-  openChromeStartupSettings: 'Open Chrome Startup Settings (Required)',
-  openFirefoxStartupSettings: 'Copy Settings URL & Open in Firefox',
-  openEdgeStartupSettings: 'Open Edge Startup Settings (Required)',
+    'Set Edge "Start, home, and new tabs" to "Open the new tab page" to avoid duplicate restores.',
+  openChromeStartupSettings: 'Open Chrome Startup Settings',
+  openFirefoxStartupSettings: 'Copy Firefox Settings URL',
+  openEdgeStartupSettings: 'Open Edge Startup Settings',
   firefoxSettingsCopiedTitle: 'Settings URL Copied',
   firefoxStartupSettingsCopiedDesc:
     'Copied "about:preferences#home" to clipboard. Due to Firefox security restrictions, paste it into the address bar and under "Home and startup -> Startup", uncheck "Open previous windows and tabs".',
@@ -144,8 +147,8 @@ export const en = {
   searchWorkspacesOrHistory: 'Search workspaces or history...',
   noSavedGroupsInStartup: 'No saved workspaces yet',
   noHistoryGroupsInStartup: 'No history sessions yet',
-  startupTip: 'Tip: To pack or organize tabs during browsing, click the extension icon or press Alt + Shift + K.',
-  startupTipMac: 'Tip: To pack or organize tabs during browsing, click the extension icon or press Command + Shift + K.',
+  startupTip: 'Tip: Drag tabs into saved groups to organize · Click the extension icon or press Alt + Shift + K to pack tabs.',
+  startupTipMac: 'Tip: Drag tabs into saved groups to organize · Click the extension icon or press Command + Shift + K to pack tabs.',
   remainingTabSingle: '+1 more tab',
   remainingTabsCount: '+{count} more tabs',
   loadGroupsFailed: 'Failed to load tab groups',
@@ -179,6 +182,8 @@ export const en = {
   couldNotSaveTabs: 'Could not save tabs',
   restoredTabsSuccess: 'Restored {count} tabs in browser',
   restoredTabsSuccessShort: 'Restored {count} tabs',
+  openedInNewWindowSuccess: 'Opened {count} tabs in a new window',
+  restoredUndoSuccess: 'Restored',
   restoreTabsFailed: 'Failed to restore tabs',
   savedAsNamedGroupDetail: 'Saved as "{name}" in Saved Groups',
   groupConvertedSuccess: 'Group converted to permanent named group',

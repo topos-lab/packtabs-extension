@@ -5,6 +5,8 @@ import { updateSettings } from '~/composables/useSettings';
 import type { ThemeMode } from '~/types/Storage';
 import { settingsStorage } from '~/types/Storage';
 
+const THEME_CACHE_KEY = 'packtabs:theme-mode';
+
 const theme = ref<ThemeMode>('system');
 const isDark = ref(false);
 let isInitialized = false;
@@ -15,6 +17,16 @@ function getSystemPrefersDark(): boolean {
   return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
+function cacheTheme(mode: ThemeMode) {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(THEME_CACHE_KEY, mode);
+    }
+  } catch {
+    // Ignore storage failures in restricted contexts
+  }
+}
+
 function applyTheme(mode: ThemeMode) {
   if (typeof document === 'undefined') {return;}
 
@@ -22,12 +34,30 @@ function applyTheme(mode: ThemeMode) {
   isDark.value = shouldBeDark;
 
   document.documentElement.style.colorScheme = shouldBeDark ? 'dark' : 'light';
+  document.documentElement.classList.toggle('dark', shouldBeDark);
+  document.documentElement.classList.toggle('light', !shouldBeDark);
+  cacheTheme(mode);
+}
 
-  if (shouldBeDark) {
-    document.documentElement.classList.add('dark');
-  } else {
-    document.documentElement.classList.remove('dark');
+/**
+ * Synchronously apply cached theme preference before first paint to prevent light-mode flash
+ * when extension pages (especially the toolbar popup) open in dark mode.
+ */
+export function applyCachedTheme() {
+  let cached: ThemeMode = 'system';
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem(THEME_CACHE_KEY);
+      if (raw === 'light' || raw === 'dark' || raw === 'system') {
+        cached = raw;
+      }
+    }
+  } catch {
+    // Ignore storage access errors
   }
+
+  theme.value = cached;
+  applyTheme(cached);
 }
 
 export function useTheme() {

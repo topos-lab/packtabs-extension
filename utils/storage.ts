@@ -361,6 +361,29 @@ export async function recordDeletedHistorySignature(tabs?: TabItem[]): Promise<v
 }
 
 /**
+ * Removes a deleted history group's signature from the tombstone store (e.g. when undoing a deletion).
+ */
+export async function clearDeletedHistorySignature(tabs?: TabItem[]): Promise<void> {
+  const sig = getTabsSignature(tabs);
+  if (!sig) {
+    return;
+  }
+  await withSignatureLock(async () => {
+    try {
+      const now = Date.now();
+      const rawList = await deletedHistorySignaturesStorage.getValue();
+      const active = normalizeSignatureEntries(rawList, now);
+      const filtered = active.filter((entry) => entry.sig !== sig);
+      if (filtered.length !== active.length) {
+        await deletedHistorySignaturesStorage.setValue(filtered);
+      }
+    } catch {
+      // Non-critical fallback
+    }
+  });
+}
+
+/**
  * Checks if a tab set matches a recently deleted history group signature (within TTL).
  */
 export async function isDeletedHistorySignature(tabs?: TabItem[]): Promise<boolean> {

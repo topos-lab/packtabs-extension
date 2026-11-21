@@ -26,7 +26,7 @@ describe('SettingsModal Component', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders settings options when open is true', async () => {
+  it('renders settings options without redundant Close footer button when open is true', async () => {
     mount(SettingsModal, {
       props: {
         open: true,
@@ -35,10 +35,21 @@ describe('SettingsModal Component', () => {
     });
 
     await nextTick();
-    expect(document.body.textContent).toContain('Appearance');
+    expect(document.body.textContent).toContain('Theme');
     expect(document.body.textContent).toContain('Language');
     expect(document.body.textContent).toContain('Restore on Startup');
+    expect(document.body.textContent).not.toContain('Close window after save');
+    expect(document.body.textContent).toContain('History Limit');
     expect(document.body.textContent).toContain('Shortcut');
+
+    const footerCloseBtn = Array.from(document.body.querySelectorAll('button')).find(
+      (b) => b.textContent?.trim() === 'Close' && !b.querySelector('svg')
+    );
+    expect(footerCloseBtn).toBeUndefined();
+  });
+
+  it('defaults autoCloseAfterSave to true on fresh install', () => {
+    expect(settingsStorage.fallback.autoCloseAfterSave).toBe(true);
   });
 
   it('toggles openOnStartup and persists to settingsStorage', async () => {

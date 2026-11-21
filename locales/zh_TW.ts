@@ -11,7 +11,6 @@ export const zh_TW: Record<MessageKey, string> = {
   tabManager: '分頁管理',
   aboutPackTabs: '關於 PackTabs',
   aboutDesc: '一鍵儲存未完成任務的分頁，隨時恢復工作區。',
-  aboutTagline: '面向任務的分頁與階段管理器',
 
   // Navigation / Sidebar
   currentTabs: '目前分頁',
@@ -32,6 +31,7 @@ export const zh_TW: Record<MessageKey, string> = {
   closeWindowAfterSave: '儲存後關閉視窗',
   saving: '儲存中...',
   saveAsTabGroup: '儲存為分頁分組',
+  saveAndExit: '儲存並退出',
   noCurrentTabs: '目前視窗沒有開啟的網頁分頁。',
   noMatchingTabs: '沒有符合搜尋條件的分頁。',
   tooltipDragTab: '拖曳分頁歸類到分組',
@@ -55,15 +55,18 @@ export const zh_TW: Record<MessageKey, string> = {
 
   // Tab Group Actions & Details
   openAll: '全部開啟',
+  openInNewWindow: '在新視窗中開啟',
   save: '儲存',
   delete: '刪除',
   cancel: '取消',
   close: '關閉',
+  undo: '復原',
   showLess: '收合',
+  popupSaveCurrentTabs: '儲存目前視窗分頁',
   saveGroup: '儲存分組',
   deleteTabGroup: '刪除分頁分組',
   renameTabGroup: '重新命名分頁分組',
-  saveAsNamedGroup: '儲存為具名分組',
+  saveAsNamedGroup: '儲存為分組',
   editGroupName: '編輯分組名稱',
   untitledTabGroup: '未命名分頁分組',
   untitled: '無標題',
@@ -94,14 +97,14 @@ export const zh_TW: Record<MessageKey, string> = {
   maxHistoryDesc: '自動保留的關閉視窗歷史快照最大數量',
   startupSettingTipTitle: '必須完成的前置設定',
   startupSettingTipDescChrome:
-    '若設為「繼續瀏覽上次開啟的網頁」，Chrome 每次啟動都會自動恢復舊分頁，導致功能失效或產生重複工作階段。請務必點擊下方按鈕，將 Chrome「啟動時」設定為「開啟新分頁」。',
+    '請將 Chrome「啟動時」設為「開啟新分頁」，避免重複恢復舊分頁。',
   startupSettingTipDescFirefox:
-    '若勾選了「開啟先前的視窗和分頁」，Firefox 每次啟動都會自動恢復舊分頁，導致功能失效或產生重複工作階段。請務必點擊下方按鈕複製網址並在網址列開啟，在「首頁與啟動 -> 啟動」中取消勾選「開啟先前的視窗和分頁」。',
+    '請在網址列開啟 about:preferences#home，取消勾選「開啟先前的視窗和分頁」以避免重複恢復。',
   startupSettingTipDescEdge:
-    '若設為「開啟前一個工作階段的索引標籤」，Edge 每次啟動都會自動恢復舊分頁，導致功能失效或產生重複工作階段。請務必點擊下方按鈕，將 Edge「啟動時」設定為「開啟新分頁」。',
-  openChromeStartupSettings: '前往 Chrome 啟動設定 (必設項)',
-  openFirefoxStartupSettings: '複製設定網址並在網址列開啟 (Firefox)',
-  openEdgeStartupSettings: '前往 Edge 啟動設定 (必設項)',
+    '請將 Edge「啟動時」設為「開啟新分頁」，避免重複恢復舊分頁。',
+  openChromeStartupSettings: '前往 Chrome 啟動設定',
+  openFirefoxStartupSettings: '複製 Firefox 設定網址',
+  openEdgeStartupSettings: '前往 Edge 啟動設定',
   firefoxSettingsCopiedTitle: '設定網址已複製',
   firefoxStartupSettingsCopiedDesc:
     '已複製「about:preferences#home」至剪貼簿。因 Firefox 安全限制，請在網址列貼上並按 Enter 開啟，在「首頁與啟動 -> 啟動」中取消勾選「開啟先前的視窗和分頁」。',
@@ -145,8 +148,8 @@ export const zh_TW: Record<MessageKey, string> = {
   searchWorkspacesOrHistory: '搜尋工作區或歷史...',
   noSavedGroupsInStartup: '尚無已儲存的工作區',
   noHistoryGroupsInStartup: '尚無歷史階段快照',
-  startupTip: '提示：日常儲存或整理分頁，請點擊工具列圖示或按 Alt + Shift + K。',
-  startupTipMac: '提示：日常儲存或整理分頁，請點擊工具列圖示或按 Command + Shift + K。',
+  startupTip: '提示：拖曳分頁可歸類到已儲存分組 · 日常儲存或整理分頁，請點擊工具列圖示或按 Alt + Shift + K。',
+  startupTipMac: '提示：拖曳分頁可歸類到已儲存分組 · 日常儲存或整理分頁，請點擊工具列圖示或按 Command + Shift + K。',
   remainingTabSingle: '+1 個更多分頁',
   remainingTabsCount: '+{count} 個更多分頁',
   loadGroupsFailed: '載入分頁分組失敗',
@@ -180,9 +183,11 @@ export const zh_TW: Record<MessageKey, string> = {
   couldNotSaveTabs: '無法儲存分頁',
   restoredTabsSuccess: '已在瀏覽器中恢復 {count} 個分頁',
   restoredTabsSuccessShort: '已恢復 {count} 個分頁',
+  openedInNewWindowSuccess: '已在新視窗中開啟 {count} 個分頁',
+  restoredUndoSuccess: '已復原',
   restoreTabsFailed: '恢復分頁失敗',
   savedAsNamedGroupDetail: '已在已儲存分組中儲存為 "{name}"',
-  groupConvertedSuccess: '分組已轉換為永久具名分組',
+  groupConvertedSuccess: '已儲存為永久分組',
 
   // Theme Tooltip
   themeTooltipSystem: '外觀主題：跟隨系統 ({current}) • 點擊切換為淺色',

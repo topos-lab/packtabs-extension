@@ -89,6 +89,7 @@ describe('useI18n Composable', () => {
 
       expect(t('openAll')).toBe('Open All');
       expect(t('delete')).toBe('Delete');
+      expect(t('saveAndExit')).toBe('Save & Exit');
       expect(t('tabsCount', { count: 3 })).toBe('3 tabs');
     });
 
@@ -98,6 +99,7 @@ describe('useI18n Composable', () => {
 
       expect(t('openAll')).toBe('全部打开');
       expect(t('delete')).toBe('删除');
+      expect(t('saveAndExit')).toBe('保存并退出');
       expect(t('tabsCount', { count: 3 })).toBe('3 个标签页');
       expect(t('savedSuccessDetail', { count: 5, name: '工作项目' })).toBe('已将 5 个标签页保存至 "工作项目"。');
     });
@@ -108,6 +110,7 @@ describe('useI18n Composable', () => {
 
       expect(t('openAll')).toBe('全部開啟');
       expect(t('delete')).toBe('刪除');
+      expect(t('saveAndExit')).toBe('儲存並退出');
       expect(t('tabsCount', { count: 3 })).toBe('3 個分頁');
       expect(t('savedSuccessDetail', { count: 5, name: '工作項目' })).toBe('已將 5 個分頁儲存至 "工作項目"。');
     });

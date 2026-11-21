@@ -10,9 +10,19 @@ if (!fs.existsSync(firefoxProfileDir)) {
   fs.mkdirSync(firefoxProfileDir, { recursive: true });
 }
 
+function formatBuildTimestamp(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   modules: ['@wxt-dev/module-vue'],
+  vite: () => ({
+    define: {
+      __APP_BUILD_TIME__: JSON.stringify(formatBuildTimestamp(new Date())),
+    },
+  }),
   suppressWarnings: {
     firefoxDataCollection: true,
   },

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   openOrFocusDashboard,
   resolveTargetWindowId,
+  SELECT_DASHBOARD_VIEW_MESSAGE,
 } from '../../utils/dashboardLauncher';
 import {
   captureCurrentWindow,
@@ -135,6 +136,27 @@ describe('Multi-window dashboard opening and current window resolution', () => {
       expect(updateTabSpy).toHaveBeenCalledWith(202, { active: true });
       expect(updateWindowSpy).toHaveBeenCalledWith(2, { focused: true });
       expect(createSpy).not.toHaveBeenCalled();
+    });
+
+    it('signals existing dashboard tab to switch to Current Tabs view when view="current" is passed', async () => {
+      vi.spyOn(browser.tabs, 'query').mockResolvedValue([
+        { id: 202, windowId: 2, url: DASHBOARD_URL },
+      ] as any);
+      vi.spyOn(browser.tabs, 'update').mockResolvedValue({} as any);
+      vi.spyOn(browser.windows, 'update').mockResolvedValue({} as any);
+      const originalSendMessage = browser.tabs.sendMessage;
+      const sendMessageSpy = vi.fn().mockResolvedValue(undefined);
+      (browser.tabs as any).sendMessage = sendMessageSpy;
+
+      try {
+        await openOrFocusDashboard({ preferredWindowId: 2, view: 'current' });
+        expect(sendMessageSpy).toHaveBeenCalledWith(202, {
+          type: SELECT_DASHBOARD_VIEW_MESSAGE,
+          view: 'current',
+        });
+      } finally {
+        (browser.tabs as any).sendMessage = originalSendMessage;
+      }
     });
 
     it('replaces a single blank tab in-place inside Window 2', async () => {

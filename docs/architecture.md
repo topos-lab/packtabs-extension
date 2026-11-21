@@ -39,33 +39,34 @@ When concurrent operations or quota errors occur, `resolveSyncConflict` provides
 ### 4.1 Layout & Navigation
 
 - **Permanent Sidebar**: Clean two-section navigation with:
-  - Header: Clickable brand logo (opens About modal) and tri-state theme switcher button.
-  - Quick Views: Current Tabs (with live staging & search) and History Snapshots (with search).
-  - Saved Groups: Dynamically listed folders with active highlight and tab counter badges.
+  - Header: Clickable brand logo (opens minimal About modal displaying `(dev · YYYY-MM-DD HH:mm)` build timestamp on odd-minor development builds) and settings / tri-state theme switcher buttons (`h-14`).
+  - Quick Views: Current Tabs and History Snapshots without numeric count clutter.
+  - Saved Groups: Dynamically listed folders with active highlight and drag-drop target states.
+- **Quick Action Popup (`entrypoints/popup/`)**:
+  - Compact `280px` edge-to-edge toolbar popup applying cached theme before mount (`applyCachedTheme`) and filling root `html`/`body` dark surfaces to eliminate outer white edges. Offers a single-click "Save current window tabs" launcher and a name-only list of Saved Groups (click to open in current window; `Shift+Click` or `↗` icon button to open in a new window).
 - **Current Tabs Staging**:
-  - Displays all open web tabs in the current window.
-  - Allows individual tab exclusion, custom naming, and optional "Close window after save".
-  - Auto-names groups with intelligent timestamps (e.g. `2026-10-02 20:30`) if left blank.
+  - Displays all open web tabs in the current window sorted alphabetically by normalized URL (`sortTabsByUrl`).
+  - Integrates an inline "Close window after save" switch directly beside the Save CTA in the action bar (persisted to `sync:settings`, defaulting to `true`), dynamically switching the CTA label between "Save & Exit" and "Save as Tab Group", alongside always-visible `×` exclusions with 5-second Undo toast recovery and smart timestamp auto-naming.
 
 ### 4.2 Tri-State Theme System (`useTheme.ts`)
 
-- Supports **Light**, **Dark**, and **Auto (System)** modes.
+- Supports **Light**, **Dark**, and **Auto (System)** modes, caching mode synchronously in `localStorage` (`applyCachedTheme`) so extension pages (especially the Popup) render the target theme on frame 0 before Vue mounts.
 - Uses Lucide `SunMoon` icon for Auto, `Sun` for Light, and `Moon` for Dark.
 - Automatically listens to OS `(prefers-color-scheme: dark)` changes when in Auto mode.
-- Pure Tailwind Zinc styling: `#ffffff` / `#fafafa` in light mode, `#18181b` / `#09090b` in dark mode.
+- Pure Tailwind Zinc styling: `#ffffff` / `#fafafa` in light mode, `#222226` / `#18181b` in dark mode.
 
 ### 4.3 Drag-and-Drop Categorization
 
 - Built with standard HTML5 drag-and-drop APIs.
-- Uses custom MIME type `application/packtabs-tab` to transport tab payloads cleanly.
+- Uses custom MIME type `application/packtabs-tab` to transport tab payloads cleanly and keeps `dataTransfer.dropEffect` aligned with `effectAllowed` (`copy` for History → Saved, `move` for Saved → Saved).
 - Overrides `text/plain` with non-URL text to prevent Chrome from opening Split View or side-by-side tabs.
-- Cross-platform cursor: uses standard `cursor-move` (✥) across tab item rows on both Windows and macOS.
+- Uses `group-has-[:focus-visible]` and `.blur()` on drag start/end so hover-only actions never stick visible after mouse drag operations.
 
-### 4.4 Theme-Aware Overflow Tooltips (`Tooltip.vue`)
+### 4.4 Theme-Aware Tooltips (`Tooltip.vue`) & Neutral Toast Cards (`ToastContainer.vue`)
 
-- Replaces native un-styleable browser `title` attributes where needed with Radix Vue (`TooltipRoot`, `TooltipTrigger`, `TooltipPortal`, `TooltipContent`).
-- On tab rows (`TabItemRow.vue` and `StartupRestorer.vue`), tooltips appear only when the title overflows, showing the full title and URL without obscuring neighboring rows; operational hints live concisely at the card footer/empty state.
-- Adapts instantly to Light mode (pure white card with subtle gray border) and Dark mode (dark card with dark border).
+- Replaces all native OS browser `title` attributes across action buttons with Radix Vue `<Tooltip>` (`delayDuration: 300`, `skipDelayDuration: 300`, `disableHoverableContent: true`, zero transition animation).
+- On tab rows (`TabItemRow.vue` and `StartupRestorer.vue`), tooltips appear only when the title overflows (`scrollWidth > clientWidth`), showing the full title and URL without obscuring neighboring rows; operational hints live concisely at the card footer/empty state.
+- Toast notifications render as neutral theme-matched floating cards (`bg-white` / `dark:bg-[#27272c]`) with semantic status icons and Indigo Undo buttons (`life: 5000`, hover pause/resume).
 
 ### 4.5 Keyboard Shortcuts & MV3 Commands
 
@@ -81,11 +82,13 @@ When concurrent operations or quota errors occur, `resolveSyncConflict` provides
 
 - **Dedicated 2-Column Restorer View**:
   - Automatically opened on browser cold start (`browser.runtime.onStartup` / `browser.storage.session`) when enabled via `openOnStartup` in `sync:settings`.
-  - **Left Column**: Saved Groups (Workspaces) with tab count, instant "Open All" action, and individual tab click launchers.
-  - **Right Column**: History Snapshots with prominent highlight on the **Last Closed Session** ("上次关闭的会话" / "Last Closed Session") for 1-click resumption.
-- **Pure "Click & Go" Mental Model**:
-  - Intentionally strips away CRUD/editing/reorganizing controls and dashboard navigation links to minimize cognitive friction during browser startup.
-  - Includes unified search filtering across both saved groups and history snapshots simultaneously.
+  - **Left Column**: Saved Groups (Workspaces) with minimalist cards (no per-card tab count badges or row domains), text-only "Open All" action (`Shift+Click` for new window) paired with an adjacent `↗` new-window icon button, and individual tab click launchers with overflow-only tooltips.
+  - **Right Column**: History Snapshots with soft accent emphasis on the **Last Closed Session** ("上次关闭的会话" / "Last Closed Session") for 1-click resumption, keeping older snapshots visually calm.
+- **Click-Focused Mental Model with Hover-Only Quick Organization**:
+  - Collapses unified search behind a header toggle button (also triggered via `/` and dismissed via `Esc` or close button) and displays up to 9 tabs directly (collapsing to 8 visible rows + expand toggle only when 10+ tabs exist).
+  - Keeps open actions (`[Open All]` + borderless `[↗]`) flush right while revealing `CardHeader`-hover management icons grouped right beside card titles (`Trash2` delete on Saved cards; `BookmarkPlus` + `Trash2` on History cards) and sibling row `×` delete (auto-removing emptied history snapshots).
+  - Supports dragging rows directly without persistent drag icons: dragging from History Snapshots onto Saved Groups copies/archives (`addTab`) while preserving history, whereas dragging between Saved Groups moves (`moveTab`) with matching `effectAllowed`/`dropEffect`.
+  - All deletions and inline conversions across Dashboard and Startup Restorer skip confirmation modals in favor of 5-second Undo toasts (`restoreGroup` + `clearDeletedHistorySignature`).
 
 ## 5. Service Worker & Messaging Architecture
 

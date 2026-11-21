@@ -1,10 +1,14 @@
 import { isBlankStartupTab } from '~/utils/tabManager';
 
 export type DashboardOpenMode = 'default' | 'startup';
+export type DashboardViewTarget = 'current';
+
+export const SELECT_DASHBOARD_VIEW_MESSAGE = 'packtabs:select-view';
 
 export interface OpenDashboardOptions {
   mode?: DashboardOpenMode;
   preferredWindowId?: number;
+  view?: DashboardViewTarget;
 }
 
 /**
@@ -52,6 +56,7 @@ export async function resolveTargetWindowId(preferredWindowId?: number): Promise
 export async function openOrFocusDashboard({
   mode = 'default',
   preferredWindowId,
+  view,
 }: OpenDashboardOptions = {}): Promise<void> {
   const dashboardBaseUrl = browser.runtime.getURL('/dashboard.html');
   const isStartupMode = mode === 'startup';
@@ -93,6 +98,16 @@ export async function openOrFocusDashboard({
         await browser.tabs.update(existingTab.id, { url: targetUrl, active: true });
       } else {
         await browser.tabs.update(existingTab.id, { active: true });
+        if (view === 'current' && typeof browser.tabs?.sendMessage === 'function') {
+          try {
+            await browser.tabs.sendMessage(existingTab.id, {
+              type: SELECT_DASHBOARD_VIEW_MESSAGE,
+              view: 'current',
+            });
+          } catch {
+            // Ignore if the dashboard page is not yet listening
+          }
+        }
       }
       if (existingTab.windowId !== undefined) {
         await browser.windows.update(existingTab.windowId, { focused: true });
