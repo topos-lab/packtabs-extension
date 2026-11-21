@@ -21,13 +21,14 @@ trigger: always_on
 4. **Storage, Cross-Context Concurrency & Settings**:
    - Store large or variable tab lists in `local:`, not `sync:`, to prevent exceeding Chrome's 8KB single-item sync quota.
    - MV3 Service Worker and Dashboard run in separate JS contexts: serialize writes across contexts with named Web Locks (`navigator.locks` via `createMutex` in `utils/storage.ts`: `withLock`, `withSessionLock`, `withSettingsLock`), falling back to an in-memory queue only in test environments lacking `navigator.locks`.
-   - Route all `sync:settings` writes (`theme`, `language`, `closeTabsAfterSave`, `maxHistoryGroups`) through `updateSettings` in `composables/useSettings.ts` and subscribe with `settingsStorage.watch` for multi-window synchronization.
+   - Route all `sync:settings` writes (`theme`, `locale`, `autoCloseAfterSave`, `maxHistoryGroups`, `openOnStartup`) through `updateSettings` in `composables/useSettings.ts` and subscribe with `settingsStorage.watch` for multi-window synchronization.
    - Always validate persisted array fields defensively on read (e.g. `Array.isArray(tabs) ? tabs : []`) rather than casting raw storage objects directly.
 
 5. **Commands & Keyboard Shortcuts**:
    - Chrome caches command bindings per extension ID in user Profile `Preferences`. If a command was previously set or cleared, updating `suggested_key` for the same command will NOT overwrite existing user profiles. Introduce a new command name (e.g. `open_dashboard`) if an automatic reset is required.
    - Always register `browser.commands.onCommand.addListener` in background Service Worker for non-action commands.
    - When opening dashboard pages from shortcuts/actions, always query existing tabs (`browser.tabs.query`) and focus the active window/tab instead of creating duplicate tabs.
+   - When focusing an already-open Dashboard tab for a specific view target (e.g. Popup launching `'current'`), send `SELECT_DASHBOARD_VIEW_MESSAGE` via `browser.tabs.sendMessage` to switch views in-place without reloading the page.
 
 6. **Firefox Development Runner & Profile Persistence (`webExt`)**:
    - In WXT dev mode with Firefox (`wxt -b firefox --mv3`), `web-ext` by default creates ephemeral temporary profiles in OS temp dirs, discarding all storage across restarts.
@@ -58,6 +59,7 @@ trigger: always_on
 10. **Automated Quality & Lint Enforcement**:
    - Always run `bun run check` (or `bun run lint:fix`) before completing any modification.
    - Ensure 0 errors on TypeScript compile (`vue-tsc --noEmit`), ESLint (`eslint .`), and Vitest test suite (`vitest --run`).
+   - `bun run check` does NOT refresh `.output/chrome-mv3` or `.output/firefox-mv3`: whenever code or UI edits will be verified in a locally loaded unpacked extension, always run `bun run build` (and `bun run build:firefox` when testing Firefox) after the final edit; odd-minor dev builds expose `__APP_BUILD_TIME__` in the About dialog to confirm freshness.
 
 11. **Even/Odd Versioning & Extension Store Release Strategy**:
    - **Odd Minors for Active Development**: Odd minor versions (`1.1.0`, `1.3.0`) represent active work-in-progress development cycles. Never submit odd-minor packages to public extension stores.
@@ -70,10 +72,9 @@ trigger: always_on
    - Release/submission parsers must extract metadata strictly within the target version section (`## [X.Y.Z]`), never scanning across older versions.
    - Keep `README.md` focused on end-user value and quick start; maintain release mechanics, store credentials, and CI/CD workflows in `docs/RELEASING.md`.
 
-13. **UI/UX, Radix Vue Primitives & Anti-Over-Design Invariants**:
-   - **Hints & Overflow-Only Tooltips**: Place subtle interaction hints in card footers or empty states, never as repetitive text in every row tooltip. On tab rows, show full title/URL hover tooltips **only when content overflows** (`scrollWidth > clientWidth`).
-   - **Radix Vue Tooltip Anti-Sticky**: Always configure `disable-hoverable-content` on `TooltipProvider` and `TooltipRoot` (with `max-w-md` and `line-clamp-*`) so collision-flipped tooltips close immediately when moving to adjacent rows.
-   - **Global Toast Visibility**: Mount `<ToastContainer />` outside mode-conditional `v-if`/`v-else` branches (e.g. `isStartupMode`) so notifications always render.
-   - **Accessible Row Controls**: Never nest `<button>` elements inside clickable rows; render the primary open action and secondary actions (remove/delete) as sibling `<button>` elements.
-   - **Avoid Over-Design & Keep `_locales` Minimal**: Enforce invariants at storage/composable seams rather than fragmenting cohesive components; keep `public/_locales/*/messages.json` strictly limited to the 4 Manifest `__MSG_*__` keys (`extName`, `extDescription`, `actionTitle`, `commandOpenDashboard`).
+13. **UI/UX, Drag-and-Drop & Anti-Over-Design Invariants**:
+   - **Theme-Aware Tooltips (Zero Native Button `title`)**: Never use native HTML `title` attributes on interactive buttons. Wrap controls in `<Tooltip>` (`delayDuration: 300`, `skipDelayDuration: 300`, `disable-hoverable-content` on `TooltipProvider` and `TooltipRoot`, `max-w-md` + `line-clamp-*`, no `transition-all` animation). Put `v-if` on `<Tooltip>` itself (never on the child inside `<TooltipTrigger as-child>`), place subtle interaction hints in card footers/empty states rather than repetitive row tooltips, and show tab-row hover tooltips **only when content overflows** (`scrollWidth > clientWidth`).
+   - **HTML5 Drag-and-Drop & Non-Sticky Hover Controls**: In real browsers, a mismatch between `dragstart` `effectAllowed` and `dragover` `dropEffect` silently rejects drops (even when jsdom tests pass). Route tab drag payloads through `writeTabDragData` / `readTabDragData` in `utils/tabManager.ts`, matching `dropEffect` dynamically (`'copy'` for History -> Saved, `'move'` for Saved -> Saved) and avoiding raw URLs in `text/plain` (which trigger Chrome Split View). Reveal hover-only card/row buttons with `group-has-[:focus-visible]` + `focus-visible:opacity-100` (never `group-focus-within`, which sticks visible after mouse clicks/drags) and call `.blur()` on `document.activeElement` on drag start/end.
+   - **Neutral Floating Toasts & Global Visibility**: Style `ToastContainer.vue` as a neutral theme-matched floating card (`bg-white` / `dark:bg-[#27272c]`) with semantic status icons and brand Indigo Undo actions; always mount `<ToastContainer />` outside mode-conditional `v-if`/`v-else` branches (e.g. `isStartupMode`).
+   - **Accessible Row Controls & Shared Seams**: Never nest `<button>` elements inside clickable rows; render primary open and secondary remove/delete controls as sibling `<button>` elements. Consolidate shared group/tab restoration, 5s Undo deletions, and drag-drop persistence in `composables/useGroupActions.ts` and `utils/tabManager.ts` rather than duplicating handlers across views; keep `public/_locales/*/messages.json` strictly limited to the 4 Manifest `__MSG_*__` keys (`extName`, `extDescription`, `actionTitle`, `commandOpenDashboard`).
 
