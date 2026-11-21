@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.5.0] - In Development
+## [1.6.0] - 2026-11-21
 
 ### Added
 - **Quick Action Popup (`entrypoints/popup/`)**: Added a compact `280px` toolbar popup featuring a single-click "Save current window tabs" launcher (opening/focusing Dashboard Current Tabs in the active window) and a clean name-only Saved Groups list (click to open in current window, `Shift+Click` or hover `↗` icon to open in a new window).
